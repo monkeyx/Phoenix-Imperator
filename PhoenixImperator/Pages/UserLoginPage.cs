@@ -28,6 +28,7 @@ using System;
 using Xamarin.Forms;
 
 using Phoenix.BL.Managers;
+using Phoenix.Util;
 
 namespace PhoenixImperator.Pages
 {
@@ -57,7 +58,8 @@ namespace PhoenixImperator.Pages
 
 			Label header = new Label { 
 				XAlign = TextAlignment.Center,
-				Text = "Setup Your User Account" 
+				Text = "Setup Your User Account",
+				FontAttributes = FontAttributes.Bold
 			};
 
 			userIdEntry = new Entry {
@@ -83,6 +85,12 @@ namespace PhoenixImperator.Pages
 				VerticalOptions = LayoutOptions.CenterAndExpand
 			};
 
+			activityIndicator = new ActivityIndicator {
+				IsEnabled = true,
+				IsRunning = false,
+				BindingContext = this
+			};
+
 			loginButton.Clicked += LoginButtonClicked;
 
 			this.Padding = new Thickness(10, Device.OnPlatform(20, 0, 0), 10, 5);
@@ -91,29 +99,37 @@ namespace PhoenixImperator.Pages
 				VerticalOptions = LayoutOptions.Center,
 				Children = {
 					header,
-					new StackLayout {
-						Orientation = StackOrientation.Horizontal,
-						HorizontalOptions = LayoutOptions.FillAndExpand,
-						Children = {
-							userIdEntry,
-							userCodeEntry
-						}
-					},
-					loginButton
+					userIdEntry,
+					userCodeEntry,
+					loginButton,
+					activityIndicator
 				}
 			};
 		}
 
 		void LoginButtonClicked(object sender, EventArgs e)
 		{
+			activityIndicator.IsRunning = true;
 			Phoenix.Application.UserManager.Save (this.UserId, this.UserCode, (user) => {
 				Phoenix.Application.UserLoggedIn(user);
-				App.NavigationPage.PushAsync(new HomePage());
+
+				// now get status from Nexus and update the UI accordingly
+				Phoenix.Application.GameStatusManager.Fetch ((results, statusCode) => {
+					Log.WriteLine(Log.Layer.UI, this.GetType(), "GameStatus: Count: " + results.Count, " Status: " + statusCode);
+					HomePage homePage = new HomePage();
+					if(results.Count > 0)
+						homePage.SetStatus(results[0]);
+					Device.BeginInvokeOnMainThread(() => {
+						activityIndicator.IsRunning = false;
+						App.NavigationPage.PushAsync(homePage);
+					});
+				}, true); // clear all previous status messages
 			});
 		}
 
 		private Entry userIdEntry;
 		private Entry userCodeEntry;
+		private ActivityIndicator activityIndicator;
 	}
 }
 

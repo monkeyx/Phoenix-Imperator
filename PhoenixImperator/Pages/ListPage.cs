@@ -1,10 +1,10 @@
 ﻿//
-// AppDelegate.cs
+// ListPage.cs
 //
 // Author:
 //       Seyed Razavi <monkeyx@gmail.com>
 //
-// Copyright (c) 2015 Seyed Razavi 
+// Copyright (c) 2015 Seyed Razavi
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,29 +25,48 @@
 // THE SOFTWARE.
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
-using Foundation;
-using UIKit;
+using Xamarin.Forms;
 
-namespace PhoenixImperator.iOS
+using Phoenix.BL.Entities;
+using Phoenix.BL.Managers;
+
+namespace PhoenixImperator.Pages
 {
-	[Register ("AppDelegate")]
-	public partial class AppDelegate : global::Xamarin.Forms.Platform.iOS.FormsApplicationDelegate
+	public class ListPage<T> : ContentPage where T :   EntityBase, new()
 	{
-		public override bool FinishedLaunching (UIApplication app, NSDictionary options)
+		public ListPage (string title, NexusManager<T> manager)
 		{
-			global::Xamarin.Forms.Forms.Init ();
+			Title = title;
 
-			// Code for starting up the Xamarin Test Cloud Agent
-			#if ENABLE_TEST_CLOUD
-			Xamarin.Calabash.Start();
-			#endif
+			ListView listView = new ListView ();
+			listView.IsPullToRefreshEnabled = true;
 
-			LoadApplication (new App ());
+			manager.All ((results) => {
+				listView.ItemsSource = results;
+			});
 
-			return base.FinishedLaunching (app, options);
+			listView.RefreshCommand = new Command (() => {
+				manager.Fetch((results, statusCode) => {
+					Device.BeginInvokeOnMainThread (() => {
+						listView.IsRefreshing = false;
+						listView.ItemsSource = results;
+					});
+				});
+			});
+
+			Content = new StackLayout { 
+				Children = {
+					listView,
+					new Label{
+						HorizontalOptions = LayoutOptions.Center,
+						Text = "Pull down to refresh",
+						FontAttributes = FontAttributes.Italic
+					}
+				}
+			};
 		}
 	}
 }
+
 

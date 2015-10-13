@@ -29,12 +29,22 @@ using System.Collections.Generic;
 using Xamarin.Forms;
 
 using Phoenix.BL.Entities;
+using Phoenix.BL.Managers;
 using Phoenix.Util;
 
-namespace PhoenixImperator
+namespace PhoenixImperator.Pages
 {
 	public class HomePage : ContentPage
 	{
+		public void SetStatus(GameStatus status)
+		{
+			Log.WriteLine(Log.Layer.UI, this.GetType(), "GameStatus: " + status);
+			if (status != null) {
+				starDateLabel.Text = status.StarDate;
+				statusMessageLabel.Text = status.StatusMessage;
+			}
+		}
+
 		public HomePage ()
 		{
 			Title = "Home";
@@ -44,46 +54,91 @@ namespace PhoenixImperator
 
 			StackLayout header = new StackLayout {
 				Orientation = StackOrientation.Horizontal,
-				HorizontalOptions = LayoutOptions.Fill,
+				HorizontalOptions = LayoutOptions.CenterAndExpand,
 				Children = {
+					new Label{
+						Text = "Status:",
+						FontAttributes = FontAttributes.Bold
+					},
 					statusMessageLabel,
+					new Label{
+						Text = "Star Date:",
+						FontAttributes = FontAttributes.Bold
+					},
 					starDateLabel
 				}
+			};
+
+			ListView navigationList = new ListView () {
+				ItemsSource = new [] {"Positions", "Orders", "Items", "Info", "Star Systems"}
+			};
+
+			navigationList.ItemTapped += (sender, e) => {
+				Log.WriteLine(Log.Layer.UI, this.GetType(), "Tapped: " + e.Item);
+				((ListView)sender).SelectedItem = null; // de-select the row
+				switch(e.Item.ToString()){
+				case "Positions":
+					ShowPage<Position> (e.Item.ToString(), Phoenix.Application.PositionManager);
+					break;
+				case "Orders":
+					ShowPage<OrderType> (e.Item.ToString(), Phoenix.Application.OrderTypeManager);
+					break;
+				case "Items":
+					ShowPage<Item> (e.Item.ToString(), Phoenix.Application.ItemManager);
+					break;
+				case "Info":
+					ShowPage<InfoData> (e.Item.ToString(), Phoenix.Application.InfoManager);
+					break;
+				case "Star Systems":
+					ShowPage<StarSystem> (e.Item.ToString(), Phoenix.Application.StarSystemManager);
+					break;
+				}
+
+			};
+
+			activityIndicator = new ActivityIndicator {
+				IsEnabled = true,
+				IsRunning = false,
+				BindingContext = this
 			};
 
 			this.Padding = new Thickness(10, Device.OnPlatform(20, 0, 0), 10, 5);
 
 			Content = new StackLayout { 
 				Children = {
-					header
+					header,
+					navigationList,
+					activityIndicator
 				}
 			};
-
-			// get status from local DB first
-			Phoenix.Application.GameStatusManager.First ((status) => {
-				SetStatus(status);
-
-				// now get status from Nexus and update the UI accordingly
-				Phoenix.Application.GameStatusManager.Fetch ((results, statusCode) => {
-					Log.WriteLine(Log.Layer.UI, this.GetType(), "GameStatus: Count: " + results.Count, " Status: " + statusCode);
-					if(results.Count > 0){
-						SetStatus(results[0]);
-					}
-				}, true); // clear all previous status messages
-			});
 		}
 
-		private void SetStatus(GameStatus status)
+		private void ShowPage<T>(string title, NexusManager<T> manager) where T :   EntityBase, new()
 		{
-			Log.WriteLine(Log.Layer.UI, this.GetType(), "GameStatus: " + status);
-			if (status != null) {
-				starDateLabel.Text = status.StarDate;
-				statusMessageLabel.Text = status.StatusMessage;
+			Page page = new ListPage<T> (title, manager);
+			activityIndicator.IsRunning = true;
+			if (manager.Count() > 0) {
+				// show local results
+				manager.All ((results) => {
+					Device.BeginInvokeOnMainThread (() => {
+						activityIndicator.IsRunning = false;
+						App.NavigationPage.PushAsync (page);
+					});
+				});
+			} else {
+				// fetch and show results
+				manager.Fetch ((results, statusCode) => {
+					Device.BeginInvokeOnMainThread (() => {
+						activityIndicator.IsRunning = false;
+						App.NavigationPage.PushAsync (page);
+					});
+				}, false);
 			}
 		}
 
 		private Label starDateLabel;
 		private Label statusMessageLabel;
+		private ActivityIndicator activityIndicator;
 	}
 }
 
