@@ -1,4 +1,29 @@
-﻿using System;
+﻿//
+// PhoenixImperator.cs
+//
+// Author:
+//       Seyed Razavi <monkeyx@gmail.com>
+//
+// Copyright (c) 2015 Seyed Razavi 
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+using System;
 using System.IO;
 
 using Xamarin.Forms;
@@ -6,16 +31,15 @@ using Xamarin.Forms;
 using Phoenix.BL.Entities;
 using Phoenix.BL.Managers;
 using Phoenix.DL;
+using Phoenix.Util;
+
+using PhoenixImperator.Pages;
 
 namespace PhoenixImperator
 {
-	public class App : Application, IDatabase
+	public class App : Application, IDatabase, ILogger
 	{
 		public static NavigationPage NavigationPage { get; set; }
-
-		public static User User { get; set; }
-
-		public static UserManager UserManager { get; set; }
 
 		public App ()
 		{
@@ -25,19 +49,19 @@ namespace PhoenixImperator
 			var path = Path.Combine(libraryPath, sqliteFilename);
 			_dbConnection = new SQLite.SQLiteConnection (path);
 
-			PhoenixDatabase.DatabaseProvider = this;
-			PhoenixDatabase.CreateTables ();
+			Phoenix.Application.Initialize (this, this);
 
-			App.UserManager = new UserManager ();
-			int userCount = App.UserManager.Count ();
-			Console.WriteLine ("Users: " + userCount);
-			UserForm userForm = new UserForm();
-			MainPage = new NavigationPage(userForm);
+			int userCount = Phoenix.Application.UserManager.Count ();
+			Log.WriteLine (Log.Layer.AL, typeof(App), "Users: " + userCount);
+			UserLoginPage userLoginPage = new UserLoginPage();
+			App.NavigationPage = new NavigationPage(userLoginPage);
+			MainPage = App.NavigationPage;
 			if (userCount > 0) {
-				App.UserManager.First ((user) => {
+				Phoenix.Application.UserManager.First ((user) => {
 					// The root page of your application
-					userForm.UserCode = user.Code;
-					userForm.UserId = user.Id;
+					userLoginPage.UserCode = user.Code;
+					userLoginPage.UserId = user.Id;
+					Phoenix.Application.UserLoggedIn(user);
 				});
 			}
 		}
@@ -45,6 +69,11 @@ namespace PhoenixImperator
 		public SQLite.SQLiteConnection GetConnection()
 		{
 			return _dbConnection;
+		}
+
+		public void WriteLine(string format, params object[] arg)
+		{
+			Console.WriteLine (format, arg);
 		}
 
 		protected override void OnStart ()
