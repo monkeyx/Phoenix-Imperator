@@ -58,9 +58,16 @@ namespace PhoenixImperator.Pages
 		{
 			Title = "Login";
 
+			string headerText;
+			if (Phoenix.Application.UserManager.Count () < 1) {
+				headerText = "Setup your account";
+			} else {
+				headerText = "Login";
+			}
+
 			Label header = new Label { 
 				XAlign = TextAlignment.Center,
-				Text = "Setup Your User Account",
+				Text = headerText,
 				FontAttributes = FontAttributes.Bold
 			};
 
@@ -126,6 +133,9 @@ namespace PhoenixImperator.Pages
 						homePage.SetStatus(i.Current);
 
 					if(Phoenix.Application.InfoManager.Count() < 1){ // no info or star systems - fetch first
+						Device.BeginInvokeOnMainThread(() => {
+							DisplayAlert("Set Up", "This is the first time getting information from Nexus so this may take a bit of time. Please be patient","OK");
+						});
 						Phoenix.Application.InfoManager.Fetch((infoResults, s1) => {
 							Phoenix.Application.StarSystemManager.Fetch((systemResults, s2) => {
 								Device.BeginInvokeOnMainThread(() => {

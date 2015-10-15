@@ -30,31 +30,29 @@ using Xamarin.Forms;
 
 using Phoenix.BL.Entities;
 using Phoenix.BL.Managers;
-using Phoenix.DL;
 using Phoenix.Util;
 
 using PhoenixImperator.Pages;
 
 namespace PhoenixImperator
 {
-	public class App : Application, IDatabase, ILogger
+	public class App : Application, Phoenix.IDatabase, Phoenix.ILogger, Phoenix.IDocumentFolder
 	{
 		public static NavigationPage NavigationPage { get; set; }
 
 		public App ()
 		{
 			var sqliteFilename = "Phoenix.db3";
+			string documentsPath = GetDocumentPath ();
 			#if __ANDROID__
-			string documentsPath = System.Environment.GetFolderPath (System.Environment.SpecialFolder.Personal); // Documents folder
 			var path = Path.Combine(documentsPath, sqliteFilename);
 			#else
-			string documentsPath = Environment.GetFolderPath (Environment.SpecialFolder.Personal); // Documents folder
 			string libraryPath = Path.Combine (documentsPath, "..", "Library"); // Library folder
 			var path = Path.Combine(libraryPath, sqliteFilename);
 			#endif
 			_dbConnection = new SQLite.SQLiteConnection (path);
 
-			Phoenix.Application.Initialize (this, this);
+			Phoenix.Application.Initialize (this, this, this);
 
 			int userCount = Phoenix.Application.UserManager.Count ();
 			Log.WriteLine (Log.Layer.AL, typeof(App), "Users: " + userCount);
@@ -71,11 +69,57 @@ namespace PhoenixImperator
 			}
 		}
 
+		/// <summary>
+		/// Gets the document path.
+		/// </summary>
+		/// <returns>The document path.</returns>
+		public string GetDocumentPath()
+		{
+			#if __ANDROID__
+			string documentsPath = System.Environment.GetFolderPath (System.Environment.SpecialFolder.Personal); // Documents folder
+			#else
+			string documentsPath = Environment.GetFolderPath (Environment.SpecialFolder.Personal); // Documents folder
+			#endif
+			return documentsPath;
+		}
+
+		/// <summary>
+		/// Writes the file.
+		/// </summary>
+		/// <param name="filename">Filename.</param>
+		/// <param name="content">Content.</param>
+		/// <param name="fileame">Fileame.</param>
+		public void WriteFile(string filename, string content)
+		{
+			string filePath = Path.Combine (GetDocumentPath (), filename);
+			File.WriteAllText (filePath, content);
+		}
+
+		/// <summary>
+		/// Reads the file.
+		/// </summary>
+		/// <returns>The file.</returns>
+		/// <param name="filename">Filename.</param>
+		public string ReadFile(string filename)
+		{
+			string filePath = Path.Combine (GetDocumentPath (), filename);
+			return File.ReadAllText (filePath);
+		}
+
+		/// <summary>
+		/// Gets the connection.
+		/// </summary>
+		/// <returns>The connection.</returns>
 		public SQLite.SQLiteConnection GetConnection()
 		{
 			return _dbConnection;
 		}
 
+		/// <summary>
+		/// Writes the line.
+		/// </summary>
+		/// <param name="format">Format.</param>
+		/// <param name="arg">Argument.</param>
 		public void WriteLine(string format, params object[] arg)
 		{
 			Console.WriteLine (format, arg);

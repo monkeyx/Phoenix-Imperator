@@ -30,6 +30,7 @@ using Xamarin.Forms;
 
 using Phoenix.BL.Entities;
 using Phoenix.BL.Managers;
+using Phoenix.Util;
 
 namespace PhoenixImperator.Pages.Entities
 {
@@ -53,6 +54,17 @@ namespace PhoenixImperator.Pages.Entities
 			if (!string.IsNullOrWhiteSpace (item.Design)) {
 				AddProperty ("Design", item.Design);
 			}
+
+			Phoenix.Application.PositionManager.GetTurnReport (item.Id, (turn) => {
+				Device.BeginInvokeOnMainThread(() => {
+					WebView browser = new WebView();
+					HtmlWebViewSource htmlSource = new HtmlWebViewSource();
+					htmlSource.Html = turn.Replace("body {background:url(black/space.png);}","body {background-color: black;}");
+					browser.Source = htmlSource;
+					AddContentTab("Turn Report");
+					currentTab.Content = browser;
+				});
+			});
 		}
 	}
 }
