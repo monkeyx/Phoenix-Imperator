@@ -44,9 +44,14 @@ namespace PhoenixImperator
 		public App ()
 		{
 			var sqliteFilename = "Phoenix.db3";
+			#if __ANDROID__
+			string documentsPath = System.Environment.GetFolderPath (System.Environment.SpecialFolder.Personal); // Documents folder
+			var path = Path.Combine(documentsPath, sqliteFilename);
+			#else
 			string documentsPath = Environment.GetFolderPath (Environment.SpecialFolder.Personal); // Documents folder
 			string libraryPath = Path.Combine (documentsPath, "..", "Library"); // Library folder
 			var path = Path.Combine(libraryPath, sqliteFilename);
+			#endif
 			_dbConnection = new SQLite.SQLiteConnection (path);
 
 			Phoenix.Application.Initialize (this, this);
