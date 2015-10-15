@@ -125,8 +125,7 @@ namespace PhoenixImperator.Pages
 				Phoenix.Application.UserLoggedIn(user);
 
 				// now get status from Nexus and update the UI accordingly
-				Phoenix.Application.GameStatusManager.Fetch ((results, statusCode) => {
-					Log.WriteLine(Log.Layer.UI, this.GetType(), "GameStatus: Status: " + statusCode);
+				Phoenix.Application.GameStatusManager.Fetch ((results) => {
 					HomePage homePage = new HomePage();
 					IEnumerator<GameStatus> i = results.GetEnumerator();
 					if(i.MoveNext())
@@ -136,8 +135,8 @@ namespace PhoenixImperator.Pages
 						Device.BeginInvokeOnMainThread(() => {
 							DisplayAlert("Set Up", "This is the first time getting information from Nexus so this may take a bit of time. Please be patient","OK");
 						});
-						Phoenix.Application.InfoManager.Fetch((infoResults, s1) => {
-							Phoenix.Application.StarSystemManager.Fetch((systemResults, s2) => {
+						Phoenix.Application.InfoManager.Fetch((infoResults) => {
+							Phoenix.Application.StarSystemManager.Fetch((systemResults) => {
 								Device.BeginInvokeOnMainThread(() => {
 									activityIndicator.IsRunning = false;
 									App.NavigationPage.PushAsync(homePage);

@@ -62,10 +62,10 @@ namespace PhoenixImperator.Pages.Entities
 			listView.IsPullToRefreshEnabled = true;
 			listView.ItemsSource = GroupEntities(entities);
 
-			listView.RefreshCommand = new Command (() => {
+			listView.RefreshCommand = new Command ((e) => {
 				refreshHelpText.IsVisible = false;
 				if(!isSearching) {
-					manager.Fetch((results, statusCode) => {
+					manager.Fetch((results) => {
 						Device.BeginInvokeOnMainThread (() => {
 							listView.IsRefreshing = false;
 							refreshHelpText.IsVisible = true;

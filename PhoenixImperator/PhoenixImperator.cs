@@ -25,6 +25,11 @@
 // THE SOFTWARE.
 using System;
 using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
+
+using ModernHttpClient;
 
 using Xamarin.Forms;
 
@@ -36,7 +41,7 @@ using PhoenixImperator.Pages;
 
 namespace PhoenixImperator
 {
-	public class App : Application, Phoenix.IDatabase, Phoenix.ILogger, Phoenix.IDocumentFolder
+	public class App : Application, Phoenix.IDatabase, Phoenix.ILogger, Phoenix.IDocumentFolder, Phoenix.IRestClient
 	{
 		public static NavigationPage NavigationPage { get; set; }
 
@@ -52,7 +57,7 @@ namespace PhoenixImperator
 			#endif
 			_dbConnection = new SQLite.SQLiteConnection (path);
 
-			Phoenix.Application.Initialize (this, this, this);
+			Phoenix.Application.Initialize (this, this, this, this);
 
 			int userCount = Phoenix.Application.UserManager.Count ();
 			Log.WriteLine (Log.Layer.AL, typeof(App), "Users: " + userCount);
@@ -125,16 +130,53 @@ namespace PhoenixImperator
 			Console.WriteLine (format, arg);
 		}
 
+		/// <summary>
+		/// Async GET method
+		/// </summary>
+		/// <returns>Stream</returns>
+		/// <param name="url">URL.</param>
+		public Task<Stream> GetAsync(string url)
+		{
+			var httpClient = new HttpClient(new NativeMessageHandler());
+			httpClient.Timeout = TimeSpan.FromSeconds(30);
+			return httpClient.GetStreamAsync (new Uri (url));
+		}
+
+		/// <summary>
+		/// Async POST method
+		/// </summary>
+		/// <returns>Stream</returns>
+		/// <param name="url">URL.</param>
+		/// <param name="dto">Dto.</param>
+		public Task<HttpResponseMessage> PostAsync(string url, object dto)
+		{
+			var httpClient = new HttpClient(new NativeMessageHandler());
+			httpClient.Timeout = TimeSpan.FromSeconds(30);
+			return httpClient.PostAsync(new Uri(url),new StringContent(dto.ToString()));
+		}
+
+		/// <summary>
+		/// Application developers override this method to perform actions when the application starts.
+		/// </summary>
+		/// <remarks>To be added.</remarks>
 		protected override void OnStart ()
 		{
 			// Handle when your app starts
 		}
 
+		/// <summary>
+		/// Application developers override this method to perform actions when the application enters the sleeping state.
+		/// </summary>
+		/// <remarks>To be added.</remarks>
 		protected override void OnSleep ()
 		{
 			// Handle when your app sleeps
 		}
 
+		/// <summary>
+		/// Application developers override this method to perform actions when the application resumes from a sleeping state.
+		/// </summary>
+		/// <remarks>To be added.</remarks>
 		protected override void OnResume ()
 		{
 			// Handle when your app resumes

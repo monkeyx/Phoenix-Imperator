@@ -134,7 +134,7 @@ namespace PhoenixImperator.Pages
 				});
 			} else {
 				// fetch and show results
-				manager.Fetch ((results, statusCode) => {
+				manager.Fetch ((results) => {
 					Page page = new EntityListPage<T> (title, manager, results);
 					Device.BeginInvokeOnMainThread (() => {
 						activityIndicator.IsRunning = false;
