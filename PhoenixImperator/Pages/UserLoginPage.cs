@@ -24,10 +24,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
+using System.Collections.Generic;
 
 using Xamarin.Forms;
 
 using Phoenix.BL.Managers;
+using Phoenix.BL.Entities;
 using Phoenix.Util;
 
 namespace PhoenixImperator.Pages
@@ -66,13 +68,15 @@ namespace PhoenixImperator.Pages
 				Placeholder = "User ID",
 				HorizontalOptions = LayoutOptions.FillAndExpand,
 				VerticalOptions = LayoutOptions.CenterAndExpand,
-				Keyboard = Keyboard.Numeric
+				Keyboard = Keyboard.Numeric,
+				// Text = ""
 			};
 
 			userCodeEntry = new Entry {
 				Placeholder = "Code",
 				HorizontalOptions = LayoutOptions.FillAndExpand,
-				VerticalOptions = LayoutOptions.CenterAndExpand
+				VerticalOptions = LayoutOptions.CenterAndExpand,
+				// Text = ""
 			};
 
 			userIdEntry.MinimumWidthRequest = 20;
@@ -115,14 +119,28 @@ namespace PhoenixImperator.Pages
 
 				// now get status from Nexus and update the UI accordingly
 				Phoenix.Application.GameStatusManager.Fetch ((results, statusCode) => {
-					Log.WriteLine(Log.Layer.UI, this.GetType(), "GameStatus: Count: " + results.Count, " Status: " + statusCode);
+					Log.WriteLine(Log.Layer.UI, this.GetType(), "GameStatus: Status: " + statusCode);
 					HomePage homePage = new HomePage();
-					if(results.Count > 0)
-						homePage.SetStatus(results[0]);
-					Device.BeginInvokeOnMainThread(() => {
-						activityIndicator.IsRunning = false;
-						App.NavigationPage.PushAsync(homePage);
-					});
+					IEnumerator<GameStatus> i = results.GetEnumerator();
+					if(i.MoveNext())
+						homePage.SetStatus(i.Current);
+
+					if(Phoenix.Application.InfoManager.Count() < 1){ // no info or star systems - fetch first
+						Phoenix.Application.InfoManager.Fetch((infoResults, s1) => {
+							Phoenix.Application.StarSystemManager.Fetch((systemResults, s2) => {
+								Device.BeginInvokeOnMainThread(() => {
+									activityIndicator.IsRunning = false;
+									App.NavigationPage.PushAsync(homePage);
+								});
+							});
+						});
+					}
+					else {
+						Device.BeginInvokeOnMainThread(() => {
+							activityIndicator.IsRunning = false;
+							App.NavigationPage.PushAsync(homePage);
+						});
+					}
 				}, true); // clear all previous status messages
 			});
 		}

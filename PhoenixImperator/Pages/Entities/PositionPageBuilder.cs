@@ -1,5 +1,5 @@
 ﻿//
-// ListPage.cs
+// PositionPage.cs
 //
 // Author:
 //       Seyed Razavi <monkeyx@gmail.com>
@@ -31,40 +31,28 @@ using Xamarin.Forms;
 using Phoenix.BL.Entities;
 using Phoenix.BL.Managers;
 
-namespace PhoenixImperator.Pages
+namespace PhoenixImperator.Pages.Entities
 {
-	public class ListPage<T> : ContentPage where T :   EntityBase, new()
+	public class PositionPageBuilder : BaseEntityPageBuilder<Position>
 	{
-		public ListPage (string title, NexusManager<T> manager)
+		protected override void DisplayEntity(Position item)
 		{
-			Title = title;
-
-			ListView listView = new ListView ();
-			listView.IsPullToRefreshEnabled = true;
-
-			manager.All ((results) => {
-				listView.ItemsSource = results;
-			});
-
-			listView.RefreshCommand = new Command (() => {
-				manager.Fetch((results, statusCode) => {
-					Device.BeginInvokeOnMainThread (() => {
-						listView.IsRefreshing = false;
-						listView.ItemsSource = results;
-					});
-				});
-			});
-
-			Content = new StackLayout { 
-				Children = {
-					listView,
-					new Label{
-						HorizontalOptions = LayoutOptions.Center,
-						Text = "Pull down to refresh",
-						FontAttributes = FontAttributes.Italic
-					}
-				}
-			};
+			AddContentTab ("General");
+			if (item.StarSystem != null) {
+				AddEntityProperty (Phoenix.Application.StarSystemManager, item.StarSystem, "Star System", item.SystemText);
+			} else {
+				AddPropertyDoubleLine ("Star System", item.SystemText);
+			}
+			AddPropertyDoubleLine ("Location", item.LocationText);
+			if (!string.IsNullOrWhiteSpace (item.PositionClass)) {
+				AddProperty ("Class", item.PositionClass);
+			}
+			if (!string.IsNullOrWhiteSpace (item.Size)) {
+				AddProperty ("Size", item.Size);
+			}
+			if (!string.IsNullOrWhiteSpace (item.Design)) {
+				AddProperty ("Design", item.Design);
+			}
 		}
 	}
 }

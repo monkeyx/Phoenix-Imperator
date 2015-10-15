@@ -32,6 +32,8 @@ using Phoenix.BL.Entities;
 using Phoenix.BL.Managers;
 using Phoenix.Util;
 
+using PhoenixImperator.Pages.Entities;
+
 namespace PhoenixImperator.Pages
 {
 	public class HomePage : ContentPage
@@ -70,7 +72,11 @@ namespace PhoenixImperator.Pages
 			};
 
 			ListView navigationList = new ListView () {
-				ItemsSource = new [] {"Positions", "Orders", "Items", "Info", "Star Systems"}
+				#if DEBUG
+				ItemsSource = new [] {"Positions", "Orders", "Items", "Star Systems", "Info [DEBUG]"}
+				#else
+				ItemsSource = new [] {"Positions", "Orders", "Items", "Star Systems"}
+				#endif
 			};
 
 			navigationList.ItemTapped += (sender, e) => {
@@ -86,8 +92,8 @@ namespace PhoenixImperator.Pages
 				case "Items":
 					ShowPage<Item> (e.Item.ToString(), Phoenix.Application.ItemManager);
 					break;
-				case "Info":
-					ShowPage<InfoData> (e.Item.ToString(), Phoenix.Application.InfoManager);
+				case "Info [DEBUG]":
+					ShowPage<InfoData> (e.Item.ToString(), Phoenix.Application.InfoManager,false);
 					break;
 				case "Star Systems":
 					ShowPage<StarSystem> (e.Item.ToString(), Phoenix.Application.StarSystemManager);
@@ -113,13 +119,14 @@ namespace PhoenixImperator.Pages
 			};
 		}
 
-		private void ShowPage<T>(string title, NexusManager<T> manager) where T :   EntityBase, new()
+		private void ShowPage<T>(string title, NexusManager<T> manager, bool entityHasDetail = true) where T :   EntityBase, new()
 		{
-			Page page = new ListPage<T> (title, manager);
 			activityIndicator.IsRunning = true;
 			if (manager.Count() > 0) {
 				// show local results
 				manager.All ((results) => {
+					EntityListPage<T> page = new EntityListPage<T> (title, manager, results);
+					page.EntityHasDetail = entityHasDetail;
 					Device.BeginInvokeOnMainThread (() => {
 						activityIndicator.IsRunning = false;
 						App.NavigationPage.PushAsync (page);
@@ -128,6 +135,7 @@ namespace PhoenixImperator.Pages
 			} else {
 				// fetch and show results
 				manager.Fetch ((results, statusCode) => {
+					Page page = new EntityListPage<T> (title, manager, results);
 					Device.BeginInvokeOnMainThread (() => {
 						activityIndicator.IsRunning = false;
 						App.NavigationPage.PushAsync (page);
