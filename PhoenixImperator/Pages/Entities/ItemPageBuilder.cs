@@ -65,7 +65,7 @@ namespace PhoenixImperator.Pages.Entities
 			AddLabel (item.TechManual);
 
 			if (item.Properties.Count > 0) {
-				AddContentTab ("Misc");
+				AddContentTab ("More");
 				foreach (ItemProperty prop in item.Properties.Values) {
 					AddProperty (prop.Key, prop.Value);
 				}

@@ -36,7 +36,7 @@ using PhoenixImperator.Pages.Entities;
 
 namespace PhoenixImperator.Pages
 {
-	public class HomePage : ContentPage
+	public class HomePage : PhoenixPage
 	{
 		public void SetStatus(GameStatus status)
 		{
@@ -47,7 +47,7 @@ namespace PhoenixImperator.Pages
 			}
 		}
 
-		public HomePage ()
+		public HomePage () : base()
 		{
 			Title = "Home";
 
@@ -73,7 +73,7 @@ namespace PhoenixImperator.Pages
 
 			ListView navigationList = new ListView () {
 				#if DEBUG
-				ItemsSource = new [] {"Positions", "Orders", "Items", "Star Systems", "Info [DEBUG]"}
+				ItemsSource = new [] {"Positions", "Orders", "Items", "Star Systems", "Order Types [DEBUG]", "Info [DEBUG]"}
 				#else
 				ItemsSource = new [] {"Positions", "Orders", "Items", "Star Systems"}
 				#endif
@@ -86,7 +86,7 @@ namespace PhoenixImperator.Pages
 				case "Positions":
 					ShowPage<Position> (e.Item.ToString(), Phoenix.Application.PositionManager);
 					break;
-				case "Orders":
+				case "Order Types [DEBUG]":
 					ShowPage<OrderType> (e.Item.ToString(), Phoenix.Application.OrderTypeManager);
 					break;
 				case "Items":
@@ -134,12 +134,21 @@ namespace PhoenixImperator.Pages
 				});
 			} else {
 				// fetch and show results
-				manager.Fetch ((results) => {
-					Page page = new EntityListPage<T> (title, manager, results);
-					Device.BeginInvokeOnMainThread (() => {
-						activityIndicator.IsRunning = false;
-						App.NavigationPage.PushAsync (page);
-					});
+				manager.Fetch ((results, ex) => {
+					if(ex == null){
+						Page page = new EntityListPage<T> (title, manager, results);
+						Device.BeginInvokeOnMainThread (() => {
+							activityIndicator.IsRunning = false;
+							App.NavigationPage.PushAsync (page);
+						});
+					}
+					else {
+						#if DEBUG
+						ShowErrorAlert(ex);
+						#else
+						ShowErrorAlert("Problem connecting to Nexus");
+						#endif
+					}
 				}, false);
 			}
 		}

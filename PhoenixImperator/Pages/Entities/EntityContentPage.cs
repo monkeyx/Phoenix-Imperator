@@ -1,5 +1,5 @@
 ﻿//
-// PositionPage.cs
+// EntityContentPage.cs
 //
 // Author:
 //       Seyed Razavi <monkeyx@gmail.com>
@@ -24,46 +24,34 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
-using System.Collections.Generic;
 
 using Xamarin.Forms;
 
 using Phoenix.BL.Entities;
-using Phoenix.BL.Managers;
-using Phoenix.Util;
 
-namespace PhoenixImperator.Pages.Entities
+namespace PhoenixImperator
 {
-	public class PositionPageBuilder : BaseEntityPageBuilder<Position>
+	public class EntityContentPage : TabbedPage
 	{
-		protected override void DisplayEntity(Position item)
-		{
-			AddContentTab ("General");
-			if (item.StarSystem != null) {
-				AddEntityProperty (Phoenix.Application.StarSystemManager, item.StarSystem, "Star System", item.SystemText);
-			} else {
-				AddPropertyDoubleLine ("Star System", item.SystemText);
-			}
-			AddPropertyDoubleLine ("Location", item.LocationText);
-			if (!string.IsNullOrWhiteSpace (item.PositionClass)) {
-				AddProperty ("Class", item.PositionClass);
-			}
-			if (!string.IsNullOrWhiteSpace (item.Size)) {
-				AddProperty ("Size", item.Size);
-			}
-			if (!string.IsNullOrWhiteSpace (item.Design)) {
-				AddProperty ("Design", item.Design);
-			}
+		public EntityBase Entity { get; private set; }
 
-			Phoenix.Application.PositionManager.GetTurnReport (item.Id, (turn) => {
-				Device.BeginInvokeOnMainThread(() => {
-					WebView browser = new WebView();
-					HtmlWebViewSource htmlSource = new HtmlWebViewSource();
-					htmlSource.Html = turn;
-					browser.Source = htmlSource;
-					AddContentTab("Turn Report");
-					currentTab.Content = browser;
-				});
+		public EntityContentPage (EntityBase entity) : base()
+		{
+			Entity = entity;
+			Title = entity.ToString ();
+		}
+
+		public void ShowInfoAlert(string title, object info)
+		{
+			Device.BeginInvokeOnMainThread(() => {
+				DisplayAlert(title, info.ToString(),"OK");
+			});
+		}
+
+		public void ShowErrorAlert(object error)
+		{
+			Device.BeginInvokeOnMainThread(() => {
+				DisplayAlert("Problem", error.ToString(),"OK");
 			});
 		}
 	}

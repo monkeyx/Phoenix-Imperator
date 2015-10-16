@@ -33,6 +33,8 @@ using XLabs.Forms.Controls;
 using Phoenix.BL.Entities;
 using Phoenix.BL.Managers;
 
+using PhoenixImperator.Pages;
+
 namespace PhoenixImperator.Pages.Entities
 {
 	public abstract class BaseEntityPageBuilder<T> : IEntityPageBuilder<T> where T :   EntityBase, new()
@@ -42,9 +44,8 @@ namespace PhoenixImperator.Pages.Entities
 		public Page BuildPage(T item)
 		{
 			if (item == null) {
-				return new ContentPage {
+				return new PhoenixPage {
 					Title = "Not Found",
-					Padding = new Thickness(10, Device.OnPlatform(20, 0, 0), 10, 5),
 					Content = new StackLayout{
 						VerticalOptions = LayoutOptions.Center,
 						Children = {
@@ -55,17 +56,15 @@ namespace PhoenixImperator.Pages.Entities
 					}
 				};
 			}
-			entityPage = new TabbedPage () {
-				Title = item.ToString ()
-			};
+			entityPage = new EntityContentPage (item);
 			DisplayEntity (item);
 			return entityPage;
 		}
 
 		protected abstract void DisplayEntity(T item);
 
-		protected TabbedPage entityPage;
-		protected ContentPage currentTab;
+		protected EntityContentPage entityPage;
+		protected PhoenixPage currentTab;
 		protected StackLayout currentLayout;
 
 		protected void AddContentTab(string title)
@@ -73,7 +72,7 @@ namespace PhoenixImperator.Pages.Entities
 			currentLayout = new StackLayout {
 				Padding = new Thickness (10)
 			};
-			currentTab = new ContentPage {
+			currentTab = new PhoenixPage {
 				Content = currentLayout,
 				Title = title
 			};

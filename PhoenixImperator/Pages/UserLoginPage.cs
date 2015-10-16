@@ -34,7 +34,7 @@ using Phoenix.Util;
 
 namespace PhoenixImperator.Pages
 {
-	public class UserLoginPage : ContentPage
+	public class UserLoginPage : PhoenixPage
 	{
 		public int UserId {
 			get {
@@ -54,7 +54,7 @@ namespace PhoenixImperator.Pages
 			}
 		}
 
-		public UserLoginPage ()
+		public UserLoginPage () : base()
 		{
 			Title = "Login";
 
@@ -124,33 +124,82 @@ namespace PhoenixImperator.Pages
 			Phoenix.Application.UserManager.Save (this.UserId, this.UserCode, (user) => {
 				Phoenix.Application.UserLoggedIn(user);
 
-				// now get status from Nexus and update the UI accordingly
-				Phoenix.Application.GameStatusManager.Fetch ((results) => {
-					HomePage homePage = new HomePage();
-					IEnumerator<GameStatus> i = results.GetEnumerator();
-					if(i.MoveNext())
-						homePage.SetStatus(i.Current);
+				HomePage homePage = new HomePage();
 
-					if(Phoenix.Application.InfoManager.Count() < 1){ // no info or star systems - fetch first
-						Device.BeginInvokeOnMainThread(() => {
-							DisplayAlert("Set Up", "This is the first time getting information from Nexus so this may take a bit of time. Please be patient","OK");
-						});
-						Phoenix.Application.InfoManager.Fetch((infoResults) => {
-							Phoenix.Application.StarSystemManager.Fetch((systemResults) => {
-								Device.BeginInvokeOnMainThread(() => {
-									activityIndicator.IsRunning = false;
-									App.NavigationPage.PushAsync(homePage);
-								});
+				if(Phoenix.Application.GameStatusManager.Count() < 1){
+					// fresh setup
+					ShowInfoAlert("Set Up", "This is the first time getting information from Nexus so this may take a bit of time. Please be patient");
+					Phoenix.Application.GameStatusManager.Fetch ((results, ex) => {
+						if(ex == null){
+							IEnumerator<GameStatus> i = results.GetEnumerator();
+							if(i.MoveNext())
+								homePage.SetStatus(i.Current);
+							Phoenix.Application.InfoManager.Fetch((infoResults, ex2) => {
+								if(ex2 == null){
+									Phoenix.Application.StarSystemManager.Fetch((systemResults, ex3) => {
+										if(ex3 == null){
+											Phoenix.Application.OrderTypeManager.Fetch((orderTypeResults, ex4) => {
+												if(ex4 == null){
+													Device.BeginInvokeOnMainThread(() => {
+														activityIndicator.IsRunning = false;
+														App.NavigationPage.PushAsync(homePage);
+													});
+												}
+												else {
+													#if DEBUG
+													ShowErrorAlert(ex4);
+													#else
+													ShowErrorAlert("Problem connecting to Nexus");
+													#endif
+												}
+
+											});
+										}
+										else {
+											#if DEBUG
+											ShowErrorAlert(ex3);
+											#else
+											ShowErrorAlert("Problem connecting to Nexus");
+											#endif
+										}
+									});
+								}
+								else {
+									#if DEBUG
+									ShowErrorAlert(ex2);
+									#else
+									ShowErrorAlert("Problem connecting to Nexus");
+									#endif
+								}
 							});
-						});
-					}
-					else {
+						}
+						else {
+							#if DEBUG
+							ShowErrorAlert(ex);
+							#else
+							ShowErrorAlert("Problem connecting to Nexus");
+							#endif
+						}
+
+					});
+				}
+				else {
+					// show home and refresh data in background
+					Phoenix.Application.GameStatusManager.First((result) => {
 						Device.BeginInvokeOnMainThread(() => {
 							activityIndicator.IsRunning = false;
 							App.NavigationPage.PushAsync(homePage);
 						});
-					}
-				}, true); // clear all previous status messages
+					});
+
+					Phoenix.Application.GameStatusManager.Fetch ((results, ex) => {
+						IEnumerator<GameStatus> i = results.GetEnumerator();
+						if(i.MoveNext())
+							homePage.SetStatus(i.Current);
+					}, true);
+					Phoenix.Application.InfoManager.Fetch((infoResults, ex2) => {});
+					Phoenix.Application.OrderTypeManager.Fetch((orderTypeResults, ex4) => {});
+				}
 			});
 		}
 

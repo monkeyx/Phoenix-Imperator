@@ -139,7 +139,7 @@ namespace PhoenixImperator
 		{
 			var httpClient = new HttpClient(new NativeMessageHandler());
 			httpClient.Timeout = TimeSpan.FromSeconds(30);
-			return httpClient.GetStreamAsync (new Uri (url));
+			return httpClient.GetStreamAsync (url);
 		}
 
 		/// <summary>
@@ -152,7 +152,7 @@ namespace PhoenixImperator
 		{
 			var httpClient = new HttpClient(new NativeMessageHandler());
 			httpClient.Timeout = TimeSpan.FromSeconds(30);
-			return httpClient.PostAsync(new Uri(url),new StringContent(dto.ToString()));
+			return httpClient.PostAsync(url,new StringContent(dto.ToString()));
 		}
 
 		/// <summary>

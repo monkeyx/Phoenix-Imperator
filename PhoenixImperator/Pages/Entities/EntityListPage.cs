@@ -36,7 +36,7 @@ using Phoenix.Util;
 
 namespace PhoenixImperator.Pages.Entities
 {
-	public class EntityListPage<T> : ContentPage where T :   EntityBase, new()
+	public class EntityListPage<T> : PhoenixPage where T :   EntityBase, new()
 	{
 		/// <summary>
 		/// Gets or sets a value indicating whether this <see cref="PhoenixImperator.Pages.Entities.EntityListPage`1"/> entity
@@ -59,18 +59,30 @@ namespace PhoenixImperator.Pages.Entities
 				GroupDisplayBinding = new Binding ("GroupName"),
 				GroupShortNameBinding = new Binding ("GroupShortName")
 			};
+			listView.ItemTemplate = new DataTemplate (typeof(TextCell));
+			listView.ItemTemplate.SetBinding (TextCell.TextProperty, "ListText");
+			listView.ItemTemplate.SetBinding (TextCell.DetailProperty, "ListDetail");
 			listView.IsPullToRefreshEnabled = true;
 			listView.ItemsSource = GroupEntities(entities);
 
 			listView.RefreshCommand = new Command ((e) => {
 				refreshHelpText.IsVisible = false;
 				if(!isSearching) {
-					manager.Fetch((results) => {
-						Device.BeginInvokeOnMainThread (() => {
-							listView.IsRefreshing = false;
-							refreshHelpText.IsVisible = true;
-							listView.ItemsSource = GroupEntities(results);
-						});
+					manager.Fetch((results, ex) => {
+						if(ex == null){
+							Device.BeginInvokeOnMainThread (() => {
+								listView.IsRefreshing = false;
+								refreshHelpText.IsVisible = true;
+								listView.ItemsSource = GroupEntities(results);
+							});
+						}
+						else {
+							#if DEBUG
+							ShowErrorAlert(ex);
+							#else
+							ShowErrorAlert("Problem connecting to Nexus");
+							#endif
+						}
 					},true);
 				}
 				else {

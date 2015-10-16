@@ -46,8 +46,8 @@ namespace PhoenixImperator.Pages.Entities
 
 				ListView listView = new ListView ();
 				listView.ItemTemplate = new DataTemplate (typeof(TextCell));
-				listView.ItemTemplate.SetBinding (TextCell.TextProperty, "NameAndId");
-				listView.ItemTemplate.SetBinding (TextCell.DetailProperty, "Location");
+				listView.ItemTemplate.SetBinding (TextCell.TextProperty, "ListText");
+				listView.ItemTemplate.SetBinding (TextCell.DetailProperty, "ListDetail");
 				listView.ItemsSource = item.CelestialBodies;
 				currentLayout.Children.Add (listView);
 			}
@@ -57,8 +57,8 @@ namespace PhoenixImperator.Pages.Entities
 
 				ListView listView = new ListView ();
 				listView.ItemTemplate = new DataTemplate (typeof(TextCell));
-				listView.ItemTemplate.SetBinding (TextCell.TextProperty, "ToStarSystemName");
-				listView.ItemTemplate.SetBinding (TextCell.DetailProperty, "DistanceString");
+				listView.ItemTemplate.SetBinding (TextCell.TextProperty, "ListText");
+				listView.ItemTemplate.SetBinding (TextCell.DetailProperty, "ListDetail");
 				listView.ItemsSource = item.JumpLinks;
 
 				listView.ItemTapped += (sender, e) => {
@@ -85,8 +85,8 @@ namespace PhoenixImperator.Pages.Entities
 						};
 						positionListView = new ListView ();
 						positionListView.ItemTemplate = new DataTemplate (typeof(TextCell));
-						positionListView.ItemTemplate.SetBinding (TextCell.TextProperty, "NameAndId");
-						positionListView.ItemTemplate.SetBinding (TextCell.DetailProperty, "LocationText");
+						positionListView.ItemTemplate.SetBinding (TextCell.TextProperty, "ListText");
+						positionListView.ItemTemplate.SetBinding (TextCell.DetailProperty, "ListDetail");
 						positionListView.ItemsSource = results;
 						positionListView.ItemTapped += (sender, e) => {
 							Log.WriteLine (Log.Layer.UI, this.GetType (), "Tapped: " + e.Item);
