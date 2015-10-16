@@ -63,17 +63,26 @@ namespace PhoenixImperator.Pages.Entities
 					browser.Source = htmlSource;
 					AddContentTab("Turn Report");
 					currentTab.Content = browser;
+
+					AddContentTab("Orders");
+					ordersList = new ListView ();
+					ordersList.ItemTemplate = new DataTemplate (typeof(TextCell));
+					ordersList.ItemTemplate.SetBinding (TextCell.TextProperty, "ListText");
+					ordersList.ItemTemplate.SetBinding (TextCell.DetailProperty, "ListDetail");
+					currentLayout.Children.Add(ordersList);
 				});
 			});
 
+
+
 			Phoenix.Application.OrderManager.AllForPosition (item.Id, (results) => {
 				if(results.Count > 0){
-					DisplayOrders(results);
+					UpdateOrdersList(results);
 				}
 				else {
 					Phoenix.Application.OrderManager.FetchForPosition(item.Id,(fetchResults,ex) => {
 						if(ex == null){
-							DisplayOrders(fetchResults);
+							UpdateOrdersList(fetchResults);
 						}
 						else {
 							#if DEBUG
@@ -87,18 +96,14 @@ namespace PhoenixImperator.Pages.Entities
 			});
 		}
 
-		private void DisplayOrders(IEnumerable<Order> orders)
+		private void UpdateOrdersList(IEnumerable<Order> orders)
 		{
 			Device.BeginInvokeOnMainThread (() => {
-				AddContentTab("Orders");
-				ListView listView = new ListView ();
-				listView.ItemTemplate = new DataTemplate (typeof(TextCell));
-				listView.ItemTemplate.SetBinding (TextCell.TextProperty, "ListText");
-				listView.ItemTemplate.SetBinding (TextCell.DetailProperty, "ListDetail");
-				listView.ItemsSource = orders;
-				currentLayout.Children.Add(listView);
+				ordersList.ItemsSource = orders;
 			});
 		}
+
+		private ListView ordersList;
 	}
 }
 

@@ -127,9 +127,9 @@ namespace PhoenixImperator.Pages.Entities
 			Content = new StackLayout { 
 				Children = {
 					searchBar,
+					activityIndicator,
 					listView,
-					refreshHelpText,
-					activityIndicator
+					refreshHelpText
 				}
 			};
 		}

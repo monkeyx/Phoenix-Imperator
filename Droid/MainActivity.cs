@@ -45,6 +45,8 @@ namespace PhoenixImperator.Droid
 			global::Xamarin.Forms.Forms.Init (this, bundle);
 
 			LoadApplication (new App ());
+
+			this.Window.SetFlags(WindowManagerFlags.KeepScreenOn, WindowManagerFlags.KeepScreenOn);
 		}
 	}
 }

@@ -5,7 +5,7 @@
 	<key>CFBundleDisplayName</key>
 	<string>Phoenix Imperator</string>
 	<key>CFBundleIdentifier</key>
-	<string>co.monkeyx.phoenix_imperator</string>
+	<string>co.monkeyx.phoenix.imperator</string>
 	<key>CFBundleShortVersionString</key>
 	<string>1.0</string>
 	<key>CFBundleVersion</key>

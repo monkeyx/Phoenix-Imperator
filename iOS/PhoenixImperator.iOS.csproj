@@ -59,6 +59,10 @@
     <MtouchDebug>true</MtouchDebug>
     <IpaPackageName>
     </IpaPackageName>
+    <MtouchUseRefCounting>true</MtouchUseRefCounting>
+    <MtouchI18n>
+    </MtouchI18n>
+    <CodesignProvision>e46aaec3-7d26-4458-ae4c-3b25d838cc76</CodesignProvision>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />

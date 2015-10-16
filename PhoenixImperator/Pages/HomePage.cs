@@ -132,10 +132,10 @@ namespace PhoenixImperator.Pages
 
 			Content = new StackLayout { 
 				Children = {
+					activityIndicator,
 					header,
 					navigationList,
-					refreshHelpText,
-					activityIndicator
+					refreshHelpText
 				}
 			};
 		}

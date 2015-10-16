@@ -46,6 +46,8 @@ namespace PhoenixImperator.iOS
 
 			LoadApplication (new App ());
 
+			UIApplication.SharedApplication.IdleTimerDisabled = true;
+
 			return base.FinishedLaunching (app, options);
 		}
 	}
