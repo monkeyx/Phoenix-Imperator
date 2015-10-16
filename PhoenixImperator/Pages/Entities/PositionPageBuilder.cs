@@ -56,6 +56,13 @@ namespace PhoenixImperator.Pages.Entities
 			}
 
 			AddContentTab("Turn Report");
+			ActivityIndicator turnReportActivity = new ActivityIndicator {
+				IsEnabled = true,
+				IsRunning = true,
+				BindingContext = currentTab
+			};
+			currentLayout.Children.Add (turnReportActivity);
+
 			View reportContent = currentTab.Content;
 
 			Phoenix.Application.PositionManager.GetTurnReport (item.Id, (turn) => {
@@ -65,10 +72,19 @@ namespace PhoenixImperator.Pages.Entities
 					htmlSource.Html = turn;
 					browser.Source = htmlSource;
 					reportContent = browser;
+					turnReportActivity.IsEnabled = false;
+					turnReportActivity.IsRunning = false;
 				});
 			});
 
 			AddContentTab("Orders");
+			ActivityIndicator ordersActivity = new ActivityIndicator {
+				IsEnabled = true,
+				IsRunning = true,
+				BindingContext = currentTab
+			};
+			currentLayout.Children.Add (ordersActivity);
+
 			ordersList = new ListView ();
 			ordersList.ItemTemplate = new DataTemplate (typeof(TextCell));
 			ordersList.ItemTemplate.SetBinding (TextCell.TextProperty, "ListText");
@@ -77,10 +93,14 @@ namespace PhoenixImperator.Pages.Entities
 
 			Phoenix.Application.OrderManager.AllForPosition (item.Id, (results) => {
 				if(results.Count > 0){
+					ordersActivity.IsEnabled = false;
+					ordersActivity.IsRunning = false;
 					UpdateOrdersList(results);
 				}
 				else {
 					Phoenix.Application.OrderManager.FetchForPosition(item.Id,(fetchResults,ex) => {
+						ordersActivity.IsEnabled = false;
+						ordersActivity.IsRunning = false;
 						if(ex == null){
 							UpdateOrdersList(fetchResults);
 						}
