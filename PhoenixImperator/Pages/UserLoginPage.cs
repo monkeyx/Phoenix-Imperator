@@ -71,6 +71,11 @@ namespace PhoenixImperator.Pages
 				FontAttributes = FontAttributes.Bold
 			};
 
+			statusMessage = new Label {
+				XAlign = TextAlignment.Center,
+				Text = ""
+			};
+
 			userIdEntry = new Entry {
 				Placeholder = "User ID",
 				HorizontalOptions = LayoutOptions.FillAndExpand,
@@ -113,7 +118,8 @@ namespace PhoenixImperator.Pages
 					header,
 					userIdEntry,
 					userCodeEntry,
-					loginButton
+					loginButton,
+					statusMessage
 				}
 			};
 		}
@@ -127,122 +133,62 @@ namespace PhoenixImperator.Pages
 			Phoenix.Application.UserManager.Save (this.UserId, this.UserCode, (user) => {
 				Phoenix.Application.UserLoggedIn(user);
 
-				HomePage homePage = new HomePage();
+				homePage = new HomePage();
 
 				if(Phoenix.Application.GameStatusManager.Count() < 1){
 					// fresh setup
 					ShowInfoAlert("Set Up", "This is the first time getting information from Nexus so this may take a bit of time. Please be patient");
+					header.Text = "Setting Up. Please be patient.";
 					Phoenix.Application.GameStatusManager.Fetch ((results, ex) => {
 						if(ex == null){
-							Device.BeginInvokeOnMainThread(() => {
-								header.Text = "Please be patient. Fetched game status. Now fetching info (2/6).";
-							});
+							UpdateStatusMessage("Fetched game status. Now fetching info (2/6)");
 							IEnumerator<GameStatus> i = results.GetEnumerator();
 							if(i.MoveNext())
 								homePage.SetStatus(i.Current);
 							Phoenix.Application.InfoManager.Fetch((infoResults, ex2) => {
-								Device.BeginInvokeOnMainThread(() => {
-									header.Text = "Please be patient. Fetched info data. Now fetching star systems (3/6).";
-								});
+								UpdateStatusMessage("Fetched info data. Now fetching star systems (3/6)");
 								if(ex2 == null){
 									Phoenix.Application.StarSystemManager.Fetch((systemResults, ex3) => {
-										Device.BeginInvokeOnMainThread(() => {
-											header.Text = "Please be patient. Fetched star systems. Now fetching order types (4/6).";
-										});
+										UpdateStatusMessage("Fetched star systems. Now fetching order types (4/6)");
 										if(ex3 == null){
 											Phoenix.Application.OrderTypeManager.Fetch((orderTypeResults, ex4) => {
 												if(ex4 == null){
-													Device.BeginInvokeOnMainThread(() => {
-														header.Text = "Please be patient. Fetched order types. Now fetching items (5/6).";
-													});
+													UpdateStatusMessage("Fetched order types. Now fetching items (5/6)");
 													Phoenix.Application.ItemManager.Fetch((itemResults, ex5) => {
 														if(ex5 == null){
-															Device.BeginInvokeOnMainThread(() => {
-																header.Text = "Please be patient. Fetched items. Now fetching positions (6/6).";
-															});
+															UpdateStatusMessage("Fetched items. Now fetching positions (6/6)");
 															Phoenix.Application.PositionManager.Fetch((positionResults, ex6) => {
 																if(ex6 == null){
-																	Device.BeginInvokeOnMainThread(() => {
-																		activityIndicator.IsRunning = false;
-																		App.NavigationPage.PushAsync(homePage);
-																	});
+																	ShowHomePage();
 																}
 																else {
-																	#if DEBUG
-																	ShowErrorAlert(ex6);
-																	#else
-																	ShowErrorAlert("Problem connecting to Nexus");
-																	#endif
-																	Device.BeginInvokeOnMainThread(() => {
-																		activityIndicator.IsRunning = false;
-																		App.NavigationPage.PushAsync(homePage);
-																	});
+																	ShowErrorAndThenHome(ex6);
 																}
 															});
 														}
 														else {
-															#if DEBUG
-															ShowErrorAlert(ex5);
-															#else
-															ShowErrorAlert("Problem connecting to Nexus");
-															#endif
-															Device.BeginInvokeOnMainThread(() => {
-																activityIndicator.IsRunning = false;
-																App.NavigationPage.PushAsync(homePage);
-															});
+															ShowErrorAndThenHome(ex5);
 														}
 													});
 												}
 												else {
-													#if DEBUG
-													ShowErrorAlert(ex4);
-													#else
-													ShowErrorAlert("Problem connecting to Nexus");
-													#endif
-													Device.BeginInvokeOnMainThread(() => {
-														activityIndicator.IsRunning = false;
-														App.NavigationPage.PushAsync(homePage);
-													});
+													ShowErrorAndThenHome(ex4);
 												}
 
 											});
 										}
 										else {
-											#if DEBUG
-											ShowErrorAlert(ex3);
-											#else
-											ShowErrorAlert("Problem connecting to Nexus");
-											#endif
-											Device.BeginInvokeOnMainThread(() => {
-												activityIndicator.IsRunning = false;
-												App.NavigationPage.PushAsync(homePage);
-											});
+											ShowErrorAndThenHome(ex3);
 										}
 									});
 								}
 								else {
-									#if DEBUG
-									ShowErrorAlert(ex2);
-									#else
-									ShowErrorAlert("Problem connecting to Nexus");
-									#endif
-									Device.BeginInvokeOnMainThread(() => {
-										activityIndicator.IsRunning = false;
-										App.NavigationPage.PushAsync(homePage);
-									});
+									ShowErrorAndThenHome(ex2);
 								}
 							});
 						}
 						else {
-							#if DEBUG
-							ShowErrorAlert(ex);
-							#else
-							ShowErrorAlert("Problem connecting to Nexus");
-							#endif
-							Device.BeginInvokeOnMainThread(() => {
-								activityIndicator.IsRunning = false;
-								App.NavigationPage.PushAsync(homePage);
-							});
+							ShowErrorAndThenHome(ex);
 						}
 
 					});
@@ -250,21 +196,50 @@ namespace PhoenixImperator.Pages
 				else {
 					// show home page
 					Phoenix.Application.GameStatusManager.First((result) => {
-						Device.BeginInvokeOnMainThread(() => {
-							activityIndicator.IsRunning = false;
-							homePage.SetStatus(result);
-							App.NavigationPage.PushAsync(homePage);
-						});
+						homePage.SetStatus(result);
+						ShowHomePage();
 					});
 				}
 			});
 		}
 
+		private void UpdateStatusMessage(string message)
+		{
+			Device.BeginInvokeOnMainThread(() => {
+				statusMessage.Text = message;
+			});
+		}
+
+		private void ShowErrorAndThenHome(object error)
+		{
+			#if DEBUG
+			ShowErrorAlert(error);
+			#else
+			ShowErrorAlert("Problem connecting to Nexus");
+			#endif
+			ShowHomePage ();
+		}
+
+		private void ShowHomePage()
+		{
+			Device.BeginInvokeOnMainThread (() => {
+				activityIndicator.IsRunning = false;
+				userIdEntry.IsEnabled = true;
+				userCodeEntry.IsEnabled = true;
+				loginButton.IsEnabled = true;
+				statusMessage.Text = "";
+				header.Text = "Login";
+				App.NavigationPage.PushAsync (homePage);
+			});
+		}
+
 		private Label header;
+		private Label statusMessage;
 		private Entry userIdEntry;
 		private Entry userCodeEntry;
 		private Button loginButton;
 		private ActivityIndicator activityIndicator;
+		private HomePage homePage;
 	}
 }
 

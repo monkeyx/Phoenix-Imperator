@@ -55,25 +55,25 @@ namespace PhoenixImperator.Pages.Entities
 				AddProperty ("Design", item.Design);
 			}
 
+			AddContentTab("Turn Report");
+			View reportContent = currentTab.Content;
+
 			Phoenix.Application.PositionManager.GetTurnReport (item.Id, (turn) => {
 				Device.BeginInvokeOnMainThread(() => {
 					WebView browser = new WebView();
 					HtmlWebViewSource htmlSource = new HtmlWebViewSource();
 					htmlSource.Html = turn;
 					browser.Source = htmlSource;
-					AddContentTab("Turn Report");
-					currentTab.Content = browser;
-
-					AddContentTab("Orders");
-					ordersList = new ListView ();
-					ordersList.ItemTemplate = new DataTemplate (typeof(TextCell));
-					ordersList.ItemTemplate.SetBinding (TextCell.TextProperty, "ListText");
-					ordersList.ItemTemplate.SetBinding (TextCell.DetailProperty, "ListDetail");
-					currentLayout.Children.Add(ordersList);
+					reportContent = browser;
 				});
 			});
 
-
+			AddContentTab("Orders");
+			ordersList = new ListView ();
+			ordersList.ItemTemplate = new DataTemplate (typeof(TextCell));
+			ordersList.ItemTemplate.SetBinding (TextCell.TextProperty, "ListText");
+			ordersList.ItemTemplate.SetBinding (TextCell.DetailProperty, "ListDetail");
+			currentLayout.Children.Add(ordersList);
 
 			Phoenix.Application.OrderManager.AllForPosition (item.Id, (results) => {
 				if(results.Count > 0){
