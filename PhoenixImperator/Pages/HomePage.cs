@@ -79,6 +79,8 @@ namespace PhoenixImperator.Pages
 				#endif
 			};
 
+			navigationList.IsPullToRefreshEnabled = true;
+
 			navigationList.ItemTapped += (sender, e) => {
 				Log.WriteLine(Log.Layer.UI, this.GetType(), "Tapped: " + e.Item);
 				((ListView)sender).SelectedItem = null; // de-select the row
@@ -99,13 +101,31 @@ namespace PhoenixImperator.Pages
 					ShowPage<StarSystem> (e.Item.ToString(), Phoenix.Application.StarSystemManager);
 					break;
 				}
-
 			};
+
+			navigationList.RefreshCommand = new Command ((e) => {
+				refreshHelpText.IsVisible = false;
+				Phoenix.Application.GameStatusManager.Fetch ((results, ex) => {
+					IEnumerator<GameStatus> i = results.GetEnumerator();
+					if(i.MoveNext())
+						SetStatus(i.Current);
+					refreshHelpText.IsVisible = true;
+					navigationList.IsRefreshing = false;
+				}, true);
+				Phoenix.Application.InfoManager.Fetch((infoResults, ex2) => {});
+				Phoenix.Application.OrderTypeManager.Fetch((orderTypeResults, ex4) => {});
+			});
 
 			activityIndicator = new ActivityIndicator {
 				IsEnabled = true,
 				IsRunning = false,
 				BindingContext = this
+			};
+
+			refreshHelpText = new Label {
+				HorizontalOptions = LayoutOptions.Center,
+				Text = "Pull down to check Nexus status",
+				FontAttributes = FontAttributes.Italic
 			};
 
 			this.Padding = new Thickness(10, Device.OnPlatform(20, 0, 0), 10, 5);
@@ -114,6 +134,7 @@ namespace PhoenixImperator.Pages
 				Children = {
 					header,
 					navigationList,
+					refreshHelpText,
 					activityIndicator
 				}
 			};
@@ -156,6 +177,7 @@ namespace PhoenixImperator.Pages
 		private Label starDateLabel;
 		private Label statusMessageLabel;
 		private ActivityIndicator activityIndicator;
+		private Label refreshHelpText;
 	}
 }
 

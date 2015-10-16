@@ -184,21 +184,14 @@ namespace PhoenixImperator.Pages
 					});
 				}
 				else {
-					// show home and refresh data in background
+					// show home page
 					Phoenix.Application.GameStatusManager.First((result) => {
 						Device.BeginInvokeOnMainThread(() => {
 							activityIndicator.IsRunning = false;
+							homePage.SetStatus(result);
 							App.NavigationPage.PushAsync(homePage);
 						});
 					});
-
-					Phoenix.Application.GameStatusManager.Fetch ((results, ex) => {
-						IEnumerator<GameStatus> i = results.GetEnumerator();
-						if(i.MoveNext())
-							homePage.SetStatus(i.Current);
-					}, true);
-					Phoenix.Application.InfoManager.Fetch((infoResults, ex2) => {});
-					Phoenix.Application.OrderTypeManager.Fetch((orderTypeResults, ex4) => {});
 				}
 			});
 		}

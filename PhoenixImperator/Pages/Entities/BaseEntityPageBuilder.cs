@@ -67,6 +67,20 @@ namespace PhoenixImperator.Pages.Entities
 		protected PhoenixPage currentTab;
 		protected StackLayout currentLayout;
 
+		protected void ShowInfoAlert(string title, object info)
+		{
+			Device.BeginInvokeOnMainThread(() => {
+				currentTab.ShowInfoAlert(title,info);
+			});
+		}
+
+		protected void ShowErrorAlert(object error)
+		{
+			Device.BeginInvokeOnMainThread(() => {
+				currentTab.ShowErrorAlert(error);
+			});
+		}
+
 		protected void AddContentTab(string title)
 		{
 			currentLayout = new StackLayout {

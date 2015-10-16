@@ -40,20 +40,6 @@ namespace PhoenixImperator
 			Entity = entity;
 			Title = entity.ToString ();
 		}
-
-		public void ShowInfoAlert(string title, object info)
-		{
-			Device.BeginInvokeOnMainThread(() => {
-				DisplayAlert(title, info.ToString(),"OK");
-			});
-		}
-
-		public void ShowErrorAlert(object error)
-		{
-			Device.BeginInvokeOnMainThread(() => {
-				DisplayAlert("Problem", error.ToString(),"OK");
-			});
-		}
 	}
 }
 

@@ -65,6 +65,39 @@ namespace PhoenixImperator.Pages.Entities
 					currentTab.Content = browser;
 				});
 			});
+
+			Phoenix.Application.OrderManager.AllForPosition (item.Id, (results) => {
+				if(results.Count > 0){
+					DisplayOrders(results);
+				}
+				else {
+					Phoenix.Application.OrderManager.FetchForPosition(item.Id,(fetchResults,ex) => {
+						if(ex == null){
+							DisplayOrders(fetchResults);
+						}
+						else {
+							#if DEBUG
+							ShowErrorAlert(ex);
+							#else
+							ShowErrorAlert("Problem connecting to Nexus");
+							#endif
+						}
+					});
+				}
+			});
+		}
+
+		private void DisplayOrders(IEnumerable<Order> orders)
+		{
+			Device.BeginInvokeOnMainThread (() => {
+				AddContentTab("Orders");
+				ListView listView = new ListView ();
+				listView.ItemTemplate = new DataTemplate (typeof(TextCell));
+				listView.ItemTemplate.SetBinding (TextCell.TextProperty, "ListText");
+				listView.ItemTemplate.SetBinding (TextCell.DetailProperty, "ListDetail");
+				listView.ItemsSource = orders;
+				currentLayout.Children.Add(listView);
+			});
 		}
 	}
 }
