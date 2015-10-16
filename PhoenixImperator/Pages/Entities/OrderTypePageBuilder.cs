@@ -39,7 +39,7 @@ namespace PhoenixImperator.Pages.Entities
 		{
 			AddContentTab ("General");
 			AddProperty ("Type", item.TypeFlag.ToString ());
-			AddProperty ("Position", item.GetPositionType ());
+			AddPropertyDoubleLine ("Position(s)", item.PositionType);
 			AddProperty ("TU Cost", item.TUCost.ToString ());
 
 			AddContentTab ("Description");
