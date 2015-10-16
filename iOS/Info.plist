@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDisplayName</key>
-	<string>Phoenix Imperator</string>
+	<string>Imperator</string>
 	<key>CFBundleIdentifier</key>
 	<string>co.monkeyx.phoenix.imperator</string>
 	<key>CFBundleShortVersionString</key>

@@ -42,18 +42,23 @@ namespace PhoenixImperator.Pages.Entities
 		protected override void DisplayEntity(StarSystem item)
 		{
 			if (item.CelestialBodies.Count > 0) {
-				AddContentTab ("Celestial Bodies");
+				AddContentTab ("Celestial Bodies","icon_celestialbodies.png");
 
 				ListView listView = new ListView ();
 				listView.ItemTemplate = new DataTemplate (typeof(TextCell));
 				listView.ItemTemplate.SetBinding (TextCell.TextProperty, "ListText");
 				listView.ItemTemplate.SetBinding (TextCell.DetailProperty, "ListDetail");
 				listView.ItemsSource = item.CelestialBodies;
+
+				listView.ItemTapped += (sender, e) => {
+					Log.WriteLine(Log.Layer.UI, this.GetType(), "Tapped: " + e.Item);
+					((ListView)sender).SelectedItem = null; // de-select the row
+				};
 				currentLayout.Children.Add (listView);
 			}
 
 			if (item.JumpLinks.Count > 0) {
-				AddContentTab ("Jump Links");
+				AddContentTab ("Jump Links","icon_jumplink.png");
 
 				ListView listView = new ListView ();
 				listView.ItemTemplate = new DataTemplate (typeof(TextCell));
@@ -75,7 +80,7 @@ namespace PhoenixImperator.Pages.Entities
 				allPositions = results;
 				if(results.GetEnumerator().MoveNext()){
 					Device.BeginInvokeOnMainThread (() => {
-						AddContentTab ("Positions");
+						AddContentTab ("Positions","icon_positions.png");
 						SearchBar searchBar = new SearchBar () {
 							Placeholder = "Search"
 						};

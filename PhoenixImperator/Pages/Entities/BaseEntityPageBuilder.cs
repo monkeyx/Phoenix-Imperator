@@ -81,14 +81,15 @@ namespace PhoenixImperator.Pages.Entities
 			});
 		}
 
-		protected void AddContentTab(string title)
+		protected void AddContentTab(string title, string icon)
 		{
 			currentLayout = new StackLayout {
 				Padding = new Thickness (10)
 			};
 			currentTab = new PhoenixPage {
 				Content = currentLayout,
-				Title = title
+				Title = title,
+				Icon = icon
 			};
 			entityPage.Children.Add (currentTab);
 		}

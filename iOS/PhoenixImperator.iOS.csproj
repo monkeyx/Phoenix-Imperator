@@ -22,6 +22,10 @@
     <MtouchArch>i386</MtouchArch>
     <MtouchLink>None</MtouchLink>
     <MtouchDebug>true</MtouchDebug>
+    <CodesignKey>iPhone Developer</CodesignKey>
+    <MtouchUseRefCounting>true</MtouchUseRefCounting>
+    <MtouchI18n>
+    </MtouchI18n>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|iPhone' ">
     <DebugType>full</DebugType>
@@ -139,6 +143,17 @@
     <BundleResource Include="Resources\Icon-72%402x.png" />
     <BundleResource Include="Resources\Icon-Small-50.png" />
     <BundleResource Include="Resources\Icon-Small-50%402x.png" />
+    <BundleResource Include="Resources\logo.png" />
+    <BundleResource Include="Resources\logo%402x.png" />
+    <BundleResource Include="Resources\icon_report.png" />
+    <BundleResource Include="Resources\icon_production.png" />
+    <BundleResource Include="Resources\icon_celestialbodies.png" />
+    <BundleResource Include="Resources\icon_positions.png" />
+    <BundleResource Include="Resources\icon_more.png" />
+    <BundleResource Include="Resources\icon_orders.png" />
+    <BundleResource Include="Resources\icon_jumplink.png" />
+    <BundleResource Include="Resources\icon_general.png" />
+    <BundleResource Include="Resources\icon_techmanual.png" />
   </ItemGroup>
   <ItemGroup>
     <InterfaceDefinition Include="Resources\LaunchScreen.storyboard" />

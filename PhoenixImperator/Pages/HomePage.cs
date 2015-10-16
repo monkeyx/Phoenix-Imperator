@@ -51,8 +51,17 @@ namespace PhoenixImperator.Pages
 		{
 			Title = "Home";
 
-			starDateLabel = new Label ();
-			statusMessageLabel = new Label ();
+			BackgroundColor = Color.Black;
+
+			Image logo = new Image { Aspect = Aspect.AspectFill };
+			logo.Source = ImageSource.FromFile ("logo.png");
+
+			starDateLabel = new Label {
+				TextColor = Color.Silver
+			};
+			statusMessageLabel = new Label {
+				TextColor = Color.Silver
+			};
 
 			StackLayout header = new StackLayout {
 				Orientation = StackOrientation.Horizontal,
@@ -60,20 +69,24 @@ namespace PhoenixImperator.Pages
 				Children = {
 					new Label{
 						Text = "Status:",
-						FontAttributes = FontAttributes.Bold
+						FontAttributes = FontAttributes.Bold,
+						TextColor = Color.White
 					},
 					statusMessageLabel,
 					new Label{
 						Text = "Star Date:",
-						FontAttributes = FontAttributes.Bold
+						FontAttributes = FontAttributes.Bold,
+						TextColor = Color.White
 					},
 					starDateLabel
 				}
 			};
 
 			ListView navigationList = new ListView () {
+				BackgroundColor = Color.Gray,
+				SeparatorColor = Color.Silver,
 				#if DEBUG
-				ItemsSource = new [] {"Positions", "Orders", "Items", "Star Systems", "Order Types [DEBUG]", "Info [DEBUG]"}
+				ItemsSource = new [] {"Positions", "Orders", "Items", "Star Systems", "Order Types", "Info"}
 				#else
 				ItemsSource = new [] {"Positions", "Orders", "Items", "Star Systems"}
 				#endif
@@ -88,13 +101,13 @@ namespace PhoenixImperator.Pages
 				case "Positions":
 					ShowPage<Position> (e.Item.ToString(), Phoenix.Application.PositionManager);
 					break;
-				case "Order Types [DEBUG]":
+				case "Order Types":
 					ShowPage<OrderType> (e.Item.ToString(), Phoenix.Application.OrderTypeManager);
 					break;
 				case "Items":
 					ShowPage<Item> (e.Item.ToString(), Phoenix.Application.ItemManager);
 					break;
-				case "Info [DEBUG]":
+				case "Info":
 					ShowPage<InfoData> (e.Item.ToString(), Phoenix.Application.InfoManager,false);
 					break;
 				case "Star Systems":
@@ -125,6 +138,7 @@ namespace PhoenixImperator.Pages
 			refreshHelpText = new Label {
 				HorizontalOptions = LayoutOptions.Center,
 				Text = "Pull down to check Nexus status",
+				TextColor = Color.White,
 				FontAttributes = FontAttributes.Italic
 			};
 
@@ -133,6 +147,7 @@ namespace PhoenixImperator.Pages
 			Content = new StackLayout { 
 				Children = {
 					activityIndicator,
+					logo,
 					header,
 					navigationList,
 					refreshHelpText

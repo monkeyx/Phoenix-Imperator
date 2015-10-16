@@ -37,14 +37,14 @@ namespace PhoenixImperator.Pages.Entities
 	{
 		protected override void DisplayEntity(Item item)
 		{
-			AddContentTab ("General");
+			AddContentTab ("General", "icon_general.png");
 			AddProperty ("Type", item.ItemType);
 			AddProperty ("Sub Type", item.SubType);
 			AddProperty ("Mass Units", item.MassUnits.ToString ());
 			AddProperty ("Race", item.Race);
 
 			if (item.Production > 0) {
-				AddContentTab ("Production");
+				AddContentTab ("Production", "icon_production.png");
 				AddProperty ("Production", item.Production.ToString ());
 				if (item.BlueprintId > 0) {
 					AddEntityProperty(Manager, item.BlueprintItem, "Blueprint");
@@ -61,11 +61,11 @@ namespace PhoenixImperator.Pages.Entities
 				}
 			}
 
-			AddContentTab ("Tech Manual");
+			AddContentTab ("Tech Manual", "icon_techmanual.png");
 			AddLabel (item.TechManual);
 
 			if (item.Properties.Count > 0) {
-				AddContentTab ("More");
+				AddContentTab ("More", "icon_more.png");
 				foreach (ItemProperty prop in item.Properties.Values) {
 					AddProperty (prop.Key, prop.Value);
 				}

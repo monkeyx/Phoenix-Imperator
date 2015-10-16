@@ -37,16 +37,16 @@ namespace PhoenixImperator.Pages.Entities
 	{
 		protected override void DisplayEntity(OrderType item)
 		{
-			AddContentTab ("General");
-			AddProperty ("Type", item.TypeFlag.ToString ());
+			AddContentTab ("General", "icon_general.png");
+			AddPropertyDoubleLine ("Type", item.TypeDescription);
 			AddPropertyDoubleLine ("Position(s)", item.PositionType);
 			AddProperty ("TU Cost", item.TUCost.ToString ());
 
-			AddContentTab ("Description");
+			AddContentTab ("Description", "icon_techmanual.png");
 			AddLabel (item.Description);
 
 			if (item.Parameters.Count > 0) {
-				AddContentTab ("Parameters");
+				AddContentTab ("Parameters", "icon_positions.png");
 
 				ListView listView = new ListView ();
 				listView.ItemTemplate = new DataTemplate (typeof(TextCell));

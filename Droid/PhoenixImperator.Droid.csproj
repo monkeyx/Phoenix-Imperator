@@ -25,7 +25,7 @@
     <DefineConstants>DEBUG;</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <AndroidLinkMode>None</AndroidLinkMode>
+    <AndroidLinkMode>Full</AndroidLinkMode>
     <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -117,6 +117,16 @@
     <AndroidResource Include="Resources\drawable-hdpi\icon.png" />
     <AndroidResource Include="Resources\drawable-xhdpi\icon.png" />
     <AndroidResource Include="Resources\drawable-xxhdpi\icon.png" />
+    <AndroidResource Include="Resources\drawable\logo.png" />
+    <AndroidResource Include="Resources\drawable\icon_report.png" />
+    <AndroidResource Include="Resources\drawable\icon_production.png" />
+    <AndroidResource Include="Resources\drawable\icon_celestialbodies.png" />
+    <AndroidResource Include="Resources\drawable\icon_positions.png" />
+    <AndroidResource Include="Resources\drawable\icon_more.png" />
+    <AndroidResource Include="Resources\drawable\icon_orders.png" />
+    <AndroidResource Include="Resources\drawable\icon_techmanual.png" />
+    <AndroidResource Include="Resources\drawable\icon_jumplink.png" />
+    <AndroidResource Include="Resources\drawable\icon_general.png" />
   </ItemGroup>
   <Import Project="..\PhoenixImperator\PhoenixImperator.projitems" Label="Shared" Condition="Exists('..\PhoenixImperator\PhoenixImperator.projitems')" />
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />

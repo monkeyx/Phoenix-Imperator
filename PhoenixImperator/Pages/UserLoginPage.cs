@@ -56,13 +56,16 @@ namespace PhoenixImperator.Pages
 
 		public UserLoginPage () : base()
 		{
-			Title = "Login";
+			BackgroundColor = Color.Black;
+
+			Image logo = new Image { Aspect = Aspect.AspectFill };
+			logo.Source = ImageSource.FromFile ("logo.png");
 
 			string headerText;
 			if (Phoenix.Application.UserManager.Count () < 1) {
 				headerText = "Setup your account";
 			} else {
-				headerText = "Login";
+				headerText = "";
 			}
 
 			header = new Label { 
@@ -96,6 +99,10 @@ namespace PhoenixImperator.Pages
 
 			loginButton = new Button {
 				Text = "Login",
+				Font = Font.SystemFontOfSize(NamedSize.Large),
+				FontAttributes = FontAttributes.Bold,
+				TextColor = Color.Black,
+				BackgroundColor = Color.White,
 				BorderWidth = 1,
 				HorizontalOptions = LayoutOptions.FillAndExpand,
 				VerticalOptions = LayoutOptions.CenterAndExpand
@@ -112,9 +119,10 @@ namespace PhoenixImperator.Pages
 			this.Padding = new Thickness(10, Device.OnPlatform(20, 0, 0), 10, 5);
 
 			Content = new StackLayout { 
-				VerticalOptions = LayoutOptions.Center,
+				VerticalOptions = LayoutOptions.StartAndExpand,
 				Children = {
 					activityIndicator,
+					logo,
 					header,
 					userIdEntry,
 					userCodeEntry,
@@ -229,7 +237,8 @@ namespace PhoenixImperator.Pages
 				loginButton.IsEnabled = true;
 				statusMessage.Text = "";
 				header.Text = "Login";
-				App.NavigationPage.PushAsync (homePage);
+				App.NavigationPage.PushAsync(homePage);
+
 			});
 		}
 

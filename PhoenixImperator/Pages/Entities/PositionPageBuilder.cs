@@ -38,7 +38,7 @@ namespace PhoenixImperator.Pages.Entities
 	{
 		protected override void DisplayEntity(Position item)
 		{
-			AddContentTab ("General");
+			AddContentTab ("General", "icon_general.png");
 			if (item.StarSystem != null) {
 				AddEntityProperty (Phoenix.Application.StarSystemManager, item.StarSystem, "Star System", item.SystemText);
 			} else {
@@ -57,7 +57,7 @@ namespace PhoenixImperator.Pages.Entities
 
 			Phoenix.Application.PositionManager.GetTurnReport (item.Id, (turn) => {
 				Device.BeginInvokeOnMainThread(() => {
-					AddContentTab("Turn Report");
+					AddContentTab("Turn Report", "icon_report.png");
 					WebView browser = new WebView();
 					HtmlWebViewSource htmlSource = new HtmlWebViewSource();
 					htmlSource.Html = turn;
@@ -66,19 +66,19 @@ namespace PhoenixImperator.Pages.Entities
 				});
 			});
 
-			AddContentTab("Orders");
+			AddContentTab("Orders", "icon_orders.png");
 			ActivityIndicator ordersActivity = new ActivityIndicator {
 				IsEnabled = true,
 				IsRunning = true,
 				BindingContext = currentTab
 			};
-			currentLayout.Children.Add (ordersActivity);
-
 			ordersList = new ListView ();
 			ordersList.ItemTemplate = new DataTemplate (typeof(TextCell));
 			ordersList.ItemTemplate.SetBinding (TextCell.TextProperty, "ListText");
 			ordersList.ItemTemplate.SetBinding (TextCell.DetailProperty, "ListDetail");
 			currentLayout.Children.Add(ordersList);
+
+			currentLayout.Children.Add (ordersActivity);
 
 			Phoenix.Application.OrderManager.AllForPosition (item.Id, (results) => {
 				if(results.Count > 0){

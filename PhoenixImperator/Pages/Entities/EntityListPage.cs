@@ -49,6 +49,8 @@ namespace PhoenixImperator.Pages.Entities
 		{
 			Title = title;
 
+			BackgroundColor = Color.Black;
+
 			EntityHasDetail = entityHasDetail;
 
 			allEntities = entities;
@@ -121,6 +123,7 @@ namespace PhoenixImperator.Pages.Entities
 			refreshHelpText = new Label {
 				HorizontalOptions = LayoutOptions.Center,
 				Text = "Pull down to refresh",
+				TextColor = Color.White,
 				FontAttributes = FontAttributes.Italic
 			};
 

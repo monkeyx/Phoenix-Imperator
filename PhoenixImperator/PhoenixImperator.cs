@@ -62,7 +62,10 @@ namespace PhoenixImperator
 			int userCount = Phoenix.Application.UserManager.Count ();
 			Log.WriteLine (Log.Layer.AL, typeof(App), "Users: " + userCount);
 			UserLoginPage userLoginPage = new UserLoginPage();
-			App.NavigationPage = new NavigationPage(userLoginPage);
+			App.NavigationPage = new NavigationPage(userLoginPage){
+				BarBackgroundColor = Color.Black,
+				BarTextColor = Color.White
+			};
 			MainPage = App.NavigationPage;
 			if (userCount > 0) {
 				Phoenix.Application.UserManager.First ((user) => {

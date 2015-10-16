@@ -34,6 +34,7 @@ namespace PhoenixImperator
 		public PhoenixPage ()
 		{
 			Padding = new Thickness (10, Device.OnPlatform (20, 0, 0), 10, 5);
+			BackgroundColor = Color.White;
 		}
 
 		public void ShowInfoAlert(string title, object info)

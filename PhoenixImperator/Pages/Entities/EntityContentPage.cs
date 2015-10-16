@@ -39,6 +39,8 @@ namespace PhoenixImperator
 		{
 			Entity = entity;
 			Title = entity.ToString ();
+
+			BackgroundColor = Color.White;
 		}
 	}
 }

@@ -175,6 +175,36 @@ namespace PhoenixImperator.Droid
 			// aapt resource value: 0x7f020002
 			public const int icon = 2130837506;
 			
+			// aapt resource value: 0x7f020003
+			public const int icon_celestialbodies = 2130837507;
+			
+			// aapt resource value: 0x7f020004
+			public const int icon_general = 2130837508;
+			
+			// aapt resource value: 0x7f020005
+			public const int icon_jumplink = 2130837509;
+			
+			// aapt resource value: 0x7f020006
+			public const int icon_more = 2130837510;
+			
+			// aapt resource value: 0x7f020007
+			public const int icon_orders = 2130837511;
+			
+			// aapt resource value: 0x7f020008
+			public const int icon_positions = 2130837512;
+			
+			// aapt resource value: 0x7f020009
+			public const int icon_production = 2130837513;
+			
+			// aapt resource value: 0x7f02000a
+			public const int icon_report = 2130837514;
+			
+			// aapt resource value: 0x7f02000b
+			public const int icon_techmanual = 2130837515;
+			
+			// aapt resource value: 0x7f02000c
+			public const int logo = 2130837516;
+			
 			static Drawable()
 			{
 				global::Android.Runtime.ResourceIdManager.UpdateIdValues();
