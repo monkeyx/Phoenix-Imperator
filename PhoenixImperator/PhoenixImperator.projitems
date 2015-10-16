@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>{E2E10124-85F6-4A72-A217-3222F4D12312}</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>PhoenixImperator</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)PhoenixImperator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Pages\HomePage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Pages\UserLoginPage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Pages\Entities\BaseEntityPageBuilder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Pages\Entities\EntityPageBuilderFactory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Pages\Entities\ItemPageBuilder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Pages\Entities\IEntityPageBuilder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Pages\Entities\OrderTypePageBuilder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Pages\Entities\PositionPageBuilder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Pages\Entities\StarSystemPageBuilder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Pages\Entities\EntityListPage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Pages\Entities\EntityContentPage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Pages\PhoenixPage.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)Pages\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Pages\Entities\" />
+    <Folder Include="$(MSBuildThisFileDirectory)UI\" />
+  </ItemGroup>
+</Project>
