@@ -55,25 +55,14 @@ namespace PhoenixImperator.Pages.Entities
 				AddProperty ("Design", item.Design);
 			}
 
-			AddContentTab("Turn Report");
-			ActivityIndicator turnReportActivity = new ActivityIndicator {
-				IsEnabled = true,
-				IsRunning = true,
-				BindingContext = currentTab
-			};
-			currentLayout.Children.Add (turnReportActivity);
-
-			View reportContent = currentTab.Content;
-
 			Phoenix.Application.PositionManager.GetTurnReport (item.Id, (turn) => {
 				Device.BeginInvokeOnMainThread(() => {
+					AddContentTab("Turn Report");
 					WebView browser = new WebView();
 					HtmlWebViewSource htmlSource = new HtmlWebViewSource();
 					htmlSource.Html = turn;
 					browser.Source = htmlSource;
-					reportContent = browser;
-					turnReportActivity.IsEnabled = false;
-					turnReportActivity.IsRunning = false;
+					currentTab.Content = browser;
 				});
 			});
 
