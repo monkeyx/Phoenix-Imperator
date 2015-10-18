@@ -1,5 +1,5 @@
 ﻿//
-// BasePhoenixPage.cs
+// OrderPositionsListPage.cs
 //
 // Author:
 //       Seyed Razavi <monkeyx@gmail.com>
@@ -24,30 +24,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 
 using Xamarin.Forms;
 
-namespace PhoenixImperator
+using Phoenix.BL.Entities;
+using Phoenix.BL.Managers;
+using Phoenix.Util;
+
+namespace PhoenixImperator.Pages.Entities
 {
-	public class PhoenixPage : ContentPage
+	public class OrderPositionsListPage : EntityListPage<Position>
 	{
-		public PhoenixPage ()
+		public OrderPositionsListPage (IEnumerable<Position> positions) : base("Orders",Phoenix.Application.PositionManager,positions,true,false)
 		{
-			BackgroundColor = Color.White;
-		}
-
-		public void ShowInfoAlert(string title, object info)
-		{
-			Device.BeginInvokeOnMainThread(() => {
-				DisplayAlert(title, info.ToString(),"OK");
-			});
-		}
-
-		public void ShowErrorAlert(object error)
-		{
-			Device.BeginInvokeOnMainThread(() => {
-				DisplayAlert("Problem", error.ToString(),"OK");
-			});
 		}
 	}
 }

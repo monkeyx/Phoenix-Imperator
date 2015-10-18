@@ -88,7 +88,7 @@ namespace PhoenixImperator.Pages
 				#if DEBUG
 				ItemsSource = new [] {"Positions", "Orders", "Items", "Star Systems", "Order Types", "Info"}
 				#else
-				ItemsSource = new [] {"Positions", "Orders", "Items", "Star Systems"}
+				ItemsSource = new [] {"Positions", "Orders", "Items", "Star Systems", "Order Types"}
 				#endif
 			};
 
@@ -112,6 +112,9 @@ namespace PhoenixImperator.Pages
 					break;
 				case "Star Systems":
 					ShowPage<StarSystem> (e.Item.ToString(), Phoenix.Application.StarSystemManager);
+					break;
+				case "Orders":
+					ShowOrdersPage();
 					break;
 				}
 			};
@@ -153,6 +156,18 @@ namespace PhoenixImperator.Pages
 					refreshHelpText
 				}
 			};
+		}
+
+		private void ShowOrdersPage()
+		{
+			activityIndicator.IsRunning = true;
+			Phoenix.Application.PositionManager.GetPositionsWithOrders ((results) => {
+				OrderPositionsListPage page = new OrderPositionsListPage(results);
+				Device.BeginInvokeOnMainThread (() => {
+					activityIndicator.IsRunning = false;
+					App.NavigationPage.PushAsync (page);
+				});
+			});
 		}
 
 		private void ShowPage<T>(string title, NexusManager<T> manager, bool entityHasDetail = true) where T :   EntityBase, new()

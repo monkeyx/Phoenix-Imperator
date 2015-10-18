@@ -22,6 +22,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Pages\Entities\EntityListPage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Pages\Entities\EntityContentPage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Pages\PhoenixPage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Pages\Entities\OrderPositionsListPage.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="$(MSBuildThisFileDirectory)Pages\" />

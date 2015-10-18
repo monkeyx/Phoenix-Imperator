@@ -65,18 +65,20 @@ namespace PhoenixImperator.Pages
 			if (Phoenix.Application.UserManager.Count () < 1) {
 				headerText = "Setup your account";
 			} else {
-				headerText = "";
+				headerText = "Phoenix Imperator";
 			}
 
 			header = new Label { 
 				XAlign = TextAlignment.Center,
 				Text = headerText,
+				TextColor = Color.White,
 				FontAttributes = FontAttributes.Bold
 			};
 
 			statusMessage = new Label {
 				XAlign = TextAlignment.Center,
-				Text = ""
+				Text = "",
+				TextColor = Color.Silver
 			};
 
 			userIdEntry = new Entry {
@@ -236,7 +238,7 @@ namespace PhoenixImperator.Pages
 				userCodeEntry.IsEnabled = true;
 				loginButton.IsEnabled = true;
 				statusMessage.Text = "";
-				header.Text = "Login";
+				header.Text = "Phoenix Imperator";
 				App.NavigationPage.PushAsync(homePage);
 
 			});

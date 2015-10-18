@@ -45,9 +45,11 @@ namespace PhoenixImperator.Pages.Entities
 		/// <value><c>true</c> if entity has detail; otherwise, <c>false</c>.</value>
 		public bool EntityHasDetail { get; set; }
 
-		public EntityListPage (string title, NexusManager<T> manager, IEnumerable<T> entities, bool entityHasDetail = true)
+		public EntityListPage (string title, NexusManager<T> manager, IEnumerable<T> entities, bool entityHasDetail = true, bool pullToRefresh = true)
 		{
 			Title = title;
+
+			Padding = new Thickness (10, Device.OnPlatform (20, 0, 0), 10, 5);
 
 			BackgroundColor = Color.Black;
 
@@ -64,40 +66,46 @@ namespace PhoenixImperator.Pages.Entities
 			listView.ItemTemplate = new DataTemplate (typeof(TextCell));
 			listView.ItemTemplate.SetBinding (TextCell.TextProperty, "ListText");
 			listView.ItemTemplate.SetBinding (TextCell.DetailProperty, "ListDetail");
-			listView.IsPullToRefreshEnabled = true;
 			listView.ItemsSource = GroupEntities(entities);
 
-			listView.RefreshCommand = new Command ((e) => {
-				refreshHelpText.IsVisible = false;
-				if(!isSearching) {
-					manager.Fetch((results, ex) => {
-						if(ex == null){
-							Device.BeginInvokeOnMainThread (() => {
-								listView.IsRefreshing = false;
-								refreshHelpText.IsVisible = true;
-								listView.ItemsSource = GroupEntities(results);
-							});
-						}
-						else {
-							#if DEBUG
-							ShowErrorAlert(ex);
-							#else
-							ShowErrorAlert("Problem connecting to Nexus");
-							#endif
-						}
-					},true);
-				}
-				else {
-					refreshHelpText.IsVisible = true;
-				}
-			});
+			if (pullToRefresh) {
+				listView.IsPullToRefreshEnabled = true;
+				listView.RefreshCommand = new Command ((e) => {
+					refreshHelpText.IsVisible = false;
+					if(!isSearching) {
+						manager.Fetch((results, ex) => {
+							if(ex == null){
+								Device.BeginInvokeOnMainThread (() => {
+									listView.IsRefreshing = false;
+									refreshHelpText.IsVisible = true;
+									listView.ItemsSource = GroupEntities(results);
+								});
+							}
+							else {
+								#if DEBUG
+								ShowErrorAlert(ex);
+								#else
+								ShowErrorAlert("Problem connecting to Nexus");
+								#endif
+							}
+						},true);
+					}
+					else {
+						refreshHelpText.IsVisible = true;
+					}
+				});
 
+				refreshHelpText = new Label {
+					HorizontalOptions = LayoutOptions.Center,
+					Text = "Pull down to refresh",
+					TextColor = Color.White,
+					FontAttributes = FontAttributes.Italic
+				};
+			}
 			listView.ItemTapped += (sender, e) => {
 				Log.WriteLine (Log.Layer.UI, this.GetType (), "Tapped: " + e.Item + "(" + e.Item.GetType() + ")");
 				((ListView)sender).SelectedItem = null; // de-select the row
-				if(EntityHasDetail){
-					EntityPageBuilderFactory.ShowEntityPage<T>(manager,((T)e.Item).Id);
-				}
+				EntitySelected(manager, (T)e.Item);
 			};
 
 			// Search bar
@@ -118,23 +126,27 @@ namespace PhoenixImperator.Pages.Entities
 				IsRunning = false,
 				BindingContext = this
 			};
-
-			// Labels
-			refreshHelpText = new Label {
-				HorizontalOptions = LayoutOptions.Center,
-				Text = "Pull down to refresh",
-				TextColor = Color.White,
-				FontAttributes = FontAttributes.Italic
-			};
-
-			Content = new StackLayout { 
+			StackLayout layout =  new StackLayout { 
 				Children = {
 					searchBar,
 					activityIndicator,
-					listView,
-					refreshHelpText
+					listView
 				}
 			};
+
+			Content = layout;
+
+			if (pullToRefresh) {
+				layout.Children.Add (refreshHelpText);
+			}
+
+		}
+
+		protected virtual void EntitySelected(NexusManager<T> manager, T item)
+		{
+			if(EntityHasDetail){
+				EntityPageBuilderFactory.ShowEntityPage<T>(manager,item.Id);
+			}
 		}
 
 		private void FilterList(string filter)

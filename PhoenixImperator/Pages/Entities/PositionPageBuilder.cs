@@ -25,6 +25,7 @@
 // THE SOFTWARE.
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 using Xamarin.Forms;
 
@@ -36,9 +37,14 @@ namespace PhoenixImperator.Pages.Entities
 {
 	public class PositionPageBuilder : BaseEntityPageBuilder<Position>
 	{
+		public static ObservableCollection<Order> Orders { get; set; }
+		public static Position CurrentPosition;
+
 		protected override void DisplayEntity(Position item)
 		{
+			CurrentPosition = item;
 			AddContentTab ("General", "icon_general.png");
+			AddLabel (item.PositionTypeString);
 			if (item.StarSystem != null) {
 				AddEntityProperty (Phoenix.Application.StarSystemManager, item.StarSystem, "Star System", item.SystemText);
 			} else {
@@ -55,6 +61,14 @@ namespace PhoenixImperator.Pages.Entities
 				AddProperty ("Design", item.Design);
 			}
 
+			Button requestUpdateButton = new Button {
+				Text = "Request Update",
+				TextColor = Color.White,
+				BackgroundColor = Color.Green
+			};
+			requestUpdateButton.Clicked += RequestUpdateButtonClicked;
+			currentLayout.Children.Add (requestUpdateButton);
+
 			Phoenix.Application.PositionManager.GetTurnReport (item.Id, (turn) => {
 				Device.BeginInvokeOnMainThread(() => {
 					AddContentTab("Turn Report", "icon_report.png");
@@ -67,18 +81,33 @@ namespace PhoenixImperator.Pages.Entities
 			});
 
 			AddContentTab("Orders", "icon_orders.png");
+			ordersTab = currentTab;
 			ActivityIndicator ordersActivity = new ActivityIndicator {
 				IsEnabled = true,
 				IsRunning = true,
 				BindingContext = currentTab
 			};
 			ordersList = new ListView ();
-			ordersList.ItemTemplate = new DataTemplate (typeof(TextCell));
+			ordersList.ItemTemplate = new DataTemplate (typeof(OrderViewCell));
 			ordersList.ItemTemplate.SetBinding (TextCell.TextProperty, "ListText");
 			ordersList.ItemTemplate.SetBinding (TextCell.DetailProperty, "ListDetail");
-			currentLayout.Children.Add(ordersList);
 
 			currentLayout.Children.Add (ordersActivity);
+			currentLayout.Children.Add (new Label {
+				HorizontalOptions = LayoutOptions.Center,
+				FontAttributes = FontAttributes.Italic,
+				Text = "Swipe left to delete an order"
+			});
+
+			currentLayout.Children.Add(ordersList);
+
+			Button clearOrdersButton = new Button {
+				Text = "Clear All Orders",
+				TextColor = Color.White,
+				BackgroundColor = Color.Red
+			};
+			clearOrdersButton.Clicked += ClearOrdersButtonClicked;
+			currentLayout.Children.Add (clearOrdersButton);
 
 			Phoenix.Application.OrderManager.AllForPosition (item.Id, (results) => {
 				if(results.Count > 0){
@@ -105,14 +134,66 @@ namespace PhoenixImperator.Pages.Entities
 			});
 		}
 
+		void RequestUpdateButtonClicked(object sender, EventArgs e)
+		{
+			Phoenix.Application.OrderManager.RequestUpdate (CurrentPosition.Id, (results) => {
+				Orders = new ObservableCollection<Order> (results);
+				ordersList.ItemsSource = Orders;
+				SwitchToOrdersTab();
+			});
+		}
+
+		void ClearOrdersButtonClicked(object sender, EventArgs e)
+		{
+			Phoenix.Application.OrderManager.ClearOrders (CurrentPosition.Id, (results) => {
+				Orders = new ObservableCollection<Order> (results);
+				ordersList.ItemsSource = Orders;
+				SwitchToOrdersTab();
+			});
+		}
+
+		protected void SwitchToOrdersTab()
+		{
+			if (ordersTab != null) {
+				Device.BeginInvokeOnMainThread (() => {
+					entityPage.CurrentPage = ordersTab;
+				});
+			}
+
+		}
+
 		private void UpdateOrdersList(IEnumerable<Order> orders)
 		{
+			Orders = new ObservableCollection<Order> (orders);
 			Device.BeginInvokeOnMainThread (() => {
-				ordersList.ItemsSource = orders;
+				ordersList.ItemsSource = Orders;
 			});
 		}
 
 		private ListView ordersList;
+		private Page ordersTab;
+	}
+
+	public class OrderViewCell : TextCell
+	{
+		public IEnumerable<Order> Orders { get; set; }
+
+		public OrderViewCell()
+		{
+			var deleteAction = new MenuItem { Text = "Delete", IsDestructive = true }; // red background
+			deleteAction.SetBinding (MenuItem.CommandParameterProperty, new Binding ("."));
+			deleteAction.Clicked += OnDelete;
+
+			this.ContextActions.Add (deleteAction);
+		}
+
+		void OnDelete (object sender, EventArgs e)
+		{
+			var item = (MenuItem)sender;
+			Log.WriteLine (Log.Layer.UI,GetType(),"OnDelete: " + item.CommandParameter);
+			Phoenix.Application.OrderManager.DeleteOrder ((Order)item.CommandParameter);
+			PositionPageBuilder.Orders.Remove ((Order)item.CommandParameter);
+		}
 	}
 }
 
