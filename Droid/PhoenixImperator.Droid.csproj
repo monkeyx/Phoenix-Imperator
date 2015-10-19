@@ -127,6 +127,8 @@
     <AndroidResource Include="Resources\drawable\icon_techmanual.png" />
     <AndroidResource Include="Resources\drawable\icon_jumplink.png" />
     <AndroidResource Include="Resources\drawable\icon_general.png" />
+    <AndroidResource Include="Resources\drawable\settings.png" />
+    <AndroidResource Include="Resources\drawable\home.png" />
   </ItemGroup>
   <Import Project="..\PhoenixImperator\PhoenixImperator.projitems" Label="Shared" Condition="Exists('..\PhoenixImperator\PhoenixImperator.projitems')" />
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />

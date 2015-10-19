@@ -43,7 +43,14 @@ namespace PhoenixImperator.Pages.Entities
 		/// has detail.
 		/// </summary>
 		/// <value><c>true</c> if entity has detail; otherwise, <c>false</c>.</value>
-		public bool EntityHasDetail { get; set; }
+		public bool EntityHasDetail { get; private set; }
+
+		/// <summary>
+		/// Gets a value indicating whether this <see cref="PhoenixImperator.Pages.Entities.EntityListPage`1"/> pull to refresh.
+		/// </summary>
+		/// <value><c>true</c> if pull to refresh; otherwise, <c>false</c>.</value>
+		public bool PullToRefresh { get; private set;}
+
 
 		public EntityListPage (string title, NexusManager<T> manager, IEnumerable<T> entities, bool entityHasDetail = true, bool pullToRefresh = true)
 		{
@@ -54,6 +61,7 @@ namespace PhoenixImperator.Pages.Entities
 			BackgroundColor = Color.Black;
 
 			EntityHasDetail = entityHasDetail;
+			PullToRefresh = pullToRefresh;
 
 			allEntities = entities;
 
@@ -71,36 +79,20 @@ namespace PhoenixImperator.Pages.Entities
 			if (pullToRefresh) {
 				listView.IsPullToRefreshEnabled = true;
 				listView.RefreshCommand = new Command ((e) => {
-					refreshHelpText.IsVisible = false;
 					if(!isSearching) {
 						manager.Fetch((results, ex) => {
 							if(ex == null){
 								Device.BeginInvokeOnMainThread (() => {
 									listView.IsRefreshing = false;
-									refreshHelpText.IsVisible = true;
 									listView.ItemsSource = GroupEntities(results);
 								});
 							}
 							else {
-								#if DEBUG
 								ShowErrorAlert(ex);
-								#else
-								ShowErrorAlert("Problem connecting to Nexus");
-								#endif
 							}
 						},true);
 					}
-					else {
-						refreshHelpText.IsVisible = true;
-					}
 				});
-
-				refreshHelpText = new Label {
-					HorizontalOptions = LayoutOptions.Center,
-					Text = "Pull down to refresh",
-					TextColor = Color.White,
-					FontAttributes = FontAttributes.Italic
-				};
 			}
 			listView.ItemTapped += (sender, e) => {
 				Log.WriteLine (Log.Layer.UI, this.GetType (), "Tapped: " + e.Item + "(" + e.Item.GetType() + ")");
@@ -135,11 +127,14 @@ namespace PhoenixImperator.Pages.Entities
 			};
 
 			Content = layout;
+		}
 
-			if (pullToRefresh) {
-				layout.Children.Add (refreshHelpText);
+		protected override void OnAppearing ()
+		{
+			base.OnAppearing ();
+			if (PullToRefresh) {
+				Onboarding.ShowOnboarding ((int)UserFlags.SHOWN_ONBOARDING_ENTITY_LIST_PULL_TO_REFRESH, "Help", "Pull down to refresh");
 			}
-
 		}
 
 		protected virtual void EntitySelected(NexusManager<T> manager, T item)
@@ -193,7 +188,6 @@ namespace PhoenixImperator.Pages.Entities
 		private IEnumerable<T> allEntities;
 		private ListView listView;
 		private ActivityIndicator activityIndicator;
-		private Label refreshHelpText;
 		private SearchBar searchBar;
 		private bool isSearching;
 	}

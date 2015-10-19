@@ -36,7 +36,7 @@ namespace PhoenixImperator
 	{
 		NexusManager<T> Manager { get; set; }
 
-		Page BuildPage(T item);
+		TabbedPage BuildPage(T item);
 	}
 }
 

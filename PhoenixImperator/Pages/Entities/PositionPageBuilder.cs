@@ -40,11 +40,21 @@ namespace PhoenixImperator.Pages.Entities
 		public static ObservableCollection<Order> Orders { get; set; }
 		public static Position CurrentPosition;
 
+		public static void UpdateOrders(IEnumerable<Order> orders)
+		{
+			Orders.Clear ();
+			foreach (Order o in orders) {
+				Orders.Add (o);
+			}
+		}
+
 		protected override void DisplayEntity(Position item)
 		{
+			Orders = new ObservableCollection<Order> ();
+
 			CurrentPosition = item;
 			AddContentTab ("General", "icon_general.png");
-			AddLabel (item.PositionTypeString);
+			// AddLabel (item.PositionTypeString);
 			if (item.StarSystem != null) {
 				AddEntityProperty (Phoenix.Application.StarSystemManager, item.StarSystem, "Star System", item.SystemText);
 			} else {
@@ -87,40 +97,64 @@ namespace PhoenixImperator.Pages.Entities
 				IsRunning = true,
 				BindingContext = currentTab
 			};
+
+			StackLayout orderFormLayout = new StackLayout {
+				Orientation = StackOrientation.Horizontal,
+				HorizontalOptions = LayoutOptions.StartAndExpand
+			};
+
+			currentLayout.Children.Add (orderFormLayout);
+
+			orderPicker = new Picker {
+				Title = "Add Order",
+				HorizontalOptions = LayoutOptions.Fill
+			};
+
+			currentLayout.Children.Add (orderPicker);
+
 			ordersList = new ListView ();
 			ordersList.ItemTemplate = new DataTemplate (typeof(OrderViewCell));
 			ordersList.ItemTemplate.SetBinding (TextCell.TextProperty, "ListText");
 			ordersList.ItemTemplate.SetBinding (TextCell.DetailProperty, "ListDetail");
+			ordersList.ItemTapped += (sender, e) => {
+				ordersActivity.IsRunning = true;
+				Phoenix.Application.OrderManager.Get(((Order)e.Item).Id,(order) => {
+					OrderEditPage page = new OrderEditPage(order);
+					RootPage.Root.NextPage(page);
+					ordersList.SelectedItem = null;
+					ordersActivity.IsRunning = false;
+				});
+			};
+			ordersList.ItemsSource = Orders;
 
 			currentLayout.Children.Add (ordersActivity);
-			currentLayout.Children.Add (new Label {
-				HorizontalOptions = LayoutOptions.Center,
-				FontAttributes = FontAttributes.Italic,
-				Text = "Swipe left to delete an order"
-			});
-
 			currentLayout.Children.Add(ordersList);
 
 			Button clearOrdersButton = new Button {
-				Text = "Clear All Orders",
+				Text = "Clear Orders",
+				BorderWidth = 1,
 				TextColor = Color.White,
 				BackgroundColor = Color.Red
 			};
 			clearOrdersButton.Clicked += ClearOrdersButtonClicked;
 			currentLayout.Children.Add (clearOrdersButton);
 
+			entityPage.CurrentPageChanged += (sender, e) => {
+				if(entityPage.CurrentPage.Title == "Orders"){
+					Onboarding.ShowOnboarding ((int)UserFlags.SHOWN_ONBOARDING_ORDER_SWIPE_TO_DELETE, "Help", "Tap an order to edit. Swipe left to delete an order.");
+				}
+			};
+
 			Phoenix.Application.OrderManager.AllForPosition (item.Id, (results) => {
 				if(results.Count > 0){
-					ordersActivity.IsEnabled = false;
 					ordersActivity.IsRunning = false;
-					UpdateOrdersList(results);
+					UpdateOrders(results);
 				}
 				else {
 					Phoenix.Application.OrderManager.FetchForPosition(item.Id,(fetchResults,ex) => {
-						ordersActivity.IsEnabled = false;
 						ordersActivity.IsRunning = false;
 						if(ex == null){
-							UpdateOrdersList(fetchResults);
+							UpdateOrders(fetchResults);
 						}
 						else {
 							#if DEBUG
@@ -132,6 +166,27 @@ namespace PhoenixImperator.Pages.Entities
 					});
 				}
 			});
+
+			Phoenix.Application.OrderTypeManager.GetOrderTypesForPosition ((Position.PositionFlag)CurrentPosition.PositionType, (results) => {
+				orderPicker.Items.Add("");
+				foreach(OrderType ot in results){
+					orderTypes.Add(ot.Name,ot);
+					orderPicker.Items.Add(ot.Name);
+				}
+			});
+
+			orderPicker.Unfocused += (sender, args) => {
+				if(orderPicker.SelectedIndex > 0){
+					Log.WriteLine(Log.Layer.UI,GetType(),"Selected Order: " + orderPicker.Items[orderPicker.SelectedIndex]);
+					OrderType orderType = orderTypes[orderPicker.Items[orderPicker.SelectedIndex]];
+					Phoenix.Application.OrderManager.AddOrder(CurrentPosition,orderType,(results) => {
+						UpdateOrders(results);
+						Device.BeginInvokeOnMainThread (() => {
+							orderPicker.SelectedIndex = -1;
+						});
+					});
+				}
+			};
 		}
 
 		void RequestUpdateButtonClicked(object sender, EventArgs e)
@@ -152,6 +207,8 @@ namespace PhoenixImperator.Pages.Entities
 			});
 		}
 
+
+
 		protected void SwitchToOrdersTab()
 		{
 			if (ordersTab != null) {
@@ -162,16 +219,10 @@ namespace PhoenixImperator.Pages.Entities
 
 		}
 
-		private void UpdateOrdersList(IEnumerable<Order> orders)
-		{
-			Orders = new ObservableCollection<Order> (orders);
-			Device.BeginInvokeOnMainThread (() => {
-				ordersList.ItemsSource = Orders;
-			});
-		}
-
 		private ListView ordersList;
 		private Page ordersTab;
+		private Picker orderPicker;
+		private Dictionary<string,OrderType> orderTypes = new Dictionary<string, OrderType>();
 	}
 
 	public class OrderViewCell : TextCell

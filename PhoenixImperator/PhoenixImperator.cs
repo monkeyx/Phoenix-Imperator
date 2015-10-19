@@ -41,10 +41,15 @@ using PhoenixImperator.Pages;
 
 namespace PhoenixImperator
 {
+	public enum UserFlags
+	{
+		SHOWN_ONBOARDING_NEXUS_PULL_TO_REFRESH = 0x01,
+		SHOWN_ONBOARDING_ENTITY_LIST_PULL_TO_REFRESH = 0x02,
+		SHOWN_ONBOARDING_ORDER_SWIPE_TO_DELETE = 0x04
+	}
+
 	public class App : Application, Phoenix.IDatabase, Phoenix.ILogger, Phoenix.IDocumentFolder, Phoenix.IRestClient
 	{
-		public static NavigationPage NavigationPage { get; set; }
-
 		public App ()
 		{
 			var sqliteFilename = "Phoenix.db3";
@@ -59,22 +64,7 @@ namespace PhoenixImperator
 
 			Phoenix.Application.Initialize (this, this, this, this);
 
-			int userCount = Phoenix.Application.UserManager.Count ();
-			Log.WriteLine (Log.Layer.AL, typeof(App), "Users: " + userCount);
-			UserLoginPage userLoginPage = new UserLoginPage();
-			App.NavigationPage = new NavigationPage(userLoginPage){
-				BarBackgroundColor = Color.Black,
-				BarTextColor = Color.White
-			};
-			MainPage = App.NavigationPage;
-			if (userCount > 0) {
-				Phoenix.Application.UserManager.First ((user) => {
-					// The root page of your application
-					userLoginPage.UserCode = user.Code;
-					userLoginPage.UserId = user.Id;
-					Phoenix.Application.UserLoggedIn(user);
-				});
-			}
+			MainPage = new RootPage();
 		}
 
 		/// <summary>
@@ -130,7 +120,13 @@ namespace PhoenixImperator
 		/// <param name="arg">Argument.</param>
 		public void WriteLine(string format, params object[] arg)
 		{
-			Console.WriteLine (format, arg);
+			if (format == null)
+				return;
+			try {
+				Console.WriteLine (format, arg);
+			}
+			catch{
+			}
 		}
 
 		/// <summary>
@@ -141,7 +137,7 @@ namespace PhoenixImperator
 		public Task<Stream> GetAsync(string url)
 		{
 			var httpClient = new HttpClient(new NativeMessageHandler());
-			httpClient.Timeout = TimeSpan.FromSeconds(30);
+			httpClient.Timeout = TimeSpan.FromSeconds(5);
 			return httpClient.GetStreamAsync (url);
 		}
 
@@ -154,7 +150,7 @@ namespace PhoenixImperator
 		public Task<HttpResponseMessage> PostAsync(string url, object dto)
 		{
 			var httpClient = new HttpClient(new NativeMessageHandler());
-			httpClient.Timeout = TimeSpan.FromSeconds(30);
+			httpClient.Timeout = TimeSpan.FromSeconds(5);
 			return httpClient.PostAsync(url,new StringContent(dto.ToString()));
 		}
 

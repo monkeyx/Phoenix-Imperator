@@ -40,7 +40,7 @@ namespace PhoenixImperator.Pages
 			get {
 				return Int32.Parse (userIdEntry.Text);
 			}
-			set {
+			private set {
 				userIdEntry.Text = value.ToString();
 			}
 		}
@@ -49,7 +49,7 @@ namespace PhoenixImperator.Pages
 			get {
 				return userCodeEntry.Text;
 			}
-			set {
+			private set {
 				userCodeEntry.Text = value;
 			}
 		}
@@ -132,10 +132,25 @@ namespace PhoenixImperator.Pages
 					statusMessage
 				}
 			};
+
+			int userCount = Phoenix.Application.UserManager.Count ();
+			Log.WriteLine (Log.Layer.AL, GetType(), "Users: " + userCount);
+
+			if (userCount > 0) {
+				Phoenix.Application.UserManager.First ((user) => {
+					UserCode = user.Code;
+					UserId = user.Id;
+					Phoenix.Application.UserLoggedIn(user);
+				});
+			}
 		}
 
 		void LoginButtonClicked(object sender, EventArgs e)
 		{
+			if (string.IsNullOrWhiteSpace (userCodeEntry.Text) || string.IsNullOrWhiteSpace (userIdEntry.Text)) {
+				ShowErrorAlert ("User Id and Code are required");
+				return;
+			}
 			activityIndicator.IsRunning = true;
 			userIdEntry.IsEnabled = false;
 			userCodeEntry.IsEnabled = false;
@@ -143,35 +158,41 @@ namespace PhoenixImperator.Pages
 			Phoenix.Application.UserManager.Save (this.UserId, this.UserCode, (user) => {
 				Phoenix.Application.UserLoggedIn(user);
 
-				homePage = new HomePage();
-
 				if(Phoenix.Application.GameStatusManager.Count() < 1){
 					// fresh setup
-					ShowInfoAlert("Set Up", "This is the first time getting information from Nexus so this may take a bit of time. Please be patient");
+					StackLayout layout = (StackLayout) Content;
+					ProgressBar progressBar = new ProgressBar{
+						Progress = 0f
+					};
+					layout.Children.Add(progressBar);
 					header.Text = "Setting Up. Please be patient.";
+					UpdateStatusMessage("Fetching game status");
 					Phoenix.Application.GameStatusManager.Fetch ((results, ex) => {
+						UpdateStatusMessage("Fetched game status. Now fetching info.");
 						if(ex == null){
-							UpdateStatusMessage("Fetched game status. Now fetching info (2/6)");
-							IEnumerator<GameStatus> i = results.GetEnumerator();
-							if(i.MoveNext())
-								homePage.SetStatus(i.Current);
+							progressBar.ProgressTo(0.16,250,Easing.Linear);
 							Phoenix.Application.InfoManager.Fetch((infoResults, ex2) => {
-								UpdateStatusMessage("Fetched info data. Now fetching star systems (3/6)");
+								UpdateStatusMessage("Fetched info data. Now fetching star systems.");
 								if(ex2 == null){
+									progressBar.ProgressTo(0.33,250,Easing.Linear);
 									Phoenix.Application.StarSystemManager.Fetch((systemResults, ex3) => {
-										UpdateStatusMessage("Fetched star systems. Now fetching order types (4/6)");
+										UpdateStatusMessage("Fetched star systems. Now fetching order types.");
 										if(ex3 == null){
+											progressBar.ProgressTo(0.5,250,Easing.Linear);
 											Phoenix.Application.OrderTypeManager.Fetch((orderTypeResults, ex4) => {
 												if(ex4 == null){
-													UpdateStatusMessage("Fetched order types. Now fetching items (5/6)");
+													progressBar.ProgressTo(0.67,250,Easing.Linear);
+													UpdateStatusMessage("Fetched order types. Now fetching items");
 													Phoenix.Application.ItemManager.Fetch((itemResults, ex5) => {
 														if(ex5 == null){
-															UpdateStatusMessage("Fetched items. Now fetching positions (6/6)");
+															progressBar.ProgressTo(0.83,250,Easing.Linear);
+															UpdateStatusMessage("Fetched items. Now fetching positions.");
 															Phoenix.Application.PositionManager.Fetch((positionResults, ex6) => {
 																if(ex6 == null){
 																	ShowHomePage();
 																}
 																else {
+																	progressBar.ProgressTo(1.0,250,Easing.Linear);
 																	ShowErrorAndThenHome(ex6);
 																}
 															});
@@ -204,11 +225,7 @@ namespace PhoenixImperator.Pages
 					});
 				}
 				else {
-					// show home page
-					Phoenix.Application.GameStatusManager.First((result) => {
-						homePage.SetStatus(result);
-						ShowHomePage();
-					});
+					ShowHomePage();
 				}
 			});
 		}
@@ -222,11 +239,7 @@ namespace PhoenixImperator.Pages
 
 		private void ShowErrorAndThenHome(object error)
 		{
-			#if DEBUG
 			ShowErrorAlert(error);
-			#else
-			ShowErrorAlert("Problem connecting to Nexus");
-			#endif
 			ShowHomePage ();
 		}
 
@@ -239,7 +252,7 @@ namespace PhoenixImperator.Pages
 				loginButton.IsEnabled = true;
 				statusMessage.Text = "";
 				header.Text = "Phoenix Imperator";
-				App.NavigationPage.PushAsync(homePage);
+				RootPage.Root.GoHome();
 
 			});
 		}
@@ -250,7 +263,6 @@ namespace PhoenixImperator.Pages
 		private Entry userCodeEntry;
 		private Button loginButton;
 		private ActivityIndicator activityIndicator;
-		private HomePage homePage;
 	}
 }
 

@@ -1,5 +1,5 @@
 ﻿//
-// OrderPositionsListPage.cs
+// Onboarding.cs
 //
 // Author:
 //       Seyed Razavi <monkeyx@gmail.com>
@@ -24,9 +24,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
+using System.Threading.Tasks;
 
 using Xamarin.Forms;
 
@@ -34,19 +32,38 @@ using Phoenix.BL.Entities;
 using Phoenix.BL.Managers;
 using Phoenix.Util;
 
-namespace PhoenixImperator.Pages.Entities
+using PhoenixImperator.Pages;
+
+namespace PhoenixImperator
 {
-	public class OrderPositionsListPage : EntityListPage<Position>
+	public static class Onboarding
 	{
-		public OrderPositionsListPage (IEnumerable<Position> positions) : base("Orders",Phoenix.Application.PositionManager,positions,true,false)
+		public static void ShowOnboarding(int flag, string title, string content)
 		{
+			if (Phoenix.Application.User != null && !Phoenix.Application.User.HasPreference (flag)) {
+				Phoenix.Application.User.SetPreference (flag);
+				Phoenix.Application.UserManager.Save (Phoenix.Application.User,(user) => {
+					Log.WriteLine(Log.Layer.UI, typeof(Onboarding), "User preference saved");
+				});
+				// WaitAndDisplayPopup (title, content);
+				Device.BeginInvokeOnMainThread (() => {
+					RootPage.Root.DisplayAlert (title, content, "OK");
+				});
+			}
 		}
 
-		protected override void EntitySelected(NexusManager<Position> manager, Position item)
+		private static async void WaitAndDisplayPopup(string title, string content)
 		{
-			EntityPageBuilderFactory.ShowEntityPage<Position>(manager,item.Id,1);
+			await Task.Delay(TimeSpan.FromSeconds(1));
+
+			Device.BeginInvokeOnMainThread (() => {
+				RootPage.Root.DisplayAlert (title, content, "OK");
+			});
+		}
+
+		static Onboarding ()
+		{
 		}
 	}
 }
-
 

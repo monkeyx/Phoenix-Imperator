@@ -41,16 +41,20 @@ namespace PhoenixImperator.Pages.Entities
 	{
 		public NexusManager<T> Manager { get; set; }
 
-		public Page BuildPage(T item)
+		public TabbedPage BuildPage(T item)
 		{
 			if (item == null) {
-				return new PhoenixPage {
+				return new TabbedPage {
 					Title = "Not Found",
-					Content = new StackLayout{
-						VerticalOptions = LayoutOptions.Center,
-						Children = {
-							new Label{
-								Text = "These aren't the droids you are looking for"
+					Children = {
+						new PhoenixPage {
+							Content = new StackLayout{
+								VerticalOptions = LayoutOptions.Center,
+								Children = {
+									new Label{
+										Text = "These aren't the droids you are looking for"
+									}
+								}
 							}
 						}
 					}
@@ -84,7 +88,8 @@ namespace PhoenixImperator.Pages.Entities
 		protected void AddContentTab(string title, string icon)
 		{
 			currentLayout = new StackLayout {
-				Padding = new Thickness (10)
+				Padding = new Thickness (10),
+				VerticalOptions = LayoutOptions.CenterAndExpand
 			};
 			currentTab = new PhoenixPage {
 				Content = currentLayout,

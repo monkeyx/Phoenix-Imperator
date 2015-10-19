@@ -44,7 +44,11 @@ namespace PhoenixImperator.Pages
 			if (status != null) {
 				starDateLabel.Text = status.StarDate;
 				statusMessageLabel.Text = status.StatusMessage;
+			} else {
+				starDateLabel.Text = "...";
+				statusMessageLabel.Text = "...";	
 			}
+				
 		}
 
 		public HomePage () : base()
@@ -85,11 +89,7 @@ namespace PhoenixImperator.Pages
 			ListView navigationList = new ListView () {
 				BackgroundColor = Color.Gray,
 				SeparatorColor = Color.Silver,
-				#if DEBUG
 				ItemsSource = new [] {"Positions", "Orders", "Items", "Star Systems", "Order Types", "Info"}
-				#else
-				ItemsSource = new [] {"Positions", "Orders", "Items", "Star Systems", "Order Types"}
-				#endif
 			};
 
 			navigationList.IsPullToRefreshEnabled = true;
@@ -120,29 +120,42 @@ namespace PhoenixImperator.Pages
 			};
 
 			navigationList.RefreshCommand = new Command ((e) => {
-				refreshHelpText.IsVisible = false;
+				SetStatus(null);
 				Phoenix.Application.GameStatusManager.Fetch ((results, ex) => {
-					IEnumerator<GameStatus> i = results.GetEnumerator();
-					if(i.MoveNext())
-						SetStatus(i.Current);
-					refreshHelpText.IsVisible = true;
-					navigationList.IsRefreshing = false;
+					if(ex == null){
+						Phoenix.Application.InfoManager.Fetch((infoResults, ex2) => {
+							if(ex2 == null){
+								Log.WriteLine(Log.Layer.UI,GetType(),"Info: " + Phoenix.Application.InfoManager.Count());
+								Phoenix.Application.OrderTypeManager.Fetch((orderTypeResults, ex3) => {
+									if(ex3 != null){
+										ShowErrorAlert(ex3);
+									} else {
+										Log.WriteLine(Log.Layer.UI,GetType(),"Order Types: " + Phoenix.Application.OrderTypeManager.Count());
+									}
+									navigationList.IsRefreshing = false;
+									IEnumerator<GameStatus> i = results.GetEnumerator();
+									if(i.MoveNext()){
+										SetStatus(i.Current);
+									}
+								},true);
+							}
+							else {
+								ShowErrorAlert(ex2);
+							}
+
+						},true);
+					}
+					else {
+						ShowErrorAlert(ex);
+					}
+
 				}, true);
-				Phoenix.Application.InfoManager.Fetch((infoResults, ex2) => {});
-				Phoenix.Application.OrderTypeManager.Fetch((orderTypeResults, ex4) => {});
 			});
 
 			activityIndicator = new ActivityIndicator {
 				IsEnabled = true,
 				IsRunning = false,
 				BindingContext = this
-			};
-
-			refreshHelpText = new Label {
-				HorizontalOptions = LayoutOptions.Center,
-				Text = "Pull down to check Nexus status",
-				TextColor = Color.White,
-				FontAttributes = FontAttributes.Italic
 			};
 
 			this.Padding = new Thickness(10, Device.OnPlatform(20, 0, 0), 10, 5);
@@ -152,10 +165,19 @@ namespace PhoenixImperator.Pages
 					activityIndicator,
 					logo,
 					header,
-					navigationList,
-					refreshHelpText
+					navigationList
 				}
 			};
+
+			Phoenix.Application.GameStatusManager.First((result) => {
+				SetStatus(result);
+			});
+		}
+
+		protected override void OnAppearing ()
+		{
+			base.OnAppearing ();
+			Onboarding.ShowOnboarding ((int)UserFlags.SHOWN_ONBOARDING_NEXUS_PULL_TO_REFRESH, "Help", "Pull down to check Nexus status");
 		}
 
 		private void ShowOrdersPage()
@@ -165,7 +187,7 @@ namespace PhoenixImperator.Pages
 				OrderPositionsListPage page = new OrderPositionsListPage(results);
 				Device.BeginInvokeOnMainThread (() => {
 					activityIndicator.IsRunning = false;
-					App.NavigationPage.PushAsync (page);
+					RootPage.Root.GoToPage (page);
 				});
 			});
 		}
@@ -176,11 +198,10 @@ namespace PhoenixImperator.Pages
 			if (manager.Count() > 0) {
 				// show local results
 				manager.All ((results) => {
-					EntityListPage<T> page = new EntityListPage<T> (title, manager, results);
-					page.EntityHasDetail = entityHasDetail;
+					EntityListPage<T> page = new EntityListPage<T> (title, manager, results, entityHasDetail);
 					Device.BeginInvokeOnMainThread (() => {
 						activityIndicator.IsRunning = false;
-						App.NavigationPage.PushAsync (page);
+						RootPage.Root.GoToPage (page);
 					});
 				});
 			} else {
@@ -190,7 +211,7 @@ namespace PhoenixImperator.Pages
 						Page page = new EntityListPage<T> (title, manager, results);
 						Device.BeginInvokeOnMainThread (() => {
 							activityIndicator.IsRunning = false;
-							App.NavigationPage.PushAsync (page);
+							RootPage.Root.GoToPage (page);
 						});
 					}
 					else {
@@ -207,7 +228,6 @@ namespace PhoenixImperator.Pages
 		private Label starDateLabel;
 		private Label statusMessageLabel;
 		private ActivityIndicator activityIndicator;
-		private Label refreshHelpText;
 	}
 }
 
