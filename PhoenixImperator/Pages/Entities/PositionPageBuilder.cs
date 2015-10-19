@@ -241,8 +241,9 @@ namespace PhoenixImperator.Pages.Entities
 		{
 			var item = (MenuItem)sender;
 			Log.WriteLine (Log.Layer.UI,GetType(),"OnDelete: " + item.CommandParameter);
-			Phoenix.Application.OrderManager.DeleteOrder ((Order)item.CommandParameter);
-			PositionPageBuilder.Orders.Remove ((Order)item.CommandParameter);
+			Phoenix.Application.OrderManager.DeleteOrder ((Order)item.CommandParameter,(results) => {
+				PositionPageBuilder.UpdateOrders(results);
+			});
 		}
 	}
 }

@@ -138,7 +138,7 @@ namespace PhoenixImperator.Pages
 
 			Add (new SideMenuItem {
 				Title = "Order Types",
-				IconSource = "icon_report.png",
+				IconSource = "icon_general.png",
 				TargetType = "Order Types"
 			});
 

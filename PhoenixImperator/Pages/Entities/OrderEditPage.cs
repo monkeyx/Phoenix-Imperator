@@ -25,6 +25,7 @@
 // THE SOFTWARE.
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 using Xamarin.Forms;
 
@@ -44,37 +45,72 @@ namespace PhoenixImperator.Pages
 			Title = order.OrderType.Name;
 			CurrentOrder = order;
 
-			layout = new StackLayout{
-				VerticalOptions = LayoutOptions.CenterAndExpand
+			formTable = new TableView {
+				Root = new TableRoot(),
+				Intent = TableIntent.Form,
+				BackgroundColor = Color.White
+			};
+
+			formTable.Root.Add (new TableSection ());
+
+			Button deleteButton = new Button {
+				Text = "Delete Order",
+				TextColor = Color.White,
+				BackgroundColor = Color.Red
+			};
+			deleteButton.Clicked += async(sender, e) => {
+				bool confirm = await DisplayAlert("Delete Order","Are you sure?","Yes","No");
+				if(confirm){
+					deleteButton.IsEnabled = false;
+					DeleteOrder();
+				}
+					
 			};
 
 			ShowParameters ();
 
-			Button saveButton = new Button {
-				Text = "Save",
-				BorderWidth = 1,
-				TextColor = Color.White,
-				BackgroundColor = Color.Blue
-			};
-			saveButton.Clicked += (sender, e) => {
-				saveButton.IsEnabled = false;
-				Phoenix.Application.OrderManager.SaveOrder(order,(results) => {
-					PositionPageBuilder.UpdateOrders(results);
-					RootPage.Root.PreviousPage();
-				});
-			};
-			layout.Children.Add (saveButton);
+			AddSection ("Description");
+			LastSection.Add (new ViewCell () {
+				View = new Label {
+					VerticalOptions = LayoutOptions.StartAndExpand,
+					Text = CurrentOrder.OrderType.Description,
+					BackgroundColor = Color.Silver
+				}
+			});
 
-			Content = layout;
+			LastSection.Add (new ViewCell { View = deleteButton });
+
+			Content = new ScrollView {
+				Content = new StackLayout{
+							VerticalOptions = LayoutOptions.Start,
+							Padding = new Thickness(10,20),
+							Children = {
+								formTable
+							}
+						}
+			};
+		}
+
+		private void SaveOrder()
+		{
+			Phoenix.Application.OrderManager.SaveOrder(CurrentOrder,(results) => {
+				PositionPageBuilder.UpdateOrders(results);
+			});
+		}
+
+		private void DeleteOrder()
+		{
+			Phoenix.Application.OrderManager.DeleteOrder(CurrentOrder,(results) => {
+				PositionPageBuilder.UpdateOrders(results);
+				RootPage.Root.PreviousPage();
+			});
 		}
 
 		private void ShowParameters ()
 		{
 			if (CurrentOrder.OrderType.Parameters.Count < 1) {
-				layout.Children.Add (new Label {
-					Text = "No parameters required",
-					FontAttributes = FontAttributes.Italic,
-					HorizontalOptions = LayoutOptions.CenterAndExpand
+				formTable.Root [0].Add (new TextCell{
+					Text = "No parameters"
 				});
 				return;
 			}
@@ -89,95 +125,149 @@ namespace PhoenixImperator.Pages
 			}
 		}
 
+		private TableSection AddSection()
+		{
+			TableSection section = new TableSection ();
+			formTable.Root.Add (section);
+			return section;
+		}
+
+		private TableSection AddSection(string title)
+		{
+			TableSection section = new TableSection (title);
+			formTable.Root.Add (section);
+			return section;
+		}
+
+		private TableSection LastSection{
+			get {
+				return formTable.Root [(formTable.Root.Count - 1)];
+			}
+		}
+
 		private void AddParameter(OrderParameterType paramType, OrderParameter param = null)
 		{
-			layout.Children.Add (new Label {
-				Text = paramType.Name,
-				FontAttributes = FontAttributes.Bold
-			});
 			if (param == null) {
 				param = new OrderParameter ();
 				CurrentOrder.Parameters.Add (param);
 			}
 			switch (paramType.DataType) {
 			case OrderType.DataTypes.Integer:
-				AddIntegerParam (param);
+				AddIntegerParam (paramType, param);
 				break;
 			case OrderType.DataTypes.String:
-				AddStringParam (param);
+				AddStringParam (paramType, param);
 				break;
 			case OrderType.DataTypes.Boolean:
-				AddBooleanParam (param);
+				AddBooleanParam (paramType, param);
 				break;
 			default:
-				AddInfoParam (paramType.InfoType, param);
+				AddInfoParam (paramType, param);
 				break;
 			}
 		}
 
-		private void AddIntegerParam(OrderParameter param)
+		private void AddIntegerParam(OrderParameterType paramType, OrderParameter param)
 		{
-			Entry entry = new Entry {
+			EntryCell entry = new EntryCell {
+				Label = paramType.Name,
 				Text = param.Value,
 				Keyboard = Keyboard.Numeric
 			};
-			entry.TextChanged += (sender, e) => {
+			entry.Completed += (sender, e) => {
 				param.Value = entry.Text;
+				SaveOrder();
 			};
-			layout.Children.Add (entry);
+			LastSection.Add (entry);
 		}
 
-		private void AddStringParam(OrderParameter param)
+		private void AddStringParam(OrderParameterType paramType, OrderParameter param)
 		{
-			Entry entry = new Entry {
+			EntryCell entry = new EntryCell {
+				Label = paramType.Name,
 				Text = param.Value
 			};
-			entry.TextChanged += (sender, e) => {
+			entry.Completed += (sender, e) => {
 				param.Value = entry.Text;
+				SaveOrder();
 			};
-			layout.Children.Add (entry);
+			LastSection.Add (entry);
 		}
 
-		private void AddBooleanParam(OrderParameter param)
+		private void AddBooleanParam(OrderParameterType paramType, OrderParameter param)
 		{
-			Switch switcher = new Switch {
-				HorizontalOptions = LayoutOptions.Center,
-				VerticalOptions = LayoutOptions.CenterAndExpand,
-				IsToggled = param.Value == "True"
+			SwitchCell switchCell = new SwitchCell {
+				Text = paramType.Name,
+				On = param.Value == "True"
 			};
-			switcher.Toggled += (sender, e) => {
-				param.Value = switcher.IsToggled ? "True" : "False";
+
+			switchCell.OnChanged += (sender, e) => {
+				param.Value = switchCell.On ? "True" : "False";
+				SaveOrder();
 			};
-			layout.Children.Add (switcher);
+			LastSection.Add (switchCell);
 		}
 
-		private void AddInfoParam(int infoType, OrderParameter param)
+		private void AddInfoParam(OrderParameterType paramType, OrderParameter param)
 		{
-			if (infoType == 0) {
-				AddIntegerParam (param);
+			if (paramType.InfoType == 0) {
+				AddIntegerParam (paramType, param);
 				return;
 			}
+			TableSection section = AddSection (paramType.Name);
+
 			Picker infoPicker = new Picker {
-				Title = param.Value,
-				HorizontalOptions = LayoutOptions.Fill
+				Title = param.DisplayValue,
+				VerticalOptions = LayoutOptions.Center,
+				HorizontalOptions = LayoutOptions.Center,
 			};
-			if (infoData.ContainsKey (infoType)) {
-				Dictionary<string,int> data = infoData [infoType];
-				int i = 0;
-				foreach (string value in data.Keys) {
-					infoPicker.Items.Add (value);
-					if (param.Value != null && param.Value == data[value].ToString()) {
-						infoPicker.SelectedIndex = i;
+
+			EntryCell entry = new EntryCell {
+				Text = param.Value,
+				Keyboard = Keyboard.Numeric,
+				Label = paramType.Name
+			};
+			entry.Completed += (sender, e) => {
+				param.Value = entry.Text;
+				if (infoData.ContainsKey (paramType.InfoType)) {
+					Dictionary<string,InfoData> data = infoData [paramType.InfoType];
+					int i = 0;
+					foreach(string value in data.Keys){
+						if(entry.Text == data[value].NexusId.ToString()){
+							if(infoPicker.Items.Count > i){
+								infoPicker.SelectedIndex = i;
+								infoPicker.Title = data[value].ToString();
+							}
+							break;
+						}
+						i += 1;
 					}
-					i += 1;
 				}
+				SaveOrder();
+			};
+			section.Add (entry);
+
+			if (infoData.ContainsKey (paramType.InfoType)) {
+				Dictionary<string,InfoData> data = infoData [paramType.InfoType];
+				if (data.Count > 0) {
+					section.Add (new ViewCell { View = infoPicker });
+					int i = 0;
+					foreach (string value in data.Keys) {
+						infoPicker.Items.Add (value.ToString());
+						if (param.Value != null && param.Value == data[value].ToString()) {
+							infoPicker.SelectedIndex = i;
+						}
+						i += 1;
+					}
+				}
+
 			} else {
-				Phoenix.Application.InfoManager.GetInfoDataByGroupId (infoType, (results) => {
-					Dictionary<string,int> data = new Dictionary<string,int>();
+				Phoenix.Application.InfoManager.GetInfoDataByGroupId (paramType.InfoType, (results) => {
+					Dictionary<string,InfoData> data = new Dictionary<string,InfoData>();
 					int i = 0;
 					foreach(InfoData info in results){
 						if(!data.ContainsKey(info.ToString())){
-							data.Add(info.ToString(),info.NexusId);
+							data.Add(info.ToString(),info);
 							infoPicker.Items.Add(info.ToString());
 							if (param.Value != null && param.Value == info.NexusId.ToString()) {
 								infoPicker.SelectedIndex = i;
@@ -185,22 +275,29 @@ namespace PhoenixImperator.Pages
 							i += 1;
 						}
 					}
+					if(data.Count > 0){
+						section.Add (new ViewCell { View = infoPicker });
+					}
+					infoData.Add(paramType.InfoType,data);
 				});
 			}
 			infoPicker.Unfocused += (sender, e) => {
-				if (infoData.ContainsKey (infoType)) {
-					Dictionary<string,int> data = infoData [infoType];
+				if (infoData.ContainsKey (paramType.InfoType)) {
+					Dictionary<string,InfoData> data = infoData [paramType.InfoType];
 					string value = infoPicker.Items[infoPicker.SelectedIndex];
 					if(data.ContainsKey(value)){
-						param.Value = data[value].ToString();
+						param.Value = data[value].NexusId.ToString();
+						param.DisplayValue = data[value].ToString();
+						entry.Text = data[value].NexusId.ToString();
+						SaveOrder();
 					}
 				}
 			};
-			layout.Children.Add (infoPicker);
+			AddSection ();
 		}
 
-		private StackLayout layout;
-		private Dictionary<int, Dictionary<string,int>> infoData = new Dictionary<int, Dictionary<string,int>>();
+		private TableView formTable;
+		private Dictionary<int, Dictionary<string,InfoData>> infoData = new Dictionary<int, Dictionary<string,InfoData>>();
 	}
 }
 
