@@ -27,7 +27,11 @@ using System;
 
 using Xamarin.Forms;
 
+using Phoenix.BL.Entities;
+using Phoenix.BL.Managers;
 using Phoenix.Util;
+
+using PhoenixImperator.Pages.Entities;
 
 namespace PhoenixImperator.Pages
 {
@@ -58,14 +62,39 @@ namespace PhoenixImperator.Pages
 		public void NavigateTo (SideMenuItem menu)
 		{
 			Log.WriteLine (Log.Layer.UI, GetType (), "Navigate To: " + menu.TargetType);
-			Page displayPage = (Page)Activator.CreateInstance (menu.TargetType);
-			menuPage.DeselectMenuItem ();
-			GoToPage (displayPage);
+			string menuChoice = menu.TargetType.ToString ();
+			switch (menuChoice) {
+			case "Items":
+				ShowPage<Item> (menuPage.Spinner, menuChoice, Phoenix.Application.ItemManager);
+				break;
+			case "Orders":
+				ShowOrdersPage (menuPage.Spinner);
+				break;
+			case "Order Types":
+				ShowPage<OrderType> (menuPage.Spinner, menuChoice, Phoenix.Application.OrderTypeManager);
+				break;
+			case "Positions":
+				ShowPage<Position> (menuPage.Spinner, menuChoice, Phoenix.Application.PositionManager);
+				break;
+			case "Star Systems":
+				ShowPage<StarSystem> (menuPage.Spinner, menuChoice, Phoenix.Application.StarSystemManager);
+				break;
+			case "Info":
+				ShowPage<InfoData> (menuPage.Spinner, menuChoice, Phoenix.Application.InfoManager, false);
+				break;
+			default:
+				Page displayPage = (Page)Activator.CreateInstance ((Type)menu.TargetType);
+				GoToPage (displayPage);
+				break;
+			}
+
 		}
 
 		public void GoToPage(Page displayPage)
 		{
 			Log.WriteLine (Log.Layer.UI, GetType (), "Go To Page: " + displayPage);
+			if (displayPage == null)
+				return;
 			var navigationPage = new NavigationPage (displayPage){
 				BarBackgroundColor = Color.Black,
 				BarTextColor = Color.White
@@ -85,6 +114,47 @@ namespace PhoenixImperator.Pages
 		public void PreviousPage()
 		{
 			((NavigationPage)Detail).PopAsync ();
+		}
+
+		public void ShowPage<T>(ActivityIndicator spinner, string title, NexusManager<T> manager, bool entityHasDetail = true) where T :   EntityBase, new()
+		{
+			spinner.IsRunning = true;
+			if (manager.Count() > 0) {
+				// show local results
+				manager.All ((results) => {
+					EntityListPage<T> page = new EntityListPage<T> (title, manager, results, entityHasDetail);
+					Device.BeginInvokeOnMainThread (() => {
+						spinner.IsRunning = false;
+						GoToPage (page);
+					});
+				});
+			} else {
+				// fetch and show results
+				manager.Fetch ((results, ex) => {
+					if(ex == null){
+						Page page = new EntityListPage<T> (title, manager, results);
+						Device.BeginInvokeOnMainThread (() => {
+							spinner.IsRunning = false;
+							GoToPage (page);
+						});
+					}
+					else {
+						menuPage.ShowErrorAlert(ex);
+					}
+				}, false);
+			}
+		}
+
+		public void ShowOrdersPage(ActivityIndicator spinner)
+		{
+			spinner.IsRunning = true;
+			Phoenix.Application.PositionManager.GetPositionsWithOrders ((results) => {
+				OrderPositionsListPage page = new OrderPositionsListPage(results);
+				Device.BeginInvokeOnMainThread (() => {
+					spinner.IsRunning = false;
+					GoToPage (page);
+				});
+			});
 		}
 
 		private MenuPage menuPage;

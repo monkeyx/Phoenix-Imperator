@@ -49,10 +49,11 @@ namespace PhoenixImperator.Pages.Entities
 					Children = {
 						new PhoenixPage {
 							Content = new StackLayout{
-								VerticalOptions = LayoutOptions.Center,
+								VerticalOptions = LayoutOptions.CenterAndExpand,
 								Children = {
 									new Label{
-										Text = "These aren't the droids you are looking for"
+										Text = "These aren't the droids you are looking for",
+										HorizontalOptions = LayoutOptions.CenterAndExpand
 									}
 								}
 							}
@@ -88,8 +89,8 @@ namespace PhoenixImperator.Pages.Entities
 		protected void AddContentTab(string title, string icon)
 		{
 			currentLayout = new StackLayout {
-				Padding = new Thickness (10),
-				VerticalOptions = LayoutOptions.CenterAndExpand
+				Padding = new Thickness (10,20),
+				VerticalOptions = LayoutOptions.StartAndExpand
 			};
 			currentTab = new PhoenixPage {
 				Content = currentLayout,

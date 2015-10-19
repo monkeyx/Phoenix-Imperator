@@ -30,9 +30,10 @@ using Xamarin.Forms;
 
 namespace PhoenixImperator.Pages
 {
-	public class MenuPage : ContentPage
+	public class MenuPage : PhoenixPage
 	{
 		public ListView Menu { get; set; }
+		public ActivityIndicator Spinner { get; set; }
 
 		public MenuPage ()
 		{
@@ -49,12 +50,19 @@ namespace PhoenixImperator.Pages
 				},
 			};
 
+			Spinner = new ActivityIndicator {
+				IsEnabled = true,
+				IsRunning = false,
+				BindingContext = this
+			};
+
 			var layout = new StackLayout { 
 				Spacing = 0, 
 				VerticalOptions = LayoutOptions.FillAndExpand
 			};
 			layout.Children.Add (menuLabel);
 			layout.Children.Add (Menu);
+			layout.Children.Add (Spinner);
 
 			Content = layout;
 		}
@@ -91,7 +99,7 @@ namespace PhoenixImperator.Pages
 
 		public string IconSource { get; set; }
 
-		public Type TargetType { get; set; }
+		public object TargetType { get; set; }
 	}
 
 	public class MenuListData : List<SideMenuItem>
@@ -102,6 +110,42 @@ namespace PhoenixImperator.Pages
 				Title = "Home",
 				IconSource = "home.png",
 				TargetType = typeof(HomePage)
+			});
+
+			Add (new SideMenuItem {
+				Title = "Positions",
+				IconSource = "icon_positions.png",
+				TargetType = "Positions"
+			});
+
+			Add (new SideMenuItem {
+				Title = "Orders",
+				IconSource = "icon_orders.png",
+				TargetType = "Orders"
+			});
+
+			Add (new SideMenuItem {
+				Title = "Items",
+				IconSource = "icon_production.png",
+				TargetType = "Items"
+			});
+
+			Add (new SideMenuItem {
+				Title = "Star Systems",
+				IconSource = "icon_celestialbodies.png",
+				TargetType = "Star Systems"
+			});
+
+			Add (new SideMenuItem {
+				Title = "Order Types",
+				IconSource = "icon_report.png",
+				TargetType = "Order Types"
+			});
+
+			Add (new SideMenuItem {
+				Title = "Info",
+				IconSource = "icon_techmanual.png",
+				TargetType = "Info"
 			});
 		}
 	}

@@ -99,22 +99,22 @@ namespace PhoenixImperator.Pages
 				((ListView)sender).SelectedItem = null; // de-select the row
 				switch(e.Item.ToString()){
 				case "Positions":
-					ShowPage<Position> (e.Item.ToString(), Phoenix.Application.PositionManager);
+					RootPage.Root.ShowPage<Position> (activityIndicator, e.Item.ToString(), Phoenix.Application.PositionManager);
 					break;
 				case "Order Types":
-					ShowPage<OrderType> (e.Item.ToString(), Phoenix.Application.OrderTypeManager);
+					RootPage.Root.ShowPage<OrderType> (activityIndicator, e.Item.ToString(), Phoenix.Application.OrderTypeManager);
 					break;
 				case "Items":
-					ShowPage<Item> (e.Item.ToString(), Phoenix.Application.ItemManager);
+					RootPage.Root.ShowPage<Item> (activityIndicator, e.Item.ToString(), Phoenix.Application.ItemManager);
 					break;
 				case "Info":
-					ShowPage<InfoData> (e.Item.ToString(), Phoenix.Application.InfoManager,false);
+					RootPage.Root.ShowPage<InfoData> (activityIndicator, e.Item.ToString(), Phoenix.Application.InfoManager,false);
 					break;
 				case "Star Systems":
-					ShowPage<StarSystem> (e.Item.ToString(), Phoenix.Application.StarSystemManager);
+					RootPage.Root.ShowPage<StarSystem> (activityIndicator, e.Item.ToString(), Phoenix.Application.StarSystemManager);
 					break;
 				case "Orders":
-					ShowOrdersPage();
+					RootPage.Root.ShowOrdersPage(activityIndicator);
 					break;
 				}
 			};
@@ -178,51 +178,6 @@ namespace PhoenixImperator.Pages
 		{
 			base.OnAppearing ();
 			Onboarding.ShowOnboarding ((int)UserFlags.SHOWN_ONBOARDING_NEXUS_PULL_TO_REFRESH, "Help", "Pull down to check Nexus status");
-		}
-
-		private void ShowOrdersPage()
-		{
-			activityIndicator.IsRunning = true;
-			Phoenix.Application.PositionManager.GetPositionsWithOrders ((results) => {
-				OrderPositionsListPage page = new OrderPositionsListPage(results);
-				Device.BeginInvokeOnMainThread (() => {
-					activityIndicator.IsRunning = false;
-					RootPage.Root.GoToPage (page);
-				});
-			});
-		}
-
-		private void ShowPage<T>(string title, NexusManager<T> manager, bool entityHasDetail = true) where T :   EntityBase, new()
-		{
-			activityIndicator.IsRunning = true;
-			if (manager.Count() > 0) {
-				// show local results
-				manager.All ((results) => {
-					EntityListPage<T> page = new EntityListPage<T> (title, manager, results, entityHasDetail);
-					Device.BeginInvokeOnMainThread (() => {
-						activityIndicator.IsRunning = false;
-						RootPage.Root.GoToPage (page);
-					});
-				});
-			} else {
-				// fetch and show results
-				manager.Fetch ((results, ex) => {
-					if(ex == null){
-						Page page = new EntityListPage<T> (title, manager, results);
-						Device.BeginInvokeOnMainThread (() => {
-							activityIndicator.IsRunning = false;
-							RootPage.Root.GoToPage (page);
-						});
-					}
-					else {
-						#if DEBUG
-						ShowErrorAlert(ex);
-						#else
-						ShowErrorAlert("Problem connecting to Nexus");
-						#endif
-					}
-				}, false);
-			}
 		}
 
 		private Label starDateLabel;

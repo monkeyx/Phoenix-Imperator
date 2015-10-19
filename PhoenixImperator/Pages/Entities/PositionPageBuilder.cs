@@ -132,7 +132,6 @@ namespace PhoenixImperator.Pages.Entities
 
 			Button clearOrdersButton = new Button {
 				Text = "Clear Orders",
-				BorderWidth = 1,
 				TextColor = Color.White,
 				BackgroundColor = Color.Red
 			};
