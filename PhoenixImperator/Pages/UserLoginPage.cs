@@ -170,29 +170,29 @@ namespace PhoenixImperator.Pages
 					Phoenix.Application.GameStatusManager.Fetch ((results, ex) => {
 						UpdateStatusMessage("Fetched game status. Now fetching info.");
 						if(ex == null){
-							progressBar.ProgressTo(0.16,250,Easing.Linear);
+							UpdateProgressBar(progressBar, 0.16f);
 							Phoenix.Application.InfoManager.Fetch((infoResults, ex2) => {
 								UpdateStatusMessage("Fetched info data. Now fetching star systems.");
 								if(ex2 == null){
-									progressBar.ProgressTo(0.33,250,Easing.Linear);
+									UpdateProgressBar(progressBar, 0.33f);
 									Phoenix.Application.StarSystemManager.Fetch((systemResults, ex3) => {
 										UpdateStatusMessage("Fetched star systems. Now fetching order types.");
 										if(ex3 == null){
-											progressBar.ProgressTo(0.5,250,Easing.Linear);
+											UpdateProgressBar(progressBar, 0.5f);
 											Phoenix.Application.OrderTypeManager.Fetch((orderTypeResults, ex4) => {
 												if(ex4 == null){
-													progressBar.ProgressTo(0.67,250,Easing.Linear);
+													UpdateProgressBar(progressBar, 0.67f);
 													UpdateStatusMessage("Fetched order types. Now fetching items");
 													Phoenix.Application.ItemManager.Fetch((itemResults, ex5) => {
 														if(ex5 == null){
-															progressBar.ProgressTo(0.83,250,Easing.Linear);
+															UpdateProgressBar(progressBar, 0.83f);
 															UpdateStatusMessage("Fetched items. Now fetching positions.");
 															Phoenix.Application.PositionManager.Fetch((positionResults, ex6) => {
 																if(ex6 == null){
 																	ShowHomePage();
 																}
 																else {
-																	progressBar.ProgressTo(1.0,250,Easing.Linear);
+																	UpdateProgressBar(progressBar, 1.0f);
 																	ShowErrorAndThenHome(ex6);
 																}
 															});
@@ -227,6 +227,13 @@ namespace PhoenixImperator.Pages
 				else {
 					ShowHomePage();
 				}
+			});
+		}
+
+		private void UpdateProgressBar(ProgressBar progressBar, float progressTo)
+		{
+			Device.BeginInvokeOnMainThread (() => {
+				progressBar.ProgressTo(progressTo,250,Easing.Linear);
 			});
 		}
 

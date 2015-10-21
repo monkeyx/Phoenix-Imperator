@@ -74,16 +74,12 @@ namespace PhoenixImperator.Pages.Entities
 
 		protected void ShowInfoAlert(string title, object info)
 		{
-			Device.BeginInvokeOnMainThread(() => {
-				currentTab.ShowInfoAlert(title,info);
-			});
+			currentTab.ShowInfoAlert(title,info);
 		}
 
 		protected void ShowErrorAlert(object error)
 		{
-			Device.BeginInvokeOnMainThread(() => {
-				currentTab.ShowErrorAlert(error);
-			});
+			currentTab.ShowErrorAlert(error);
 		}
 
 		protected void AddContentTab(string title, string icon)
@@ -109,7 +105,7 @@ namespace PhoenixImperator.Pages.Entities
 					HorizontalOptions = LayoutOptions.Start,
 					FontAttributes = FontAttributes.Bold,
 					Text = heading,
-					FontSize = 18,
+					FontSize = Device.GetNamedSize (NamedSize.Large, typeof(Label)),
 					IsUnderline = true
 			});
 		}
@@ -195,7 +191,7 @@ namespace PhoenixImperator.Pages.Entities
 				IsUnderline = true
 			};
 			TapGestureRecognizer tapGesture = new TapGestureRecognizer();
-			tapGesture.Command = new Command (() => {
+			tapGesture.Command = new Command ((e) => {
 				EntityPageBuilderFactory.ShowEntityPage<T2>(manager,entity.Id);
 			});
 			entityLabel.GestureRecognizers.Add (tapGesture);

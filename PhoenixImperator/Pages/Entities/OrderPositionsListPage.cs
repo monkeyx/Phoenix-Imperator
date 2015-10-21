@@ -40,12 +40,86 @@ namespace PhoenixImperator.Pages.Entities
 	{
 		public OrderPositionsListPage (IEnumerable<Position> positions) : base("Orders",Phoenix.Application.PositionManager,positions,true,false)
 		{
+			Title = "Pending Orders";
+			positionsWithOrders = new List<Position> (positions);
+			if (positionsWithOrders.Count > 0) {
+				submitButton = new Button {
+					Text = "Submit Orders",
+					TextColor = Color.White,
+					BackgroundColor = Color.Green
+				};
+				submitButton.Clicked += (sender, e) => {
+					submitButton.IsEnabled = false;
+					SubmitOrders();
+				};
+				layout.Children.Add (submitButton);
+			}
 		}
 
 		protected override void EntitySelected(NexusManager<Position> manager, Position item)
 		{
 			EntityPageBuilderFactory.ShowEntityPage<Position>(manager,item.Id,1);
 		}
+
+		private void SubmitOrders()
+		{
+			Log.WriteLine (Log.Layer.UI, GetType (), "Submitting Orders for " + positionsWithOrders.Count);
+			if (positionsWithOrders.Count < 1) {
+				return;
+			}
+			ProgressBar progressBar = new ProgressBar{
+				Progress = 0f
+			};
+
+			layout.Children.Add (progressBar);
+
+			float progressPerPosition = 1.0f / (float)positionsWithOrders.Count;
+
+			int positionsSent = 0;
+
+			Device.BeginInvokeOnMainThread(() => {
+				listView.IsRefreshing = true;
+			});
+
+			foreach (Position position in positionsWithOrders) {
+				Phoenix.Application.OrderManager.SubmitOrdersForPosition (position.Id, (count, e) => {
+					if(e == null){
+						Log.WriteLine(Log.Layer.UI,GetType(),"Successfuly uploaded " + count + " orders for " + position );
+					}
+					else {
+						ShowErrorAlert(e);
+						Device.BeginInvokeOnMainThread(() => {
+							submitButton.IsEnabled = true;
+						});
+						return;
+					}
+					UpdateProgressBar(progressBar, (float) (progressBar.Progress + progressPerPosition));
+					positionsSent += 1;
+					positionsWithOrders.Remove(position);
+					GroupEntities(positionsWithOrders,(results) => {
+						Device.BeginInvokeOnMainThread(() => {
+							listView.ItemsSource = results;
+						});
+					});
+					if(positionsSent >= positionsWithOrders.Count){
+						ShowInfoAlert("Orders Submitted", "Submitted orders for " + positionsSent + " positions");
+						Device.BeginInvokeOnMainThread(() => {
+							listView.IsRefreshing = false;
+						});
+					}
+				});
+			}
+		}
+
+		private void UpdateProgressBar(ProgressBar progressBar, float progressTo)
+		{
+			Device.BeginInvokeOnMainThread (() => {
+				progressBar.ProgressTo(progressTo,250,Easing.Linear);
+			});
+		}
+
+		private List<Position> positionsWithOrders;
+		private Button submitButton;
 	}
 }
 

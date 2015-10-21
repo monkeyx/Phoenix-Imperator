@@ -38,11 +38,11 @@ namespace PhoenixImperator.Pages.Entities
 		{
 			IEntityPageBuilder<T> builder = EntityPageBuilderFactory.CreateBuilder<T>(manager);
 			manager.Get(id,(item) => {
+				TabbedPage page = builder.BuildPage((T) item);
+				if(tabIndex > 0){
+					page.CurrentPage = page.Children[tabIndex];
+				}
 				Device.BeginInvokeOnMainThread (() => {
-					TabbedPage page = builder.BuildPage((T) item);
-					if(tabIndex > 0){
-						page.CurrentPage = page.Children[tabIndex];
-					}
 					RootPage.Root.NextPage (page);
 				});
 			});

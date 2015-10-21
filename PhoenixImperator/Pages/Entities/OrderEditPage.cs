@@ -48,20 +48,35 @@ namespace PhoenixImperator.Pages
 			formTable = new TableView {
 				Root = new TableRoot(),
 				Intent = TableIntent.Form,
-				BackgroundColor = Color.White
+				BackgroundColor = Color.White,
+				VerticalOptions = LayoutOptions.Start,
+				HorizontalOptions = LayoutOptions.Fill
 			};
 
 			formTable.Root.Add (new TableSection ());
 
+			Button saveButton = new Button {
+				Text = "Save",
+				TextColor = Color.White,
+				BackgroundColor = Color.Blue
+			};
 			Button deleteButton = new Button {
 				Text = "Delete Order",
 				TextColor = Color.White,
 				BackgroundColor = Color.Red
 			};
+
+			saveButton.Clicked += (sender, e) => {
+				deleteButton.IsEnabled = false;
+				saveButton.IsEnabled = false;
+				SaveOrder();
+			};
+
 			deleteButton.Clicked += async(sender, e) => {
 				bool confirm = await DisplayAlert("Delete Order","Are you sure?","Yes","No");
 				if(confirm){
 					deleteButton.IsEnabled = false;
+					saveButton.IsEnabled = false;
 					DeleteOrder();
 				}
 					
@@ -71,23 +86,27 @@ namespace PhoenixImperator.Pages
 
 			AddSection ("Description");
 			LastSection.Add (new ViewCell () {
-				View = new Label {
-					VerticalOptions = LayoutOptions.StartAndExpand,
-					Text = CurrentOrder.OrderType.Description,
-					BackgroundColor = Color.Silver
+				View = new StackLayout {
+					Children = {
+						new Label {
+							FontSize = Device.GetNamedSize (NamedSize.Small, typeof(Label)),
+							VerticalOptions = LayoutOptions.Fill,
+							HorizontalOptions = LayoutOptions.FillAndExpand,
+							Text = CurrentOrder.OrderType.Description,
+							BackgroundColor = Color.White,
+							TextColor = Color.Black
+						}
+					}
 				}
 			});
 
-			LastSection.Add (new ViewCell { View = deleteButton });
-
-			Content = new ScrollView {
-				Content = new StackLayout{
-							VerticalOptions = LayoutOptions.Start,
-							Padding = new Thickness(10,20),
-							Children = {
-								formTable
-							}
-						}
+			Content = new StackLayout {
+				Padding = new Thickness (10, 10),
+				Children = {
+					deleteButton,
+					new ScrollView { Content = formTable },
+					saveButton
+				}
 			};
 		}
 
@@ -95,6 +114,9 @@ namespace PhoenixImperator.Pages
 		{
 			Phoenix.Application.OrderManager.SaveOrder(CurrentOrder,(results) => {
 				PositionPageBuilder.UpdateOrders(results);
+				Device.BeginInvokeOnMainThread(() => {
+					RootPage.Root.PreviousPage();
+				});
 			});
 		}
 
@@ -102,14 +124,16 @@ namespace PhoenixImperator.Pages
 		{
 			Phoenix.Application.OrderManager.DeleteOrder(CurrentOrder,(results) => {
 				PositionPageBuilder.UpdateOrders(results);
-				RootPage.Root.PreviousPage();
+				Device.BeginInvokeOnMainThread(() => {
+					RootPage.Root.PreviousPage();
+				});
 			});
 		}
 
 		private void ShowParameters ()
 		{
 			if (CurrentOrder.OrderType.Parameters.Count < 1) {
-				formTable.Root [0].Add (new TextCell{
+				LastSection.Add (new TextCell{
 					Text = "No parameters"
 				});
 				return;
@@ -149,7 +173,25 @@ namespace PhoenixImperator.Pages
 		{
 			if (param == null) {
 				param = new OrderParameter ();
+				switch (paramType.DataType) {
+				case OrderType.DataTypes.Integer:
+					param.Value = "0";
+					break;
+				case OrderType.DataTypes.Boolean:
+					param.Value = "False";
+					break;
+				case OrderType.DataTypes.String:
+					param.Value = "";
+					break;
+				default:
+					param.Value = "";
+					break;
+				}
 				CurrentOrder.Parameters.Add (param);
+			}
+			if (paramType.InfoType > 0) {
+				AddInfoParam (paramType, param);
+				return;
 			}
 			switch (paramType.DataType) {
 			case OrderType.DataTypes.Integer:
@@ -162,7 +204,7 @@ namespace PhoenixImperator.Pages
 				AddBooleanParam (paramType, param);
 				break;
 			default:
-				AddInfoParam (paramType, param);
+				AddIntegerParam (paramType, param);
 				break;
 			}
 		}
@@ -176,7 +218,6 @@ namespace PhoenixImperator.Pages
 			};
 			entry.Completed += (sender, e) => {
 				param.Value = entry.Text;
-				SaveOrder();
 			};
 			LastSection.Add (entry);
 		}
@@ -189,7 +230,6 @@ namespace PhoenixImperator.Pages
 			};
 			entry.Completed += (sender, e) => {
 				param.Value = entry.Text;
-				SaveOrder();
 			};
 			LastSection.Add (entry);
 		}
@@ -203,7 +243,6 @@ namespace PhoenixImperator.Pages
 
 			switchCell.OnChanged += (sender, e) => {
 				param.Value = switchCell.On ? "True" : "False";
-				SaveOrder();
 			};
 			LastSection.Add (switchCell);
 		}
@@ -214,7 +253,6 @@ namespace PhoenixImperator.Pages
 				AddIntegerParam (paramType, param);
 				return;
 			}
-			TableSection section = AddSection (paramType.Name);
 
 			Picker infoPicker = new Picker {
 				Title = param.DisplayValue,
@@ -224,42 +262,66 @@ namespace PhoenixImperator.Pages
 
 			EntryCell entry = new EntryCell {
 				Text = param.Value,
-				Keyboard = Keyboard.Numeric,
 				Label = paramType.Name
 			};
+
+			if (paramType.DataType != OrderType.DataTypes.String) {
+				entry.Keyboard = Keyboard.Numeric;
+			}
+
 			entry.Completed += (sender, e) => {
 				param.Value = entry.Text;
 				if (infoData.ContainsKey (paramType.InfoType)) {
 					Dictionary<string,InfoData> data = infoData [paramType.InfoType];
-					int i = 0;
-					foreach(string value in data.Keys){
-						if(entry.Text == data[value].NexusId.ToString()){
-							if(infoPicker.Items.Count > i){
-								infoPicker.SelectedIndex = i;
-								infoPicker.Title = data[value].ToString();
+					if(data.Count > 0) {
+						Task.Factory.StartNew(() => {
+							int i = 0;
+							foreach(string value in data.Keys){
+								if(entry.Text == data[value].NexusId.ToString()){
+									if(infoPicker.Items.Count > i){
+										Device.BeginInvokeOnMainThread(() => {
+											infoPicker.SelectedIndex = i;
+											infoPicker.Title = data[value].ToString();
+										});
+									}
+									break;
+								}
+								i += 1;
 							}
-							break;
-						}
-						i += 1;
+						});
 					}
+					else {
+						Device.BeginInvokeOnMainThread(() => {
+							infoPicker.Title = param.Value;
+						});
+					}
+
+				} else {
+					Device.BeginInvokeOnMainThread(() => {
+						infoPicker.Title = param.Value;
+					});
 				}
-				SaveOrder();
 			};
-			section.Add (entry);
+			LastSection.Add (entry);
+			LastSection.Add (new ViewCell { View = infoPicker });
 
 			if (infoData.ContainsKey (paramType.InfoType)) {
-				Dictionary<string,InfoData> data = infoData [paramType.InfoType];
-				if (data.Count > 0) {
-					section.Add (new ViewCell { View = infoPicker });
-					int i = 0;
-					foreach (string value in data.Keys) {
-						infoPicker.Items.Add (value.ToString());
-						if (param.Value != null && param.Value == data[value].ToString()) {
-							infoPicker.SelectedIndex = i;
+				Task.Factory.StartNew (() => {
+					Dictionary<string,InfoData> data = infoData [paramType.InfoType];
+					if (data.Count > 0) {
+						int i = 0;
+						foreach (string value in data.Keys) {
+							infoPicker.Items.Add (value.ToString());
+							if (param.Value != null && param.Value == data[value].ToString()) {
+								Device.BeginInvokeOnMainThread(() => {
+									infoPicker.SelectedIndex = i;
+								});
+							}
+							i += 1;
 						}
-						i += 1;
 					}
-				}
+				});
+				
 
 			} else {
 				Phoenix.Application.InfoManager.GetInfoDataByGroupId (paramType.InfoType, (results) => {
@@ -268,32 +330,39 @@ namespace PhoenixImperator.Pages
 					foreach(InfoData info in results){
 						if(!data.ContainsKey(info.ToString())){
 							data.Add(info.ToString(),info);
-							infoPicker.Items.Add(info.ToString());
-							if (param.Value != null && param.Value == info.NexusId.ToString()) {
-								infoPicker.SelectedIndex = i;
-							}
+							Device.BeginInvokeOnMainThread(() => {
+								infoPicker.Items.Add(info.ToString());
+								if (param.Value != null && param.Value == info.NexusId.ToString()) {
+									infoPicker.SelectedIndex = i;
+								}
+							});
 							i += 1;
 						}
 					}
-					if(data.Count > 0){
-						section.Add (new ViewCell { View = infoPicker });
-					}
 					infoData.Add(paramType.InfoType,data);
+					if(data.Count < 1){
+						Device.BeginInvokeOnMainThread(() => {
+							infoPicker.IsEnabled = false;
+							infoPicker.IsVisible = false;
+						});
+					}
 				});
 			}
 			infoPicker.Unfocused += (sender, e) => {
-				if (infoData.ContainsKey (paramType.InfoType)) {
-					Dictionary<string,InfoData> data = infoData [paramType.InfoType];
-					string value = infoPicker.Items[infoPicker.SelectedIndex];
-					if(data.ContainsKey(value)){
-						param.Value = data[value].NexusId.ToString();
-						param.DisplayValue = data[value].ToString();
-						entry.Text = data[value].NexusId.ToString();
-						SaveOrder();
+				if(infoPicker.SelectedIndex > 0){
+					if (infoData.ContainsKey (paramType.InfoType)) {
+						Dictionary<string,InfoData> data = infoData [paramType.InfoType];
+						string value = infoPicker.Items[infoPicker.SelectedIndex];
+						if(data.ContainsKey(value)){
+							param.Value = data[value].NexusId.ToString();
+							param.DisplayValue = data[value].ToString();
+							Device.BeginInvokeOnMainThread(() => {
+								entry.Text = data[value].NexusId.ToString();
+							});
+						}
 					}
 				}
 			};
-			AddSection ();
 		}
 
 		private TableView formTable;

@@ -87,7 +87,7 @@ namespace PhoenixImperator.Pages
 			};
 
 			ListView navigationList = new ListView () {
-				BackgroundColor = Color.Gray,
+				BackgroundColor = Color.White,
 				SeparatorColor = Color.Silver,
 				ItemsSource = new [] {"Positions", "Orders", "Items", "Star Systems", "Order Types", "Info"}
 			};
@@ -132,11 +132,13 @@ namespace PhoenixImperator.Pages
 									} else {
 										Log.WriteLine(Log.Layer.UI,GetType(),"Order Types: " + Phoenix.Application.OrderTypeManager.Count());
 									}
-									navigationList.IsRefreshing = false;
-									IEnumerator<GameStatus> i = results.GetEnumerator();
-									if(i.MoveNext()){
-										SetStatus(i.Current);
-									}
+									Device.BeginInvokeOnMainThread(() => {
+										navigationList.IsRefreshing = false;
+										IEnumerator<GameStatus> i = results.GetEnumerator();
+										if(i.MoveNext()){
+											SetStatus(i.Current);
+										}
+									});
 								},true);
 							}
 							else {
@@ -170,7 +172,9 @@ namespace PhoenixImperator.Pages
 			};
 
 			Phoenix.Application.GameStatusManager.First((result) => {
-				SetStatus(result);
+				Device.BeginInvokeOnMainThread(() => {
+					SetStatus(result);
+				});
 			});
 		}
 

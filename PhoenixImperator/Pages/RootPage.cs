@@ -106,6 +106,17 @@ namespace PhoenixImperator.Pages
 			menuPage.DeselectMenuItem ();
 		}
 
+		public void NextPageModal(Page modalPage)
+		{
+			((NavigationPage)Detail).Navigation.PushModalAsync (modalPage);
+		}
+
+		public void NextPageAfterModal(Page nextPage)
+		{
+			NextPage (nextPage);
+			((NavigationPage)Detail).Navigation.PopModalAsync ();
+		}
+
 		public void NextPage(Page nextPage)
 		{
 			((NavigationPage)Detail).PushAsync (nextPage);
@@ -131,10 +142,12 @@ namespace PhoenixImperator.Pages
 			} else {
 				// fetch and show results
 				manager.Fetch ((results, ex) => {
+					Device.BeginInvokeOnMainThread (() => {
+						spinner.IsRunning = false;
+					});
 					if(ex == null){
 						Page page = new EntityListPage<T> (title, manager, results);
 						Device.BeginInvokeOnMainThread (() => {
-							spinner.IsRunning = false;
 							GoToPage (page);
 						});
 					}

@@ -105,12 +105,16 @@ namespace PhoenixImperator.Pages.Entities
 
 			currentLayout.Children.Add (orderFormLayout);
 
-			orderPicker = new Picker {
-				Title = "Add Order",
-				HorizontalOptions = LayoutOptions.Fill
+			Button addOrderButton = new Button {
+				Text = "Add Order",
+				TextColor = Color.White,
+				BackgroundColor = Color.Blue
+			};
+			addOrderButton.Clicked += (sender, e) => {
+				OrderSelectorPage page = new OrderSelectorPage(CurrentPosition);
+				RootPage.Root.NextPageModal(page);
 			};
 
-			currentLayout.Children.Add (orderPicker);
 
 			ordersList = new ListView ();
 			ordersList.ItemTemplate = new DataTemplate (typeof(OrderViewCell));
@@ -120,23 +124,37 @@ namespace PhoenixImperator.Pages.Entities
 				ordersActivity.IsRunning = true;
 				Phoenix.Application.OrderManager.Get(((Order)e.Item).Id,(order) => {
 					OrderEditPage page = new OrderEditPage(order);
-					RootPage.Root.NextPage(page);
-					ordersList.SelectedItem = null;
-					ordersActivity.IsRunning = false;
+					Device.BeginInvokeOnMainThread(() => {
+						RootPage.Root.NextPage(page);
+						ordersList.SelectedItem = null;
+						ordersActivity.IsRunning = false;
+					});
 				});
 			};
 			ordersList.ItemsSource = Orders;
-
-			currentLayout.Children.Add (ordersActivity);
-			currentLayout.Children.Add(ordersList);
 
 			Button clearOrdersButton = new Button {
 				Text = "Clear Orders",
 				TextColor = Color.White,
 				BackgroundColor = Color.Red
 			};
-			clearOrdersButton.Clicked += ClearOrdersButtonClicked;
+			clearOrdersButton.Clicked += async (sender, e) => {
+				bool confirm = await currentTab.DisplayAlert("Clear Orders","Are you sure?","Yes","No");
+				if(confirm){
+					Phoenix.Application.OrderManager.ClearOrders (CurrentPosition.Id, (results) => {
+						Orders = new ObservableCollection<Order> (results);
+						Device.BeginInvokeOnMainThread(() => {
+							ordersList.ItemsSource = Orders;
+						});
+						SwitchToOrdersTab();
+					});
+				}
+			};
+
 			currentLayout.Children.Add (clearOrdersButton);
+			currentLayout.Children.Add (ordersActivity);
+			currentLayout.Children.Add(ordersList);
+			currentLayout.Children.Add (addOrderButton);
 
 			entityPage.CurrentPageChanged += (sender, e) => {
 				if(entityPage.CurrentPage.Title == "Orders"){
@@ -146,67 +164,37 @@ namespace PhoenixImperator.Pages.Entities
 
 			Phoenix.Application.OrderManager.AllForPosition (item.Id, (results) => {
 				if(results.Count > 0){
-					ordersActivity.IsRunning = false;
+					Device.BeginInvokeOnMainThread(() => {
+						ordersActivity.IsRunning = false;
+					});
 					UpdateOrders(results);
 				}
 				else {
 					Phoenix.Application.OrderManager.FetchForPosition(item.Id,(fetchResults,ex) => {
-						ordersActivity.IsRunning = false;
+						Device.BeginInvokeOnMainThread(() => {
+							ordersActivity.IsRunning = false;
+						});
 						if(ex == null){
 							UpdateOrders(fetchResults);
 						}
 						else {
-							#if DEBUG
 							ShowErrorAlert(ex);
-							#else
-							ShowErrorAlert("Problem connecting to Nexus");
-							#endif
 						}
 					});
 				}
 			});
-
-			Phoenix.Application.OrderTypeManager.GetOrderTypesForPosition ((Position.PositionFlag)CurrentPosition.PositionType, (results) => {
-				orderPicker.Items.Add("");
-				foreach(OrderType ot in results){
-					orderTypes.Add(ot.Name,ot);
-					orderPicker.Items.Add(ot.Name);
-				}
-			});
-
-			orderPicker.Unfocused += (sender, args) => {
-				if(orderPicker.SelectedIndex > 0){
-					Log.WriteLine(Log.Layer.UI,GetType(),"Selected Order: " + orderPicker.Items[orderPicker.SelectedIndex]);
-					OrderType orderType = orderTypes[orderPicker.Items[orderPicker.SelectedIndex]];
-					Phoenix.Application.OrderManager.AddOrder(CurrentPosition,orderType,(results) => {
-						UpdateOrders(results);
-						Device.BeginInvokeOnMainThread (() => {
-							orderPicker.SelectedIndex = -1;
-						});
-					});
-				}
-			};
 		}
 
 		void RequestUpdateButtonClicked(object sender, EventArgs e)
 		{
 			Phoenix.Application.OrderManager.RequestUpdate (CurrentPosition.Id, (results) => {
 				Orders = new ObservableCollection<Order> (results);
-				ordersList.ItemsSource = Orders;
+				Device.BeginInvokeOnMainThread(() => {
+					ordersList.ItemsSource = Orders;
+				});
 				SwitchToOrdersTab();
 			});
 		}
-
-		void ClearOrdersButtonClicked(object sender, EventArgs e)
-		{
-			Phoenix.Application.OrderManager.ClearOrders (CurrentPosition.Id, (results) => {
-				Orders = new ObservableCollection<Order> (results);
-				ordersList.ItemsSource = Orders;
-				SwitchToOrdersTab();
-			});
-		}
-
-
 
 		protected void SwitchToOrdersTab()
 		{
@@ -220,8 +208,6 @@ namespace PhoenixImperator.Pages.Entities
 
 		private ListView ordersList;
 		private Page ordersTab;
-		private Picker orderPicker;
-		private Dictionary<string,OrderType> orderTypes = new Dictionary<string, OrderType>();
 	}
 
 	public class OrderViewCell : TextCell

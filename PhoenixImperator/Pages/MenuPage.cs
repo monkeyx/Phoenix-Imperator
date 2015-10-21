@@ -83,7 +83,7 @@ namespace PhoenixImperator.Pages
 
 			ItemsSource = data;
 			VerticalOptions = LayoutOptions.FillAndExpand;
-			BackgroundColor = Color.Silver;
+			BackgroundColor = Color.White;
 
 			var cell = new DataTemplate (typeof(ImageCell));
 			cell.SetBinding (TextCell.TextProperty, "Title");

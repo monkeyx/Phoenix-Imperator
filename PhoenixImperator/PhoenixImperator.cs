@@ -29,6 +29,9 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 
+using SQLite.Net;
+using SQLite.Net.Interop;
+
 using ModernHttpClient;
 
 using Xamarin.Forms;
@@ -50,9 +53,11 @@ namespace PhoenixImperator
 
 	public class App : Application, Phoenix.IDatabase, Phoenix.ILogger, Phoenix.IDocumentFolder, Phoenix.IRestClient
 	{
+		public static string Version { get; set; }
+
 		public App ()
 		{
-			var sqliteFilename = "Phoenix.db3";
+			var sqliteFilename = "phoenix_imperator_" + Version.Replace(".","_") + ".db3";
 			string documentsPath = GetDocumentPath ();
 			#if __ANDROID__
 			var path = Path.Combine(documentsPath, sqliteFilename);
@@ -60,11 +65,10 @@ namespace PhoenixImperator
 			string libraryPath = Path.Combine (documentsPath, "..", "Library"); // Library folder
 			var path = Path.Combine(libraryPath, sqliteFilename);
 			#endif
-			_dbConnection = new SQLite.SQLiteConnection (path);
-
+			_dbConnection = new SQLiteConnectionWithLock (DatabasePlatform, new SQLiteConnectionString (path, storeDateTimeAsTicks: true));
+			Console.WriteLine("SQL Database: " + path);
 			Phoenix.Application.Initialize (this, this, this, this);
-
-			MainPage = new RootPage();
+			MainPage = new RootPage ();
 		}
 
 		/// <summary>
@@ -108,7 +112,7 @@ namespace PhoenixImperator
 		/// Gets the connection.
 		/// </summary>
 		/// <returns>The connection.</returns>
-		public SQLite.SQLiteConnection GetConnection()
+		public SQLiteConnection GetConnection()
 		{
 			return _dbConnection;
 		}
@@ -132,13 +136,15 @@ namespace PhoenixImperator
 		/// <summary>
 		/// Async GET method
 		/// </summary>
-		/// <returns>Stream</returns>
 		/// <param name="url">URL.</param>
-		public Task<Stream> GetAsync(string url)
+		/// <param name="callback">Callback.</param>
+		public void GetAsync(string url, Action<Stream> callback)
 		{
-			var httpClient = new HttpClient(new NativeMessageHandler());
-			httpClient.Timeout = TimeSpan.FromSeconds(5);
-			return httpClient.GetStreamAsync (url);
+			Task.Factory.StartNew (async () => {
+				var httpClient = new HttpClient(new NativeMessageHandler());
+				httpClient.Timeout = TimeSpan.FromSeconds(5);
+				callback(await httpClient.GetStreamAsync (url));
+			});
 		}
 
 		/// <summary>
@@ -147,11 +153,13 @@ namespace PhoenixImperator
 		/// <returns>Stream</returns>
 		/// <param name="url">URL.</param>
 		/// <param name="dto">Dto.</param>
-		public Task<HttpResponseMessage> PostAsync(string url, object dto)
+		public void PostAsync(string url, object dto, Action<HttpResponseMessage> callback)
 		{
-			var httpClient = new HttpClient(new NativeMessageHandler());
-			httpClient.Timeout = TimeSpan.FromSeconds(5);
-			return httpClient.PostAsync(url,new StringContent(dto.ToString()));
+			Task.Factory.StartNew (async () => {
+				var httpClient = new HttpClient(new NativeMessageHandler());
+				httpClient.Timeout = TimeSpan.FromSeconds(5);
+				callback(await httpClient.PostAsync(url,new StringContent(dto.ToString())));
+			});
 		}
 
 		/// <summary>
@@ -181,7 +189,23 @@ namespace PhoenixImperator
 			// Handle when your app resumes
 		}
 
-		private SQLite.SQLiteConnection _dbConnection;
+		private ISQLitePlatform DatabasePlatform {
+			get {
+				#if __IOS__
+				var platform = new SQLite.Net.Platform.XamarinIOS.SQLitePlatformIOS ();
+				#else
+				#if __ANDROID__
+						var platform = new SQLite.Net.Platform.XamarinAndroid.SQLitePlatformAndroid();
+				#else
+						// WinPhone
+						var platform = new SQLite.Net.Platform.WinRT.SQLitePlatformWinRT();
+				#endif
+				#endif
+				return platform;
+			}
+		}
+
+		private SQLiteConnection _dbConnection;
 	}
 }
 

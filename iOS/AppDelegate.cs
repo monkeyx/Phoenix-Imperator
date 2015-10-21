@@ -44,11 +44,18 @@ namespace PhoenixImperator.iOS
 			Xamarin.Calabash.Start();
 			#endif
 
+			App.Version = GetBuildNumber ();
+
 			LoadApplication (new App ());
 
 			UIApplication.SharedApplication.IdleTimerDisabled = true;
 
 			return base.FinishedLaunching (app, options);
+		}
+
+		public string GetBuildNumber()
+		{
+			return NSBundle.MainBundle.InfoDictionary[new NSString("CFBundleVersion")].ToString();
 		}
 	}
 }

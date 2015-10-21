@@ -26,6 +26,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 using Xamarin.Forms;
 
@@ -44,6 +45,8 @@ namespace PhoenixImperator.Pages.Entities
 			if (item.CelestialBodies.Count > 0) {
 				AddContentTab ("Celestial Bodies","icon_celestialbodies.png");
 
+				AddProperty ("Periphery", item.PeripheryName);
+
 				ListView listView = new ListView ();
 				listView.ItemTemplate = new DataTemplate (typeof(TextCell));
 				listView.ItemTemplate.SetBinding (TextCell.TextProperty, "ListText");
@@ -59,6 +62,8 @@ namespace PhoenixImperator.Pages.Entities
 
 			if (item.JumpLinks.Count > 0) {
 				AddContentTab ("Jump Links","icon_jumplink.png");
+
+				AddProperty ("Periphery", item.PeripheryName);
 
 				ListView listView = new ListView ();
 				listView.ItemTemplate = new DataTemplate (typeof(TextCell));
@@ -110,13 +115,20 @@ namespace PhoenixImperator.Pages.Entities
 		{
 			positionListView.BeginRefresh ();
 
-			if (string.IsNullOrWhiteSpace (filter)) {
-				positionListView.ItemsSource = allPositions;
-			} else {
-				positionListView.ItemsSource = allPositions.Where (x => x.ToString ().ToLower ().Contains (filter.ToLower ()));
-			}
-
-			positionListView.EndRefresh ();
+			Task.Factory.StartNew (() => {
+				if (string.IsNullOrWhiteSpace (filter)) {
+					Device.BeginInvokeOnMainThread(() => {
+						positionListView.ItemsSource = allPositions;
+						positionListView.EndRefresh ();
+					});
+				} else {
+					IEnumerable<Position> filtered = allPositions.Where (x => x.ToString ().ToLower ().Contains (filter.ToLower ()));
+					Device.BeginInvokeOnMainThread(() => {
+						positionListView.ItemsSource = filtered;
+						positionListView.EndRefresh ();
+					});
+				}
+			});
 		}
 
 		private IEnumerable<Position> allPositions;
