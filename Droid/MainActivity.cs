@@ -33,6 +33,9 @@ using Android.Views;
 using Android.Widget;
 using Android.OS;
 
+using Xamarin;
+using Xamarin.Forms;
+
 namespace PhoenixImperator.Droid
 {
 	[Activity (Label = "PhoenixImperator.Droid", Icon = "@drawable/icon", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
@@ -44,7 +47,22 @@ namespace PhoenixImperator.Droid
 
 			global::Xamarin.Forms.Forms.Init (this, bundle);
 
+			Insights.Initialize("4cdef01b1dc979920d5d485896d5fe50e9c752a6", this.ApplicationContext);
+			Insights.Track ("Android/Start");
+
+			App.Version = GetBuildNumber ();
+
 			LoadApplication (new App ());
+
+			this.Window.SetFlags(WindowManagerFlags.KeepScreenOn, WindowManagerFlags.KeepScreenOn);
+		}
+
+		public string GetBuildNumber()
+		{
+			Context context = Forms.Context;
+			PackageManager manager = context.PackageManager;
+			PackageInfo info = manager.GetPackageInfo(context.PackageName, 0);
+			return info.VersionName;
 		}
 	}
 }

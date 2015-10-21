@@ -34,13 +34,16 @@ namespace PhoenixImperator.Pages.Entities
 {
 	public static class EntityPageBuilderFactory
 	{
-		public static void ShowEntityPage<T>(NexusManager<T> manager, int id) where T :   EntityBase, new()
+		public static void ShowEntityPage<T>(NexusManager<T> manager, int id, int tabIndex = 0) where T :   EntityBase, new()
 		{
 			IEntityPageBuilder<T> builder = EntityPageBuilderFactory.CreateBuilder<T>(manager);
 			manager.Get(id,(item) => {
+				TabbedPage page = builder.BuildPage((T) item);
+				if(tabIndex > 0){
+					page.CurrentPage = page.Children[tabIndex];
+				}
 				Device.BeginInvokeOnMainThread (() => {
-					Page page = builder.BuildPage((T) item);
-					App.NavigationPage.PushAsync (page);
+					RootPage.Root.NextPage (page);
 				});
 			});
 		}

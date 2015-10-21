@@ -29,8 +29,12 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 
+using SQLite.Net;
+using SQLite.Net.Interop;
+
 using ModernHttpClient;
 
+using Xamarin;
 using Xamarin.Forms;
 
 using Phoenix.BL.Entities;
@@ -41,13 +45,20 @@ using PhoenixImperator.Pages;
 
 namespace PhoenixImperator
 {
+	public enum UserFlags
+	{
+		SHOWN_ONBOARDING_NEXUS_PULL_TO_REFRESH = 0x01,
+		SHOWN_ONBOARDING_ENTITY_LIST_PULL_TO_REFRESH = 0x02,
+		SHOWN_ONBOARDING_ORDER_SWIPE_TO_DELETE = 0x04
+	}
+
 	public class App : Application, Phoenix.IDatabase, Phoenix.ILogger, Phoenix.IDocumentFolder, Phoenix.IRestClient
 	{
-		public static NavigationPage NavigationPage { get; set; }
+		public static string Version { get; set; }
 
 		public App ()
 		{
-			var sqliteFilename = "Phoenix.db3";
+			var sqliteFilename = "phoenix_imperator_" + Version.Replace(".","_") + ".db3";
 			string documentsPath = GetDocumentPath ();
 			#if __ANDROID__
 			var path = Path.Combine(documentsPath, sqliteFilename);
@@ -55,23 +66,10 @@ namespace PhoenixImperator
 			string libraryPath = Path.Combine (documentsPath, "..", "Library"); // Library folder
 			var path = Path.Combine(libraryPath, sqliteFilename);
 			#endif
-			_dbConnection = new SQLite.SQLiteConnection (path);
-
+			_dbConnection = new SQLiteConnectionWithLock (DatabasePlatform, new SQLiteConnectionString (path, storeDateTimeAsTicks: true));
+			Console.WriteLine("SQL Database: " + path);
 			Phoenix.Application.Initialize (this, this, this, this);
-
-			int userCount = Phoenix.Application.UserManager.Count ();
-			Log.WriteLine (Log.Layer.AL, typeof(App), "Users: " + userCount);
-			UserLoginPage userLoginPage = new UserLoginPage();
-			App.NavigationPage = new NavigationPage(userLoginPage);
-			MainPage = App.NavigationPage;
-			if (userCount > 0) {
-				Phoenix.Application.UserManager.First ((user) => {
-					// The root page of your application
-					userLoginPage.UserCode = user.Code;
-					userLoginPage.UserId = user.Id;
-					Phoenix.Application.UserLoggedIn(user);
-				});
-			}
+			MainPage = new RootPage ();
 		}
 
 		/// <summary>
@@ -115,7 +113,7 @@ namespace PhoenixImperator
 		/// Gets the connection.
 		/// </summary>
 		/// <returns>The connection.</returns>
-		public SQLite.SQLiteConnection GetConnection()
+		public SQLiteConnection GetConnection()
 		{
 			return _dbConnection;
 		}
@@ -127,19 +125,48 @@ namespace PhoenixImperator
 		/// <param name="arg">Argument.</param>
 		public void WriteLine(string format, params object[] arg)
 		{
-			Console.WriteLine (format, arg);
+			if (format == null)
+				return;
+			try {
+				Console.WriteLine (format, arg);
+			}
+			catch(Exception e){
+				Insights.Report (e);
+			}
 		}
 
 		/// <summary>
 		/// Async GET method
 		/// </summary>
-		/// <returns>Stream</returns>
 		/// <param name="url">URL.</param>
-		public Task<Stream> GetAsync(string url)
+		/// <param name="callback">Callback.</param>
+		public async void GetAsync(string url, Action<Stream> callback)
 		{
-			var httpClient = new HttpClient(new NativeMessageHandler());
-			httpClient.Timeout = TimeSpan.FromSeconds(30);
-			return httpClient.GetStreamAsync (url);
+			#if __ANDROID__
+			Task.Factory.StartNew(async () => {
+				try {
+					var httpClient = new HttpClient(new NativeMessageHandler());
+					httpClient.Timeout = TimeSpan.FromSeconds(60);
+					callback(await httpClient.GetStreamAsync (url));
+				}
+				catch(Exception e){
+					Insights.Report (e);
+					Log.WriteLine (Log.Layer.AL, GetType (), e);
+					callback (null);
+				}
+			});
+			#else
+			try {
+				var httpClient = new HttpClient(new NativeMessageHandler());
+				httpClient.Timeout = TimeSpan.FromSeconds(60);
+				callback(await httpClient.GetStreamAsync (url));
+			}
+			catch(Exception e){
+				Insights.Report (e);
+				Log.WriteLine (Log.Layer.AL, GetType (), e);
+				callback (null);
+			}
+			#endif
 		}
 
 		/// <summary>
@@ -148,11 +175,35 @@ namespace PhoenixImperator
 		/// <returns>Stream</returns>
 		/// <param name="url">URL.</param>
 		/// <param name="dto">Dto.</param>
-		public Task<HttpResponseMessage> PostAsync(string url, object dto)
+		public async void PostAsync(string url, object dto, Action<HttpResponseMessage> callback)
 		{
-			var httpClient = new HttpClient(new NativeMessageHandler());
-			httpClient.Timeout = TimeSpan.FromSeconds(30);
-			return httpClient.PostAsync(url,new StringContent(dto.ToString()));
+			#if __ANDROID__
+			Task.Factory.StartNew(async () => {
+				try{
+
+					var httpClient = new HttpClient(new NativeMessageHandler());
+					httpClient.Timeout = TimeSpan.FromSeconds(60);
+					callback(await httpClient.PostAsync(url,new StringContent(dto.ToString())));
+				}
+				catch(Exception e){
+					Insights.Report (e);
+					Log.WriteLine (Log.Layer.AL, GetType (), e);
+					callback (null);
+				}
+			});
+			#else
+			try{
+				
+				var httpClient = new HttpClient(new NativeMessageHandler());
+				httpClient.Timeout = TimeSpan.FromSeconds(60);
+				callback(await httpClient.PostAsync(url,new StringContent(dto.ToString())));
+			}
+			catch(Exception e){
+				Insights.Report (e);
+				Log.WriteLine (Log.Layer.AL, GetType (), e);
+				callback (null);
+			}
+			#endif
 		}
 
 		/// <summary>
@@ -182,7 +233,23 @@ namespace PhoenixImperator
 			// Handle when your app resumes
 		}
 
-		private SQLite.SQLiteConnection _dbConnection;
+		private ISQLitePlatform DatabasePlatform {
+			get {
+				#if __IOS__
+				var platform = new SQLite.Net.Platform.XamarinIOS.SQLitePlatformIOS ();
+				#else
+				#if __ANDROID__
+						var platform = new SQLite.Net.Platform.XamarinAndroid.SQLitePlatformAndroid();
+				#else
+						// WinPhone
+						var platform = new SQLite.Net.Platform.WinRT.SQLitePlatformWinRT();
+				#endif
+				#endif
+				return platform;
+			}
+		}
+
+		private SQLiteConnection _dbConnection;
 	}
 }
 

@@ -26,6 +26,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 using Xamarin.Forms;
 
@@ -42,18 +43,27 @@ namespace PhoenixImperator.Pages.Entities
 		protected override void DisplayEntity(StarSystem item)
 		{
 			if (item.CelestialBodies.Count > 0) {
-				AddContentTab ("Celestial Bodies");
+				AddContentTab ("Celestial Bodies","icon_celestialbodies.png");
+
+				AddProperty ("Periphery", item.PeripheryName);
 
 				ListView listView = new ListView ();
 				listView.ItemTemplate = new DataTemplate (typeof(TextCell));
 				listView.ItemTemplate.SetBinding (TextCell.TextProperty, "ListText");
 				listView.ItemTemplate.SetBinding (TextCell.DetailProperty, "ListDetail");
 				listView.ItemsSource = item.CelestialBodies;
+
+				listView.ItemTapped += (sender, e) => {
+					Log.WriteLine(Log.Layer.UI, this.GetType(), "Tapped: " + e.Item);
+					((ListView)sender).SelectedItem = null; // de-select the row
+				};
 				currentLayout.Children.Add (listView);
 			}
 
 			if (item.JumpLinks.Count > 0) {
-				AddContentTab ("Jump Links");
+				AddContentTab ("Jump Links","icon_jumplink.png");
+
+				AddProperty ("Periphery", item.PeripheryName);
 
 				ListView listView = new ListView ();
 				listView.ItemTemplate = new DataTemplate (typeof(TextCell));
@@ -75,7 +85,7 @@ namespace PhoenixImperator.Pages.Entities
 				allPositions = results;
 				if(results.GetEnumerator().MoveNext()){
 					Device.BeginInvokeOnMainThread (() => {
-						AddContentTab ("Positions");
+						AddContentTab ("Positions","icon_positions.png");
 						SearchBar searchBar = new SearchBar () {
 							Placeholder = "Search"
 						};
@@ -105,13 +115,20 @@ namespace PhoenixImperator.Pages.Entities
 		{
 			positionListView.BeginRefresh ();
 
-			if (string.IsNullOrWhiteSpace (filter)) {
-				positionListView.ItemsSource = allPositions;
-			} else {
-				positionListView.ItemsSource = allPositions.Where (x => x.ToString ().ToLower ().Contains (filter.ToLower ()));
-			}
-
-			positionListView.EndRefresh ();
+			Task.Factory.StartNew (() => {
+				if (string.IsNullOrWhiteSpace (filter)) {
+					Device.BeginInvokeOnMainThread(() => {
+						positionListView.ItemsSource = allPositions;
+						positionListView.EndRefresh ();
+					});
+				} else {
+					IEnumerable<Position> filtered = allPositions.Where (x => x.ToString ().ToLower ().Contains (filter.ToLower ()));
+					Device.BeginInvokeOnMainThread(() => {
+						positionListView.ItemsSource = filtered;
+						positionListView.EndRefresh ();
+					});
+				}
+			});
 		}
 
 		private IEnumerable<Position> allPositions;

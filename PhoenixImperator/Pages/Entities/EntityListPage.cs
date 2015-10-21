@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 
 using Xamarin.Forms;
 
@@ -43,13 +44,25 @@ namespace PhoenixImperator.Pages.Entities
 		/// has detail.
 		/// </summary>
 		/// <value><c>true</c> if entity has detail; otherwise, <c>false</c>.</value>
-		public bool EntityHasDetail { get; set; }
+		public bool EntityHasDetail { get; private set; }
 
-		public EntityListPage (string title, NexusManager<T> manager, IEnumerable<T> entities, bool entityHasDetail = true)
+		/// <summary>
+		/// Gets a value indicating whether this <see cref="PhoenixImperator.Pages.Entities.EntityListPage`1"/> pull to refresh.
+		/// </summary>
+		/// <value><c>true</c> if pull to refresh; otherwise, <c>false</c>.</value>
+		public bool PullToRefresh { get; private set;}
+
+
+		public EntityListPage (string title, NexusManager<T> manager, IEnumerable<T> entities, bool entityHasDetail = true, bool pullToRefresh = true)
 		{
 			Title = title;
 
+			Padding = new Thickness (10, Device.OnPlatform (20, 0, 0), 10, 5);
+
+			BackgroundColor = Color.Black;
+
 			EntityHasDetail = entityHasDetail;
+			PullToRefresh = pullToRefresh;
 
 			allEntities = entities;
 
@@ -62,40 +75,40 @@ namespace PhoenixImperator.Pages.Entities
 			listView.ItemTemplate = new DataTemplate (typeof(TextCell));
 			listView.ItemTemplate.SetBinding (TextCell.TextProperty, "ListText");
 			listView.ItemTemplate.SetBinding (TextCell.DetailProperty, "ListDetail");
-			listView.IsPullToRefreshEnabled = true;
-			listView.ItemsSource = GroupEntities(entities);
-
-			listView.RefreshCommand = new Command ((e) => {
-				refreshHelpText.IsVisible = false;
-				if(!isSearching) {
-					manager.Fetch((results, ex) => {
-						if(ex == null){
-							Device.BeginInvokeOnMainThread (() => {
-								listView.IsRefreshing = false;
-								refreshHelpText.IsVisible = true;
-								listView.ItemsSource = GroupEntities(results);
-							});
-						}
-						else {
-							#if DEBUG
-							ShowErrorAlert(ex);
-							#else
-							ShowErrorAlert("Problem connecting to Nexus");
-							#endif
-						}
-					},true);
-				}
-				else {
-					refreshHelpText.IsVisible = true;
-				}
+			listView.IsRefreshing = true;
+			GroupEntities (entities, (results) => {
+				Device.BeginInvokeOnMainThread (() => {
+					listView.ItemsSource = results;
+					listView.IsRefreshing = false;
+				});
 			});
 
+
+			if (pullToRefresh) {
+				listView.IsPullToRefreshEnabled = true;
+				listView.RefreshCommand = new Command ((e) => {
+					if(!isSearching) {
+						manager.Fetch((results, ex) => {
+							if(ex == null){
+								GroupEntities (results, (groupedResults) => {
+									Device.BeginInvokeOnMainThread (() => {
+										listView.ItemsSource = groupedResults;
+										listView.IsRefreshing = false;
+									});
+								});
+							}
+							else {
+								ShowErrorAlert(ex);
+							}
+						},true);
+					}
+				});
+			}
 			listView.ItemTapped += (sender, e) => {
 				Log.WriteLine (Log.Layer.UI, this.GetType (), "Tapped: " + e.Item + "(" + e.Item.GetType() + ")");
+				listView.IsEnabled = false;
 				((ListView)sender).SelectedItem = null; // de-select the row
-				if(EntityHasDetail){
-					EntityPageBuilderFactory.ShowEntityPage<T>(manager,((T)e.Item).Id);
-				}
+				EntitySelected(manager, (T)e.Item);
 			};
 
 			// Search bar
@@ -116,23 +129,64 @@ namespace PhoenixImperator.Pages.Entities
 				IsRunning = false,
 				BindingContext = this
 			};
-
-			// Labels
-			refreshHelpText = new Label {
-				HorizontalOptions = LayoutOptions.Center,
-				Text = "Pull down to refresh",
-				FontAttributes = FontAttributes.Italic
-			};
-
-			Content = new StackLayout { 
+			layout =  new StackLayout { 
 				Children = {
 					searchBar,
-					listView,
-					refreshHelpText,
-					activityIndicator
+					activityIndicator,
+					listView
 				}
 			};
+
+			Content = layout;
 		}
+
+		protected override void OnAppearing ()
+		{
+			base.OnAppearing ();
+			if (PullToRefresh) {
+				Onboarding.ShowOnboarding ((int)UserFlags.SHOWN_ONBOARDING_ENTITY_LIST_PULL_TO_REFRESH, "Help", "Pull down to refresh");
+			}
+		}
+
+		protected virtual void EntitySelected(NexusManager<T> manager, T item)
+		{
+			if(EntityHasDetail){
+				EntityPageBuilderFactory.ShowEntityPage<T>(manager,item.Id);
+			}
+			listView.IsEnabled = true;
+		}
+
+		protected void GroupEntities(IEnumerable<T> entities, Action<IEnumerable<EntityGroup<T>>> callback)
+		{
+			Task.Factory.StartNew (() => {
+				Dictionary<string, EntityGroup<T>> mapping = new Dictionary<string, EntityGroup<T>> ();
+				foreach(T item in entities){
+					EntityGroup<T> group;
+					if (item.Group == null) {
+						if (mapping.ContainsKey ("")) {
+							group = mapping [""];
+						} else {
+							group = new EntityGroup<T> ("", "*");
+							mapping.Add ("", group);
+						}
+					}
+					else if (mapping.ContainsKey (item.Group)) {
+						group = mapping [item.Group];
+					} else {
+						group = new EntityGroup<T> (item.Group, item.GroupShortName);
+						mapping.Add (item.Group, group);
+					}
+					group.Add (item);
+				}
+				IEnumerable<EntityGroup<T>> grouped = from element in mapping.Values
+					orderby element.GroupName
+					select element;
+				callback(grouped);
+			});
+		}
+
+		protected StackLayout layout;
+		protected ListView listView;
 
 		private void FilterList(string filter)
 		{
@@ -140,47 +194,31 @@ namespace PhoenixImperator.Pages.Entities
 			listView.BeginRefresh ();
 
 			if (string.IsNullOrWhiteSpace (filter)) {
-				listView.ItemsSource = GroupEntities(allEntities);
+				GroupEntities (allEntities, (results) => {
+					Device.BeginInvokeOnMainThread(() => {
+						listView.ItemsSource = results;
+						listView.EndRefresh ();
+						isSearching = false;
+					});
+				});
 			} else {
-				listView.ItemsSource = GroupEntities(allEntities.Where (x => x.ToString ().ToLower ().Contains (filter.ToLower ())));
+				Task.Factory.StartNew (() => {
+					GroupEntities(allEntities.Where (x => x.ToString ().ToLower ().Contains (filter.ToLower ())),(results) => {
+						Device.BeginInvokeOnMainThread(() => {
+							listView.ItemsSource = results;
+							listView.EndRefresh ();
+							isSearching = false;
+						});
+					});
+				});
 			}
-
-			listView.EndRefresh ();
-			isSearching = false;
-		}
-
-		private IEnumerable<EntityGroup<T>> GroupEntities(IEnumerable<T> entities)
-		{
-			Dictionary<string, EntityGroup<T>> mapping = new Dictionary<string, EntityGroup<T>> ();
-			foreach(T item in entities){
-				EntityGroup<T> group;
-				if (item.Group == null) {
-					if (mapping.ContainsKey ("")) {
-						group = mapping [""];
-					} else {
-						group = new EntityGroup<T> ("", "*");
-						mapping.Add ("", group);
-					}
-				}
-				else if (mapping.ContainsKey (item.Group)) {
-					group = mapping [item.Group];
-				} else {
-					group = new EntityGroup<T> (item.Group, item.GroupShortName);
-					mapping.Add (item.Group, group);
-				}
-				group.Add (item);
-			}
-			return from element in mapping.Values
-				orderby element.GroupName
-				select element;
 		}
 
 		private IEnumerable<T> allEntities;
-		private ListView listView;
 		private ActivityIndicator activityIndicator;
-		private Label refreshHelpText;
 		private SearchBar searchBar;
 		private bool isSearching;
+
 	}
 
 	public class EntityGroup<T> : ObservableCollection<T>  where T :   EntityBase, new()

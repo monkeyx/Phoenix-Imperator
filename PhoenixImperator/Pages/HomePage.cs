@@ -44,15 +44,28 @@ namespace PhoenixImperator.Pages
 			if (status != null) {
 				starDateLabel.Text = status.StarDate;
 				statusMessageLabel.Text = status.StatusMessage;
+			} else {
+				starDateLabel.Text = "...";
+				statusMessageLabel.Text = "...";	
 			}
+				
 		}
 
 		public HomePage () : base()
 		{
 			Title = "Home";
 
-			starDateLabel = new Label ();
-			statusMessageLabel = new Label ();
+			BackgroundColor = Color.Black;
+
+			Image logo = new Image { Aspect = Aspect.AspectFill };
+			logo.Source = ImageSource.FromFile ("logo.png");
+
+			starDateLabel = new Label {
+				TextColor = Color.Silver
+			};
+			statusMessageLabel = new Label {
+				TextColor = Color.Silver
+			};
 
 			StackLayout header = new StackLayout {
 				Orientation = StackOrientation.Horizontal,
@@ -60,47 +73,70 @@ namespace PhoenixImperator.Pages
 				Children = {
 					new Label{
 						Text = "Status:",
-						FontAttributes = FontAttributes.Bold
+						FontAttributes = FontAttributes.Bold,
+						TextColor = Color.White
 					},
 					statusMessageLabel,
 					new Label{
 						Text = "Star Date:",
-						FontAttributes = FontAttributes.Bold
+						FontAttributes = FontAttributes.Bold,
+						TextColor = Color.White
 					},
 					starDateLabel
 				}
 			};
 
 			ListView navigationList = new ListView () {
-				#if DEBUG
-				ItemsSource = new [] {"Positions", "Orders", "Items", "Star Systems", "Order Types [DEBUG]", "Info [DEBUG]"}
-				#else
-				ItemsSource = new [] {"Positions", "Orders", "Items", "Star Systems"}
-				#endif
+				BackgroundColor = Color.White,
+				SeparatorColor = Color.Silver,
+				ItemsSource = new [] {"Positions", "Orders", "Items", "Star Systems", "Order Types", "Info"}
 			};
+
+			navigationList.IsPullToRefreshEnabled = true;
 
 			navigationList.ItemTapped += (sender, e) => {
 				Log.WriteLine(Log.Layer.UI, this.GetType(), "Tapped: " + e.Item);
 				((ListView)sender).SelectedItem = null; // de-select the row
 				switch(e.Item.ToString()){
 				case "Positions":
-					ShowPage<Position> (e.Item.ToString(), Phoenix.Application.PositionManager);
+					RootPage.Root.ShowPage<Position> (activityIndicator, e.Item.ToString(), Phoenix.Application.PositionManager);
 					break;
-				case "Order Types [DEBUG]":
-					ShowPage<OrderType> (e.Item.ToString(), Phoenix.Application.OrderTypeManager);
+				case "Order Types":
+					RootPage.Root.ShowPage<OrderType> (activityIndicator, e.Item.ToString(), Phoenix.Application.OrderTypeManager);
 					break;
 				case "Items":
-					ShowPage<Item> (e.Item.ToString(), Phoenix.Application.ItemManager);
+					RootPage.Root.ShowPage<Item> (activityIndicator, e.Item.ToString(), Phoenix.Application.ItemManager);
 					break;
-				case "Info [DEBUG]":
-					ShowPage<InfoData> (e.Item.ToString(), Phoenix.Application.InfoManager,false);
+				case "Info":
+					RootPage.Root.ShowPage<InfoData> (activityIndicator, e.Item.ToString(), Phoenix.Application.InfoManager,false);
 					break;
 				case "Star Systems":
-					ShowPage<StarSystem> (e.Item.ToString(), Phoenix.Application.StarSystemManager);
+					RootPage.Root.ShowPage<StarSystem> (activityIndicator, e.Item.ToString(), Phoenix.Application.StarSystemManager);
+					break;
+				case "Orders":
+					RootPage.Root.ShowOrdersPage(activityIndicator);
 					break;
 				}
-
 			};
+
+			navigationList.RefreshCommand = new Command ((e) => {
+				SetStatus(null);
+				Phoenix.Application.GameStatusManager.Fetch ((results, ex) => {
+					if(ex == null){
+						Device.BeginInvokeOnMainThread(() => {
+							navigationList.IsRefreshing = false;
+							IEnumerator<GameStatus> i = results.GetEnumerator();
+							if(i.MoveNext()){
+								SetStatus(i.Current);
+							}
+						});
+					}
+					else {
+						ShowErrorAlert(ex);
+					}
+
+				}, true);
+			});
 
 			activityIndicator = new ActivityIndicator {
 				IsEnabled = true,
@@ -112,45 +148,24 @@ namespace PhoenixImperator.Pages
 
 			Content = new StackLayout { 
 				Children = {
+					activityIndicator,
+					logo,
 					header,
-					navigationList,
-					activityIndicator
+					navigationList
 				}
 			};
+
+			Phoenix.Application.GameStatusManager.First((result) => {
+				Device.BeginInvokeOnMainThread(() => {
+					SetStatus(result);
+				});
+			});
 		}
 
-		private void ShowPage<T>(string title, NexusManager<T> manager, bool entityHasDetail = true) where T :   EntityBase, new()
+		protected override void OnAppearing ()
 		{
-			activityIndicator.IsRunning = true;
-			if (manager.Count() > 0) {
-				// show local results
-				manager.All ((results) => {
-					EntityListPage<T> page = new EntityListPage<T> (title, manager, results);
-					page.EntityHasDetail = entityHasDetail;
-					Device.BeginInvokeOnMainThread (() => {
-						activityIndicator.IsRunning = false;
-						App.NavigationPage.PushAsync (page);
-					});
-				});
-			} else {
-				// fetch and show results
-				manager.Fetch ((results, ex) => {
-					if(ex == null){
-						Page page = new EntityListPage<T> (title, manager, results);
-						Device.BeginInvokeOnMainThread (() => {
-							activityIndicator.IsRunning = false;
-							App.NavigationPage.PushAsync (page);
-						});
-					}
-					else {
-						#if DEBUG
-						ShowErrorAlert(ex);
-						#else
-						ShowErrorAlert("Problem connecting to Nexus");
-						#endif
-					}
-				}, false);
-			}
+			base.OnAppearing ();
+			Onboarding.ShowOnboarding ((int)UserFlags.SHOWN_ONBOARDING_NEXUS_PULL_TO_REFRESH, "Help", "Pull down to check Nexus status");
 		}
 
 		private Label starDateLabel;

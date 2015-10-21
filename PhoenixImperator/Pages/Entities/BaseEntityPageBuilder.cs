@@ -26,6 +26,7 @@
 using System;
 using System.Collections.Generic;
 
+using Xamarin;
 using Xamarin.Forms;
 
 using XLabs.Forms.Controls;
@@ -41,21 +42,27 @@ namespace PhoenixImperator.Pages.Entities
 	{
 		public NexusManager<T> Manager { get; set; }
 
-		public Page BuildPage(T item)
+		public TabbedPage BuildPage(T item)
 		{
 			if (item == null) {
-				return new PhoenixPage {
+				return new TabbedPage {
 					Title = "Not Found",
-					Content = new StackLayout{
-						VerticalOptions = LayoutOptions.Center,
-						Children = {
-							new Label{
-								Text = "These aren't the droids you are looking for"
+					Children = {
+						new PhoenixPage {
+							Content = new StackLayout{
+								VerticalOptions = LayoutOptions.CenterAndExpand,
+								Children = {
+									new Label{
+										Text = "These aren't the droids you are looking for",
+										HorizontalOptions = LayoutOptions.CenterAndExpand
+									}
+								}
 							}
 						}
 					}
 				};
 			}
+			Insights.Track (item.GetType().ToString());
 			entityPage = new EntityContentPage (item);
 			DisplayEntity (item);
 			return entityPage;
@@ -67,14 +74,26 @@ namespace PhoenixImperator.Pages.Entities
 		protected PhoenixPage currentTab;
 		protected StackLayout currentLayout;
 
-		protected void AddContentTab(string title)
+		protected void ShowInfoAlert(string title, object info)
+		{
+			currentTab.ShowInfoAlert(title,info);
+		}
+
+		protected void ShowErrorAlert(object error)
+		{
+			currentTab.ShowErrorAlert(error);
+		}
+
+		protected void AddContentTab(string title, string icon)
 		{
 			currentLayout = new StackLayout {
-				Padding = new Thickness (10)
+				Padding = new Thickness (10,20),
+				VerticalOptions = LayoutOptions.StartAndExpand
 			};
 			currentTab = new PhoenixPage {
 				Content = currentLayout,
-				Title = title
+				Title = title,
+				Icon = icon
 			};
 			entityPage.Children.Add (currentTab);
 		}
@@ -88,7 +107,7 @@ namespace PhoenixImperator.Pages.Entities
 					HorizontalOptions = LayoutOptions.Start,
 					FontAttributes = FontAttributes.Bold,
 					Text = heading,
-					FontSize = 18,
+					FontSize = Device.GetNamedSize (NamedSize.Large, typeof(Label)),
 					IsUnderline = true
 			});
 		}
@@ -174,7 +193,7 @@ namespace PhoenixImperator.Pages.Entities
 				IsUnderline = true
 			};
 			TapGestureRecognizer tapGesture = new TapGestureRecognizer();
-			tapGesture.Command = new Command (() => {
+			tapGesture.Command = new Command ((e) => {
 				EntityPageBuilderFactory.ShowEntityPage<T2>(manager,entity.Id);
 			});
 			entityLabel.GestureRecognizers.Add (tapGesture);

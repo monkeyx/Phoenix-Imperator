@@ -33,11 +33,14 @@ namespace PhoenixImperator
 	{
 		public PhoenixPage ()
 		{
-			Padding = new Thickness (10, Device.OnPlatform (20, 0, 0), 10, 5);
+			BackgroundColor = Color.White;
 		}
 
 		public void ShowInfoAlert(string title, object info)
 		{
+			if (title == null || info == null) {
+				return;
+			}
 			Device.BeginInvokeOnMainThread(() => {
 				DisplayAlert(title, info.ToString(),"OK");
 			});
@@ -45,8 +48,17 @@ namespace PhoenixImperator
 
 		public void ShowErrorAlert(object error)
 		{
+			if (error == null) {
+				return;
+			}
+			#if DEBUG
+			string errorMessage = error.ToString ();
+			#else
+			string errorMessage = "There was a problem connecting to Nexus";
+			#endif
+
 			Device.BeginInvokeOnMainThread(() => {
-				DisplayAlert("Problem", error.ToString(),"OK");
+				DisplayAlert("Problem", errorMessage,"OK");
 			});
 		}
 	}

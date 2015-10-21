@@ -27,6 +27,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+using Xamarin;
+
 using Foundation;
 using UIKit;
 
@@ -44,9 +46,21 @@ namespace PhoenixImperator.iOS
 			Xamarin.Calabash.Start();
 			#endif
 
+			Insights.Initialize("4cdef01b1dc979920d5d485896d5fe50e9c752a6");
+			Insights.Track ("iOS/Start");
+
+			App.Version = GetBuildNumber ();
+
 			LoadApplication (new App ());
 
+			UIApplication.SharedApplication.IdleTimerDisabled = true;
+
 			return base.FinishedLaunching (app, options);
+		}
+
+		public string GetBuildNumber()
+		{
+			return NSBundle.MainBundle.InfoDictionary[new NSString("CFBundleVersion")].ToString();
 		}
 	}
 }
