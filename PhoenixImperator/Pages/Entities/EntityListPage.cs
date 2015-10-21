@@ -106,6 +106,7 @@ namespace PhoenixImperator.Pages.Entities
 			}
 			listView.ItemTapped += (sender, e) => {
 				Log.WriteLine (Log.Layer.UI, this.GetType (), "Tapped: " + e.Item + "(" + e.Item.GetType() + ")");
+				listView.IsEnabled = false;
 				((ListView)sender).SelectedItem = null; // de-select the row
 				EntitySelected(manager, (T)e.Item);
 			};
@@ -152,6 +153,7 @@ namespace PhoenixImperator.Pages.Entities
 			if(EntityHasDetail){
 				EntityPageBuilderFactory.ShowEntityPage<T>(manager,item.Id);
 			}
+			listView.IsEnabled = true;
 		}
 
 		protected void GroupEntities(IEnumerable<T> entities, Action<IEnumerable<EntityGroup<T>>> callback)
