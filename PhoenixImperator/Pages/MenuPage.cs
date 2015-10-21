@@ -147,6 +147,12 @@ namespace PhoenixImperator.Pages
 				IconSource = "icon_techmanual.png",
 				TargetType = "Info"
 			});
+
+			Add (new SideMenuItem {
+				Title = "About",
+				IconSource = "settings.png",
+				TargetType = "About"
+			});
 		}
 	}
 }

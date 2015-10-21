@@ -123,29 +123,13 @@ namespace PhoenixImperator.Pages
 				SetStatus(null);
 				Phoenix.Application.GameStatusManager.Fetch ((results, ex) => {
 					if(ex == null){
-						Phoenix.Application.InfoManager.Fetch((infoResults, ex2) => {
-							if(ex2 == null){
-								Log.WriteLine(Log.Layer.UI,GetType(),"Info: " + Phoenix.Application.InfoManager.Count());
-								Phoenix.Application.OrderTypeManager.Fetch((orderTypeResults, ex3) => {
-									if(ex3 != null){
-										ShowErrorAlert(ex3);
-									} else {
-										Log.WriteLine(Log.Layer.UI,GetType(),"Order Types: " + Phoenix.Application.OrderTypeManager.Count());
-									}
-									Device.BeginInvokeOnMainThread(() => {
-										navigationList.IsRefreshing = false;
-										IEnumerator<GameStatus> i = results.GetEnumerator();
-										if(i.MoveNext()){
-											SetStatus(i.Current);
-										}
-									});
-								},true);
+						Device.BeginInvokeOnMainThread(() => {
+							navigationList.IsRefreshing = false;
+							IEnumerator<GameStatus> i = results.GetEnumerator();
+							if(i.MoveNext()){
+								SetStatus(i.Current);
 							}
-							else {
-								ShowErrorAlert(ex2);
-							}
-
-						},true);
+						});
 					}
 					else {
 						ShowErrorAlert(ex);

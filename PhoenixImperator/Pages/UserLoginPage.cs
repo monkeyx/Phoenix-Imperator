@@ -28,8 +28,6 @@ using System.Collections.Generic;
 
 using Xamarin.Forms;
 
-using XLabs.Forms.Controls;
-
 using Phoenix.BL.Managers;
 using Phoenix.BL.Entities;
 using Phoenix.Util;
@@ -88,18 +86,15 @@ namespace PhoenixImperator.Pages
 				HorizontalOptions = LayoutOptions.FillAndExpand,
 				VerticalOptions = LayoutOptions.CenterAndExpand,
 				Keyboard = Keyboard.Numeric,
-				// Text = ""
 			};
 
 			userCodeEntry = new Entry {
 				Placeholder = "Code",
 				HorizontalOptions = LayoutOptions.FillAndExpand,
 				VerticalOptions = LayoutOptions.CenterAndExpand,
-				// Text = ""
 			};
 
-			userIdEntry.MinimumWidthRequest = 20;
-			userCodeEntry.MinimumWidthRequest = 40;
+			userIdEntry.Focus ();
 
 			loginButton = new Button {
 				Text = "Login",
@@ -120,21 +115,21 @@ namespace PhoenixImperator.Pages
 
 			loginButton.Clicked += LoginButtonClicked;
 
-			ExtendedLabel linkLabel = new ExtendedLabel {
+			Button linkButton = new Button {
+				VerticalOptions = LayoutOptions.EndAndExpand,
 				HorizontalOptions = LayoutOptions.CenterAndExpand,
 				Text = "Visit Nexus to get your XML Access Id and Code",
 				TextColor = Color.White,
-				IsUnderline = true
+				BackgroundColor = Color.Black
 			};
 
-			TapGestureRecognizer tapGesture = new TapGestureRecognizer();
-			tapGesture.Command = new Command ((e) => {
+			linkButton.Clicked += (sender, e) => {
 				Button button = new Button{
 					Text = "Back to Imperator",
 					BackgroundColor = Color.Black,
 					TextColor = Color.White
 				};
-				button.Clicked += (sender, e2) => {
+				button.Clicked += (sender2, e2) => {
 					RootPage.Root.DismissModal();
 				};
 				ScrollView view = new ScrollView {
@@ -158,8 +153,7 @@ namespace PhoenixImperator.Pages
 					Content = layout
 				};
 				RootPage.Root.NextPageModal(page);
-			});
-			linkLabel.GestureRecognizers.Add (tapGesture);
+			};
 
 			this.Padding = new Thickness(10, Device.OnPlatform(20, 0, 0), 10, 5);
 
@@ -172,7 +166,7 @@ namespace PhoenixImperator.Pages
 					userIdEntry,
 					userCodeEntry,
 					loginButton,
-					linkLabel,
+					linkButton,
 					statusMessage
 				}
 			};
@@ -183,6 +177,10 @@ namespace PhoenixImperator.Pages
 
 			if (userCount > 0) {
 				Phoenix.Application.UserManager.First ((user) => {
+					Device.BeginInvokeOnMainThread (() => {
+						linkButton.IsEnabled = false;
+						linkButton.IsVisible = false;
+					});
 					UserCode = user.Code;
 					UserId = user.Id;
 					Phoenix.Application.UserLoggedIn(user);

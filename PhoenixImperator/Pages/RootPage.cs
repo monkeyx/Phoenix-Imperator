@@ -84,6 +84,9 @@ namespace PhoenixImperator.Pages
 			case "Info":
 				ShowPage<InfoData> (menuPage.Spinner, menuChoice, Phoenix.Application.InfoManager, false);
 				break;
+			case "About":
+				GoToPage (new AboutPage ());
+				break;
 			default:
 				Page displayPage = (Page)Activator.CreateInstance ((Type)menu.TargetType);
 				GoToPage (displayPage);

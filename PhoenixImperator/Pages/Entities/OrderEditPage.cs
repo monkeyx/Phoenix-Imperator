@@ -254,10 +254,12 @@ namespace PhoenixImperator.Pages
 				return;
 			}
 
+			string displayValue = string.IsNullOrWhiteSpace (param.DisplayValue) ? "Select " + paramType.Name : param.DisplayValue;
 			Picker infoPicker = new Picker {
-				Title = param.DisplayValue,
+				Title = displayValue,
 				VerticalOptions = LayoutOptions.Center,
 				HorizontalOptions = LayoutOptions.Center,
+				BackgroundColor = Color.Silver
 			};
 
 			EntryCell entry = new EntryCell {

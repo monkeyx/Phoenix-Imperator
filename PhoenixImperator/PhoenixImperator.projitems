@@ -28,6 +28,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Pages\RootPage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Pages\Entities\OrderEditPage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Pages\OrderSelectorPage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Pages\AboutPage.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="$(MSBuildThisFileDirectory)Pages\" />
