@@ -27,6 +27,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+using Xamarin;
+
 using Foundation;
 using UIKit;
 
@@ -43,6 +45,9 @@ namespace PhoenixImperator.iOS
 			#if ENABLE_TEST_CLOUD
 			Xamarin.Calabash.Start();
 			#endif
+
+			Insights.Initialize("4cdef01b1dc979920d5d485896d5fe50e9c752a6");
+			Insights.Track ("iOS/Start");
 
 			App.Version = GetBuildNumber ();
 

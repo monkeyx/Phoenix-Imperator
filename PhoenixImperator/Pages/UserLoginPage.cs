@@ -28,6 +28,8 @@ using System.Collections.Generic;
 
 using Xamarin.Forms;
 
+using XLabs.Forms.Controls;
+
 using Phoenix.BL.Managers;
 using Phoenix.BL.Entities;
 using Phoenix.Util;
@@ -118,6 +120,47 @@ namespace PhoenixImperator.Pages
 
 			loginButton.Clicked += LoginButtonClicked;
 
+			ExtendedLabel linkLabel = new ExtendedLabel {
+				HorizontalOptions = LayoutOptions.CenterAndExpand,
+				Text = "Visit Nexus to get your XML Access Id and Code",
+				TextColor = Color.White,
+				IsUnderline = true
+			};
+
+			TapGestureRecognizer tapGesture = new TapGestureRecognizer();
+			tapGesture.Command = new Command ((e) => {
+				Button button = new Button{
+					Text = "Back to Imperator",
+					BackgroundColor = Color.Black,
+					TextColor = Color.White
+				};
+				button.Clicked += (sender, e2) => {
+					RootPage.Root.DismissModal();
+				};
+				ScrollView view = new ScrollView {
+					VerticalOptions = LayoutOptions.FillAndExpand
+				};
+				StackLayout layout = new StackLayout{
+					Padding = new Thickness(10, Device.OnPlatform(20, 0, 0), 10, 5),
+					BackgroundColor = Color.Black,
+					Children = {
+						view,
+						button
+					}
+				};
+				WebView browser = new WebView{
+					Source = "http://www.phoenixbse.com/index.php?a=user&sa=xml"
+				};
+				view.Content = browser;
+
+				PhoenixPage page = new PhoenixPage{
+					Title = "Nexus",
+					Content = layout
+				};
+				RootPage.Root.NextPageModal(page);
+			});
+			linkLabel.GestureRecognizers.Add (tapGesture);
+
 			this.Padding = new Thickness(10, Device.OnPlatform(20, 0, 0), 10, 5);
 
 			Content = new StackLayout { 
@@ -129,12 +172,14 @@ namespace PhoenixImperator.Pages
 					userIdEntry,
 					userCodeEntry,
 					loginButton,
+					linkLabel,
 					statusMessage
 				}
 			};
 
 			int userCount = Phoenix.Application.UserManager.Count ();
 			Log.WriteLine (Log.Layer.AL, GetType(), "Users: " + userCount);
+
 
 			if (userCount > 0) {
 				Phoenix.Application.UserManager.First ((user) => {

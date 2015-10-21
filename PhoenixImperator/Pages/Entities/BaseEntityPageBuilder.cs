@@ -26,6 +26,7 @@
 using System;
 using System.Collections.Generic;
 
+using Xamarin;
 using Xamarin.Forms;
 
 using XLabs.Forms.Controls;
@@ -61,6 +62,7 @@ namespace PhoenixImperator.Pages.Entities
 					}
 				};
 			}
+			Insights.Track (item.GetType().ToString());
 			entityPage = new EntityContentPage (item);
 			DisplayEntity (item);
 			return entityPage;

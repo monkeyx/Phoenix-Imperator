@@ -25,6 +25,7 @@
 // THE SOFTWARE.
 using System;
 
+using Xamarin;
 using Xamarin.Forms;
 
 using Phoenix.BL.Entities;
@@ -61,6 +62,7 @@ namespace PhoenixImperator.Pages
 
 		public void NavigateTo (SideMenuItem menu)
 		{
+			Insights.Track (menu.TargetType.ToString());
 			Log.WriteLine (Log.Layer.UI, GetType (), "Navigate To: " + menu.TargetType);
 			string menuChoice = menu.TargetType.ToString ();
 			switch (menuChoice) {
@@ -114,6 +116,11 @@ namespace PhoenixImperator.Pages
 		public void NextPageAfterModal(Page nextPage)
 		{
 			NextPage (nextPage);
+			DismissModal ();
+		}
+
+		public void DismissModal()
+		{
 			((NavigationPage)Detail).Navigation.PopModalAsync ();
 		}
 

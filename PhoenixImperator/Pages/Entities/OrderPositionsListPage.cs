@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 
+using Xamarin;
 using Xamarin.Forms;
 
 using Phoenix.BL.Entities;
@@ -63,6 +64,7 @@ namespace PhoenixImperator.Pages.Entities
 
 		private void SubmitOrders()
 		{
+			Insights.Track ("Submit Orders");
 			Log.WriteLine (Log.Layer.UI, GetType (), "Submitting Orders for " + positionsWithOrders.Count);
 			if (positionsWithOrders.Count < 1) {
 				return;
@@ -75,6 +77,7 @@ namespace PhoenixImperator.Pages.Entities
 
 			float progressPerPosition = 1.0f / (float)positionsWithOrders.Count;
 
+			int totalPositions = positionsWithOrders.Count;
 			int positionsSent = 0;
 
 			Device.BeginInvokeOnMainThread(() => {
@@ -101,7 +104,7 @@ namespace PhoenixImperator.Pages.Entities
 							listView.ItemsSource = results;
 						});
 					});
-					if(positionsSent >= positionsWithOrders.Count){
+					if(positionsSent >= totalPositions){
 						ShowInfoAlert("Orders Submitted", "Submitted orders for " + positionsSent + " positions");
 						Device.BeginInvokeOnMainThread(() => {
 							listView.IsRefreshing = false;

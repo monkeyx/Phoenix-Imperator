@@ -33,6 +33,7 @@ using Android.Views;
 using Android.Widget;
 using Android.OS;
 
+using Xamarin;
 using Xamarin.Forms;
 
 namespace PhoenixImperator.Droid
@@ -45,6 +46,9 @@ namespace PhoenixImperator.Droid
 			base.OnCreate (bundle);
 
 			global::Xamarin.Forms.Forms.Init (this, bundle);
+
+			Insights.Initialize("4cdef01b1dc979920d5d485896d5fe50e9c752a6", this.ApplicationContext);
+			Insights.Track ("Android/Start");
 
 			App.Version = GetBuildNumber ();
 

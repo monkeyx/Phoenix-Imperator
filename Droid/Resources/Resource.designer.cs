@@ -69,6 +69,8 @@ namespace PhoenixImperator.Droid
 			global::XLabs.Forms.Resource.Style.CalendarCell_DayHeader = global::PhoenixImperator.Droid.Resource.Style.CalendarCell_DayHeader;
 			global::XLabs.Forms.Resource.Style.CalendarTitle = global::PhoenixImperator.Droid.Resource.Style.CalendarTitle;
 			global::ModernHttpClient.Resource.String.library_name = global::PhoenixImperator.Droid.Resource.String.library_name;
+			global::SQLite.Net.Platform.XamarinAndroid.Resource.String.ApplicationName = global::PhoenixImperator.Droid.Resource.String.ApplicationName;
+			global::SQLite.Net.Platform.XamarinAndroid.Resource.String.Hello = global::PhoenixImperator.Droid.Resource.String.Hello;
 			global::Xamarin.Forms.Platform.Resource.Animation.abc_fade_in = global::PhoenixImperator.Droid.Resource.Animation.abc_fade_in;
 			global::Xamarin.Forms.Platform.Resource.Animation.abc_fade_out = global::PhoenixImperator.Droid.Resource.Animation.abc_fade_out;
 			global::Xamarin.Forms.Platform.Resource.Animation.abc_grow_fade_in_from_bottom = global::PhoenixImperator.Droid.Resource.Animation.abc_grow_fade_in_from_bottom;
@@ -1527,8 +1529,6 @@ namespace PhoenixImperator.Droid
 			global::Xamarin.Forms.Platform.Resource.Styleable.ViewStubCompat_android_id = global::PhoenixImperator.Droid.Resource.Styleable.ViewStubCompat_android_id;
 			global::Xamarin.Forms.Platform.Resource.Styleable.ViewStubCompat_android_inflatedId = global::PhoenixImperator.Droid.Resource.Styleable.ViewStubCompat_android_inflatedId;
 			global::Xamarin.Forms.Platform.Resource.Styleable.ViewStubCompat_android_layout = global::PhoenixImperator.Droid.Resource.Styleable.ViewStubCompat_android_layout;
-			global::SQLite.Net.Platform.XamarinAndroid.Resource.String.ApplicationName = global::PhoenixImperator.Droid.Resource.String.ApplicationName;
-			global::SQLite.Net.Platform.XamarinAndroid.Resource.String.Hello = global::PhoenixImperator.Droid.Resource.String.Hello;
 		}
 		
 		public partial class Animation

@@ -34,6 +34,7 @@ using SQLite.Net.Interop;
 
 using ModernHttpClient;
 
+using Xamarin;
 using Xamarin.Forms;
 
 using Phoenix.BL.Entities;
@@ -129,7 +130,8 @@ namespace PhoenixImperator
 			try {
 				Console.WriteLine (format, arg);
 			}
-			catch{
+			catch(Exception e){
+				Insights.Report (e);
 			}
 		}
 
@@ -138,13 +140,18 @@ namespace PhoenixImperator
 		/// </summary>
 		/// <param name="url">URL.</param>
 		/// <param name="callback">Callback.</param>
-		public void GetAsync(string url, Action<Stream> callback)
+		public async void GetAsync(string url, Action<Stream> callback)
 		{
-			Task.Factory.StartNew (async () => {
+			try {
 				var httpClient = new HttpClient(new NativeMessageHandler());
-				httpClient.Timeout = TimeSpan.FromSeconds(5);
+				httpClient.Timeout = TimeSpan.FromSeconds(60);
 				callback(await httpClient.GetStreamAsync (url));
-			});
+			}
+			catch(Exception e){
+				Insights.Report (e);
+				Log.WriteLine (Log.Layer.AL, GetType (), e);
+				callback (null);
+			}
 		}
 
 		/// <summary>
@@ -153,13 +160,18 @@ namespace PhoenixImperator
 		/// <returns>Stream</returns>
 		/// <param name="url">URL.</param>
 		/// <param name="dto">Dto.</param>
-		public void PostAsync(string url, object dto, Action<HttpResponseMessage> callback)
+		public async void PostAsync(string url, object dto, Action<HttpResponseMessage> callback)
 		{
-			Task.Factory.StartNew (async () => {
+			try{
 				var httpClient = new HttpClient(new NativeMessageHandler());
-				httpClient.Timeout = TimeSpan.FromSeconds(5);
+				httpClient.Timeout = TimeSpan.FromSeconds(60);
 				callback(await httpClient.PostAsync(url,new StringContent(dto.ToString())));
-			});
+			}
+			catch(Exception e){
+				Insights.Report (e);
+				Log.WriteLine (Log.Layer.AL, GetType (), e);
+				callback (null);
+			}
 		}
 
 		/// <summary>
