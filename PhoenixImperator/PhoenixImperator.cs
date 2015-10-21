@@ -142,6 +142,20 @@ namespace PhoenixImperator
 		/// <param name="callback">Callback.</param>
 		public async void GetAsync(string url, Action<Stream> callback)
 		{
+			#if __ANDROID__
+			Task.Factory.StartNew(async () => {
+				try {
+					var httpClient = new HttpClient(new NativeMessageHandler());
+					httpClient.Timeout = TimeSpan.FromSeconds(60);
+					callback(await httpClient.GetStreamAsync (url));
+				}
+				catch(Exception e){
+					Insights.Report (e);
+					Log.WriteLine (Log.Layer.AL, GetType (), e);
+					callback (null);
+				}
+			});
+			#else
 			try {
 				var httpClient = new HttpClient(new NativeMessageHandler());
 				httpClient.Timeout = TimeSpan.FromSeconds(60);
@@ -152,6 +166,7 @@ namespace PhoenixImperator
 				Log.WriteLine (Log.Layer.AL, GetType (), e);
 				callback (null);
 			}
+			#endif
 		}
 
 		/// <summary>
@@ -162,7 +177,23 @@ namespace PhoenixImperator
 		/// <param name="dto">Dto.</param>
 		public async void PostAsync(string url, object dto, Action<HttpResponseMessage> callback)
 		{
+			#if __ANDROID__
+			Task.Factory.StartNew(async () => {
+				try{
+
+					var httpClient = new HttpClient(new NativeMessageHandler());
+					httpClient.Timeout = TimeSpan.FromSeconds(60);
+					callback(await httpClient.PostAsync(url,new StringContent(dto.ToString())));
+				}
+				catch(Exception e){
+					Insights.Report (e);
+					Log.WriteLine (Log.Layer.AL, GetType (), e);
+					callback (null);
+				}
+			});
+			#else
 			try{
+				
 				var httpClient = new HttpClient(new NativeMessageHandler());
 				httpClient.Timeout = TimeSpan.FromSeconds(60);
 				callback(await httpClient.PostAsync(url,new StringContent(dto.ToString())));
@@ -172,6 +203,7 @@ namespace PhoenixImperator
 				Log.WriteLine (Log.Layer.AL, GetType (), e);
 				callback (null);
 			}
+			#endif
 		}
 
 		/// <summary>
