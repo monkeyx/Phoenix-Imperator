@@ -6,7 +6,6 @@ Phoenix Tool built with Xamarin Forms
 - Login with Nexus user / password (requires Nexus changes)
 - Sequencing
 - Reordering orders
-- Copy ID for position / item / star system / celestial body
 - Position notes
 - Notifications
 - Macros
