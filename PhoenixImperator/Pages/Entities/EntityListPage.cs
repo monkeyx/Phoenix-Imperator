@@ -146,6 +146,9 @@ namespace PhoenixImperator.Pages.Entities
 			if (PullToRefresh) {
 				Onboarding.ShowOnboarding ((int)UserFlags.SHOWN_ONBOARDING_ENTITY_LIST_PULL_TO_REFRESH, "Help", "Pull down to refresh");
 			}
+
+
+			searchBar.Focus ();
 		}
 
 		protected virtual void EntitySelected(NexusManager<T> manager, T item)
