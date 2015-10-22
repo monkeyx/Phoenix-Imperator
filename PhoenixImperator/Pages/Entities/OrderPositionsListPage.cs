@@ -62,6 +62,22 @@ namespace PhoenixImperator.Pages.Entities
 			EntityPageBuilderFactory.ShowEntityPage<Position>(manager,item.Id,1);
 		}
 
+		protected override void DeleteEntity(EntityBase entity, Action<IEnumerable<EntityBase>> callback)
+		{
+			listView.IsRefreshing = true;
+			Phoenix.Application.OrderManager.DeleteLocalOrders (entity.Id, (response) => {
+				Phoenix.Application.PositionManager.GetPositionsWithOrders((results) => {
+					callback(results);
+					GroupEntities (results, (groupedResults) => {
+						Device.BeginInvokeOnMainThread (() => {
+							listView.ItemsSource = groupedResults;
+							listView.IsRefreshing = false;
+						});
+					});
+				});
+			});
+		}
+
 		private void SubmitOrders()
 		{
 			Insights.Track ("Submit Orders");

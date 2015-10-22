@@ -212,8 +212,6 @@ namespace PhoenixImperator.Pages.Entities
 
 	public class OrderViewCell : TextCell
 	{
-		public IEnumerable<Order> Orders { get; set; }
-
 		public OrderViewCell()
 		{
 			var deleteAction = new MenuItem { Text = "Delete", IsDestructive = true }; // red background

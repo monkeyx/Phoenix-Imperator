@@ -49,7 +49,8 @@ namespace PhoenixImperator
 	{
 		SHOWN_ONBOARDING_NEXUS_PULL_TO_REFRESH = 0x01,
 		SHOWN_ONBOARDING_ENTITY_LIST_PULL_TO_REFRESH = 0x02,
-		SHOWN_ONBOARDING_ORDER_SWIPE_TO_DELETE = 0x04
+		SHOWN_ONBOARDING_ORDER_SWIPE_TO_DELETE = 0x04,
+		SHOWN_ONBOARDING_ENTITY_LIST_SWIPE_TO_DELETE = 0x08
 	}
 
 	public class App : Application, Phoenix.IDatabase, Phoenix.ILogger, Phoenix.IDocumentFolder, Phoenix.IRestClient

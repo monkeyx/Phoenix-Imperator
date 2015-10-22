@@ -37,6 +37,24 @@ using Phoenix.Util;
 
 namespace PhoenixImperator.Pages.Entities
 {
+	public static class EntityList
+	{
+		public static ObservableCollection<EntityBase> Entities { get; set; }
+		public static Action<EntityBase, Action<IEnumerable<EntityBase>>> DeleteEntityCallback;
+
+		public static void UpdateEntities(IEnumerable<EntityBase> entities)
+		{
+			if (Entities == null) {
+				Entities = new ObservableCollection<EntityBase> ();
+			} else {
+				Entities.Clear ();
+			}
+			foreach (EntityBase e in entities) {
+				Entities.Add (e);
+			}
+		}
+	}
+
 	public class EntityListPage<T> : PhoenixPage where T :   EntityBase, new()
 	{
 		/// <summary>
@@ -52,9 +70,18 @@ namespace PhoenixImperator.Pages.Entities
 		/// <value><c>true</c> if pull to refresh; otherwise, <c>false</c>.</value>
 		public bool PullToRefresh { get; private set;}
 
+		/// <summary>
+		/// Gets the manager.
+		/// </summary>
+		/// <value>The manager.</value>
+		public NexusManager<T> Manager { get; private set;}
 
 		public EntityListPage (string title, NexusManager<T> manager, IEnumerable<T> entities, bool entityHasDetail = true, bool pullToRefresh = true)
 		{
+			Manager = manager;
+			EntityList.UpdateEntities (entities);
+			EntityList.DeleteEntityCallback = DeleteEntity;
+
 			Title = title;
 
 			Padding = new Thickness (10, Device.OnPlatform (20, 0, 0), 10, 5);
@@ -64,15 +91,13 @@ namespace PhoenixImperator.Pages.Entities
 			EntityHasDetail = entityHasDetail;
 			PullToRefresh = pullToRefresh;
 
-			allEntities = entities;
-
 			// List View
 			listView = new ListView {
 				IsGroupingEnabled = true,
 				GroupDisplayBinding = new Binding ("GroupName"),
 				GroupShortNameBinding = new Binding ("GroupShortName")
 			};
-			listView.ItemTemplate = new DataTemplate (typeof(TextCell));
+			listView.ItemTemplate = new DataTemplate (typeof(EntityViewCell));
 			listView.ItemTemplate.SetBinding (TextCell.TextProperty, "ListText");
 			listView.ItemTemplate.SetBinding (TextCell.DetailProperty, "ListDetail");
 			listView.IsRefreshing = true;
@@ -140,13 +165,28 @@ namespace PhoenixImperator.Pages.Entities
 			Content = layout;
 		}
 
+		protected virtual void DeleteEntity(EntityBase entity, Action<IEnumerable<EntityBase>> callback)
+		{
+			listView.IsRefreshing = true;
+			Manager.Delete ((T)entity, (results) => {
+				callback(results);
+				GroupEntities (results, (groupedResults) => {
+					Device.BeginInvokeOnMainThread (() => {
+						listView.ItemsSource = groupedResults;
+						listView.IsRefreshing = false;
+					});
+				});
+			});
+		}
+
 		protected override void OnAppearing ()
 		{
 			base.OnAppearing ();
 			if (PullToRefresh) {
-				Onboarding.ShowOnboarding ((int)UserFlags.SHOWN_ONBOARDING_ENTITY_LIST_PULL_TO_REFRESH, "Help", "Pull down to refresh");
+				Onboarding.ShowOnboarding ((int)UserFlags.SHOWN_ONBOARDING_ENTITY_LIST_PULL_TO_REFRESH, "Help", "Pull down to refresh. Swipe left to delete an entry.");
+			} else {
+				Onboarding.ShowOnboarding ((int)UserFlags.SHOWN_ONBOARDING_ENTITY_LIST_SWIPE_TO_DELETE, "Help", "Swipe left to delete an entry.");
 			}
-
 
 			searchBar.Focus ();
 		}
@@ -159,29 +199,29 @@ namespace PhoenixImperator.Pages.Entities
 			listView.IsEnabled = true;
 		}
 
-		protected void GroupEntities(IEnumerable<T> entities, Action<IEnumerable<EntityGroup<T>>> callback)
+		protected void GroupEntities(IEnumerable<EntityBase> entities, Action<IEnumerable<EntityGroup>> callback)
 		{
 			Task.Factory.StartNew (() => {
-				Dictionary<string, EntityGroup<T>> mapping = new Dictionary<string, EntityGroup<T>> ();
+				Dictionary<string, EntityGroup> mapping = new Dictionary<string, EntityGroup> ();
 				foreach(T item in entities){
-					EntityGroup<T> group;
+					EntityGroup group;
 					if (item.Group == null) {
 						if (mapping.ContainsKey ("")) {
 							group = mapping [""];
 						} else {
-							group = new EntityGroup<T> ("", "*");
+							group = new EntityGroup ("", "*");
 							mapping.Add ("", group);
 						}
 					}
 					else if (mapping.ContainsKey (item.Group)) {
 						group = mapping [item.Group];
 					} else {
-						group = new EntityGroup<T> (item.Group, item.GroupShortName);
+						group = new EntityGroup (item.Group, item.GroupShortName);
 						mapping.Add (item.Group, group);
 					}
 					group.Add (item);
 				}
-				IEnumerable<EntityGroup<T>> grouped = from element in mapping.Values
+				IEnumerable<EntityGroup> grouped = from element in mapping.Values
 					orderby element.GroupName
 					select element;
 				callback(grouped);
@@ -197,7 +237,7 @@ namespace PhoenixImperator.Pages.Entities
 			listView.BeginRefresh ();
 
 			if (string.IsNullOrWhiteSpace (filter)) {
-				GroupEntities (allEntities, (results) => {
+				GroupEntities (EntityList.Entities, (results) => {
 					Device.BeginInvokeOnMainThread(() => {
 						listView.ItemsSource = results;
 						listView.EndRefresh ();
@@ -206,7 +246,7 @@ namespace PhoenixImperator.Pages.Entities
 				});
 			} else {
 				Task.Factory.StartNew (() => {
-					GroupEntities(allEntities.Where (x => x.ToString ().ToLower ().Contains (filter.ToLower ())),(results) => {
+					GroupEntities(EntityList.Entities.Where (x => x.ToString ().ToLower ().Contains (filter.ToLower ())),(results) => {
 						Device.BeginInvokeOnMainThread(() => {
 							listView.ItemsSource = results;
 							listView.EndRefresh ();
@@ -217,14 +257,13 @@ namespace PhoenixImperator.Pages.Entities
 			}
 		}
 
-		private IEnumerable<T> allEntities;
 		private ActivityIndicator activityIndicator;
 		private SearchBar searchBar;
 		private bool isSearching;
 
 	}
 
-	public class EntityGroup<T> : ObservableCollection<T>  where T :   EntityBase, new()
+	public class EntityGroup : ObservableCollection<EntityBase>
 	{
 		public string GroupName { get; private set; }
 
@@ -234,6 +273,27 @@ namespace PhoenixImperator.Pages.Entities
 		{
 			GroupName = groupName;
 			GroupShortName = groupShortName;
+		}
+	}
+
+	public class EntityViewCell : TextCell
+	{
+		public EntityViewCell()
+		{
+			var deleteAction = new MenuItem { Text = "Delete", IsDestructive = true }; // red background
+			deleteAction.SetBinding (MenuItem.CommandParameterProperty, new Binding ("."));
+			deleteAction.Clicked += OnDelete;
+
+			this.ContextActions.Add (deleteAction);
+		}
+
+		void OnDelete (object sender, EventArgs e)
+		{
+			var item = (MenuItem)sender;
+			Log.WriteLine (Log.Layer.UI,GetType(),"OnDelete: " + item.CommandParameter);
+			EntityList.DeleteEntityCallback ((EntityBase)item.CommandParameter,(results) => {
+				EntityList.UpdateEntities(results);
+			});
 		}
 	}
 }
