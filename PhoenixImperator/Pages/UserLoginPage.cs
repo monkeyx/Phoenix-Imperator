@@ -201,7 +201,9 @@ namespace PhoenixImperator.Pages
 			Phoenix.Application.UserManager.Save (this.UserId, this.UserCode, (user) => {
 				Phoenix.Application.UserLoggedIn(user);
 
-				Xamarin.Insights.Identify(UserId.ToString());
+				Xamarin.Insights.Identify(UserId.ToString(),new Dictionary<string, string>{
+					{"Version",App.Version}
+				});
 
 				if(Phoenix.Application.GameStatusManager.Count() < 1){
 					// fresh setup

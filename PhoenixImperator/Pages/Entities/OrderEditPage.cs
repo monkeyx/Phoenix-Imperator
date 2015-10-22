@@ -216,8 +216,10 @@ namespace PhoenixImperator.Pages
 				Text = param.Value,
 				Keyboard = Keyboard.Numeric
 			};
-			entry.Completed += (sender, e) => {
-				param.Value = entry.Text;
+			entry.PropertyChanged += (object sender, System.ComponentModel.PropertyChangedEventArgs e) => {
+				if(e.PropertyName == "Text"){
+					param.Value = entry.Text;
+				}
 			};
 			LastSection.Add (entry);
 		}
@@ -228,8 +230,10 @@ namespace PhoenixImperator.Pages
 				Label = paramType.Name,
 				Text = param.Value
 			};
-			entry.Completed += (sender, e) => {
-				param.Value = entry.Text;
+			entry.PropertyChanged += (object sender, System.ComponentModel.PropertyChangedEventArgs e) => {
+				if(e.PropertyName == "Text"){
+					param.Value = entry.Text;
+				}
 			};
 			LastSection.Add (entry);
 		}
@@ -267,43 +271,24 @@ namespace PhoenixImperator.Pages
 				Label = paramType.Name
 			};
 
+			if (string.IsNullOrWhiteSpace (param.Value)) {
+				entry.Placeholder = paramType.DataType.ToString();
+			}
+
 			if (paramType.DataType != OrderType.DataTypes.String) {
 				entry.Keyboard = Keyboard.Numeric;
 			}
 
-			entry.Completed += (sender, e) => {
-				param.Value = entry.Text;
-				if (infoData.ContainsKey (paramType.InfoType)) {
-					Dictionary<string,InfoData> data = infoData [paramType.InfoType];
-					if(data.Count > 0) {
-						Task.Factory.StartNew(() => {
-							int i = 0;
-							foreach(string value in data.Keys){
-								if(entry.Text == data[value].NexusId.ToString()){
-									if(infoPicker.Items.Count > i){
-										Device.BeginInvokeOnMainThread(() => {
-											infoPicker.SelectedIndex = i;
-											infoPicker.Title = data[value].ToString();
-										});
-									}
-									break;
-								}
-								i += 1;
-							}
-						});
-					}
-					else {
-						Device.BeginInvokeOnMainThread(() => {
-							infoPicker.Title = param.Value;
-						});
-					}
+//			entry.Completed += (sender, e) => {
+//				InfoEntryTextChanged(entry,paramType,param,infoPicker);
+//			};
 
-				} else {
-					Device.BeginInvokeOnMainThread(() => {
-						infoPicker.Title = param.Value;
-					});
+			entry.PropertyChanged += (object sender, System.ComponentModel.PropertyChangedEventArgs e) => {
+				if(e.PropertyName == "Text"){
+					InfoEntryTextChanged(entry,paramType,param,infoPicker);
 				}
 			};
+
 			LastSection.Add (entry);
 			LastSection.Add (new ViewCell { View = infoPicker });
 
@@ -365,6 +350,41 @@ namespace PhoenixImperator.Pages
 					}
 				}
 			};
+		}
+
+		private void InfoEntryTextChanged(EntryCell entry, OrderParameterType paramType, OrderParameter param, Picker infoPicker)
+		{
+			param.Value = entry.Text;
+			if (infoData.ContainsKey (paramType.InfoType)) {
+				Dictionary<string,InfoData> data = infoData [paramType.InfoType];
+				if(data.Count > 0) {
+					Task.Factory.StartNew(() => {
+						int i = 0;
+						foreach(string value in data.Keys){
+							if(entry.Text == data[value].NexusId.ToString()){
+								if(infoPicker.Items.Count > i){
+									Device.BeginInvokeOnMainThread(() => {
+										infoPicker.SelectedIndex = i;
+										infoPicker.Title = data[value].ToString();
+									});
+								}
+								break;
+							}
+							i += 1;
+						}
+					});
+				}
+				else {
+					Device.BeginInvokeOnMainThread(() => {
+						infoPicker.Title = param.Value;
+					});
+				}
+
+			} else {
+				Device.BeginInvokeOnMainThread(() => {
+					infoPicker.Title = param.Value;
+				});
+			}
 		}
 
 		private TableView formTable;
