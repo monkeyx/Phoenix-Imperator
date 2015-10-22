@@ -38,6 +38,7 @@ namespace PhoenixImperator.Pages.Entities
 		protected override void DisplayEntity(Item item)
 		{
 			AddContentTab ("General", "icon_general.png");
+			AddCopyButton ("Copy Item ID", item.Id.ToString ());
 			AddProperty ("Type", item.ItemType);
 			AddProperty ("Sub Type", item.SubType);
 			AddProperty ("Mass Units", item.MassUnits.ToString ());

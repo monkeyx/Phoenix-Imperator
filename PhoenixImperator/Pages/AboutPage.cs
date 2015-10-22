@@ -57,8 +57,12 @@ namespace PhoenixImperator.Pages
 					},
 					new Label {
 						Text = "Phoenix and Beyond the Stellar Empire are owned by KJC Games"
+					},
+					new Label {
+						Text = "Distributed under the MIT License",
+						FontAttributes = FontAttributes.Italic,
+						HorizontalOptions = LayoutOptions.CenterAndExpand
 					}
-
 				}
 			};
 		}

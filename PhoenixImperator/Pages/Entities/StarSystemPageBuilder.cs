@@ -46,6 +46,7 @@ namespace PhoenixImperator.Pages.Entities
 				AddContentTab ("Celestial Bodies","icon_celestialbodies.png");
 
 				AddProperty ("Periphery", item.PeripheryName);
+				AddCopyButton ("Copy System ID", item.Id.ToString ());
 
 				ListView listView = new ListView ();
 				listView.ItemTemplate = new DataTemplate (typeof(TextCell));
@@ -56,8 +57,14 @@ namespace PhoenixImperator.Pages.Entities
 				listView.ItemTapped += (sender, e) => {
 					Log.WriteLine(Log.Layer.UI, this.GetType(), "Tapped: " + e.Item);
 					((ListView)sender).SelectedItem = null; // de-select the row
+					App.ClipboardService.CopyToClipboard(((CelestialBody)e.Item).LocalCelestialBodyId.ToString());
 				};
 				currentLayout.Children.Add (listView);
+				currentLayout.Children.Add (new Label {
+					HorizontalOptions = LayoutOptions.CenterAndExpand,
+					Text = "Tap a planet to copy its ID",
+					FontAttributes = FontAttributes.Italic
+				});
 			}
 
 			if (item.JumpLinks.Count > 0) {
@@ -79,6 +86,11 @@ namespace PhoenixImperator.Pages.Entities
 				};
 
 				currentLayout.Children.Add (listView);
+				currentLayout.Children.Add (new Label {
+					HorizontalOptions = LayoutOptions.CenterAndExpand,
+					Text = "Tap a link to view system",
+					FontAttributes = FontAttributes.Italic
+				});
 			}
 
 			Phoenix.Application.PositionManager.GetPositionsInStarSystem (item, (results) => {

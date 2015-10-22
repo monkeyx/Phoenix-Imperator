@@ -57,6 +57,8 @@ namespace PhoenixImperator
 	{
 		public static string Version { get; set; }
 
+		public static IClipboardService ClipboardService { get; set; }
+
 		public App ()
 		{
 			var sqliteFilename = "phoenix_imperator_" + Version.Replace(".","_") + ".db3";

@@ -112,6 +112,18 @@ namespace PhoenixImperator.Pages.Entities
 			});
 		}
 
+		protected void AddCopyButton(string label, string value)
+		{
+			Button button = new Button {
+				Text = label,
+				VerticalOptions = LayoutOptions.Start,
+			};
+			currentLayout.Children.Add (button);
+			button.Clicked += (sender, e) => {
+				App.ClipboardService.CopyToClipboard(value);
+			};
+		}
+
 		protected void AddProperty(string key, string value)
 		{
 			if (currentLayout == null)

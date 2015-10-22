@@ -54,7 +54,7 @@ namespace PhoenixImperator.Pages.Entities
 
 			CurrentPosition = item;
 			AddContentTab ("General", "icon_general.png");
-			// AddLabel (item.PositionTypeString);
+			AddCopyButton ("Copy ID", item.Id.ToString ());
 			if (item.StarSystem != null) {
 				AddEntityProperty (Phoenix.Application.StarSystemManager, item.StarSystem, "Star System", item.SystemText);
 			} else {

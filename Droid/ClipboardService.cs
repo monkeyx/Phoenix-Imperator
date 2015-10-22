@@ -1,10 +1,10 @@
 ﻿//
-// AppDelegate.cs
+// ClipboardService.cs
 //
 // Author:
 //       Seyed Razavi <monkeyx@gmail.com>
 //
-// Copyright (c) 2015 Seyed Razavi 
+// Copyright (c) 2015 Seyed Razavi
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -24,44 +24,28 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
-using Xamarin;
+using Android.App;
+using Android.Content;
 
-using Foundation;
-using UIKit;
+using PhoenixImperator;
 
-namespace PhoenixImperator.iOS
+namespace PhoenixImperator.Droid
 {
-	[Register ("AppDelegate")]
-	public partial class AppDelegate : global::Xamarin.Forms.Platform.iOS.FormsApplicationDelegate
+	public class ClipboardService : IClipboardService
 	{
-		public override bool FinishedLaunching (UIApplication app, NSDictionary options)
+		public void CopyToClipboard(String text)
 		{
-			global::Xamarin.Forms.Forms.Init ();
-
-			// Code for starting up the Xamarin Test Cloud Agent
-			#if ENABLE_TEST_CLOUD
-			Xamarin.Calabash.Start();
-			#endif
-
-			Insights.Initialize("4cdef01b1dc979920d5d485896d5fe50e9c752a6");
-			Insights.Track ("iOS/Start");
-
-			App.Version = GetBuildNumber ();
-			App.ClipboardService = new ClipboardService ();
-
-			LoadApplication (new App ());
-
-			UIApplication.SharedApplication.IdleTimerDisabled = true;
-
-			return base.FinishedLaunching (app, options);
+			MainActivity.AndroidClipboardManager.Text = text;
 		}
 
-		public string GetBuildNumber()
+		public string PasteFromClipboard()
 		{
-			return NSBundle.MainBundle.InfoDictionary[new NSString("CFBundleVersion")].ToString();
+			return MainActivity.AndroidClipboardManager.Text;
+		}
+
+		public ClipboardService ()
+		{
 		}
 	}
 }
