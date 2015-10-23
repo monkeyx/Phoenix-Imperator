@@ -26,6 +26,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 using Xamarin.Forms;
 
@@ -37,7 +38,8 @@ namespace PhoenixImperator.Pages.Entities
 {
 	public class PositionPageBuilder : BaseEntityPageBuilder<Position>
 	{
-		public static ObservableCollection<Order> Orders { get; set; }
+		public static ObservableCollection<Order> Orders { get; set; } = new ObservableCollection<Order> ();
+		public static ObservableCollection<Notification> Notifications { get; set; } = new ObservableCollection<Notification> ();
 		public static Position CurrentPosition;
 
 		public static void UpdateOrders(IEnumerable<Order> orders)
@@ -48,10 +50,16 @@ namespace PhoenixImperator.Pages.Entities
 			}
 		}
 
+		public static void UpdateNotifications(IEnumerable<Notification> notifications)
+		{
+			Notifications.Clear ();
+			foreach (Notification n in notifications) {
+				Notifications.Add (n);
+			}
+		}
+
 		protected override void DisplayEntity(Position item)
 		{
-			Orders = new ObservableCollection<Order> ();
-
 			CurrentPosition = item;
 			AddContentTab ("General", "icon_general.png");
 			AddCopyButton ("Copy ID", item.Id.ToString ());
@@ -78,6 +86,34 @@ namespace PhoenixImperator.Pages.Entities
 			};
 			requestUpdateButton.Clicked += RequestUpdateButtonClicked;
 			currentLayout.Children.Add (requestUpdateButton);
+
+			AddContentTab ("Notifications", "icon_notifications.png");
+
+			ListView notificationList = new ListView {
+				IsGroupingEnabled = true,
+				GroupDisplayBinding = new Binding ("GroupName"),
+				GroupShortNameBinding = new Binding ("GroupShortName")
+			};
+			notificationList.ItemTemplate = new DataTemplate (typeof(NotificationViewCell));
+			notificationList.ItemTemplate.SetBinding (TextCell.TextProperty, "ListText");
+			notificationList.ItemTemplate.SetBinding (TextCell.DetailProperty, "ListDetail");
+			notificationList.ItemTapped += (sender, e) => {
+				EntityPageBuilderFactory.ShowEntityPage<Notification>(Phoenix.Application.NotificationManager,((Notification)e.Item).Id);
+			};
+			currentLayout.Children.Add (notificationList);
+			notificationList.IsRefreshing = true;
+
+			Phoenix.Application.NotificationManager.AllForPosition (item.Id, (results) => {
+				if(results.Count > 0){
+					UpdateNotifications(results);
+					EntityListPage<Notification>.GroupEntities (results, (groupedResults) => {
+						Device.BeginInvokeOnMainThread (() => {
+							notificationList.ItemsSource = groupedResults;
+							notificationList.IsRefreshing = false;
+						});
+					});
+				}
+			});
 
 			Phoenix.Application.PositionManager.GetTurnReport (item.Id, (turn) => {
 				Device.BeginInvokeOnMainThread(() => {
@@ -227,6 +263,27 @@ namespace PhoenixImperator.Pages.Entities
 			Log.WriteLine (Log.Layer.UI,GetType(),"OnDelete: " + item.CommandParameter);
 			Phoenix.Application.OrderManager.DeleteOrder ((Order)item.CommandParameter,(results) => {
 				PositionPageBuilder.UpdateOrders(results);
+			});
+		}
+	}
+
+	public class NotificationViewCell : TextCell
+	{
+		public NotificationViewCell()
+		{
+			var deleteAction = new MenuItem { Text = "Delete", IsDestructive = true }; // red background
+			deleteAction.SetBinding (MenuItem.CommandParameterProperty, new Binding ("."));
+			deleteAction.Clicked += OnDelete;
+
+			this.ContextActions.Add (deleteAction);
+		}
+
+		void OnDelete (object sender, EventArgs e)
+		{
+			var item = (MenuItem)sender;
+			Log.WriteLine (Log.Layer.UI,GetType(),"OnDelete: " + item.CommandParameter);
+			Phoenix.Application.NotificationManager.DeleteNotification ((Notification)item.CommandParameter,(results) => {
+				PositionPageBuilder.UpdateNotifications(results);
 			});
 		}
 	}

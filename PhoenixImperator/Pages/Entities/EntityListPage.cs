@@ -210,7 +210,7 @@ namespace PhoenixImperator.Pages.Entities
 			listView.IsEnabled = true;
 		}
 
-		protected void GroupEntities(IEnumerable<EntityBase> entities, Action<IEnumerable<EntityGroup>> callback)
+		public static void GroupEntities(IEnumerable<EntityBase> entities, Action<IEnumerable<EntityGroup>> callback)
 		{
 			Task.Factory.StartNew (() => {
 				Dictionary<string, EntityGroup> mapping = new Dictionary<string, EntityGroup> ();

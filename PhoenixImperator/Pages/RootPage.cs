@@ -66,6 +66,9 @@ namespace PhoenixImperator.Pages
 			Log.WriteLine (Log.Layer.UI, GetType (), "Navigate To: " + menu.TargetType);
 			string menuChoice = menu.TargetType.ToString ();
 			switch (menuChoice) {
+			case "Notifications":
+				ShowPage<Notification> (menuPage.Spinner, menuChoice, Phoenix.Application.NotificationManager);
+				break;
 			case "Items":
 				ShowPage<Item> (menuPage.Spinner, menuChoice, Phoenix.Application.ItemManager);
 				break;

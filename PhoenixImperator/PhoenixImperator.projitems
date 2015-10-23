@@ -30,6 +30,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Pages\OrderSelectorPage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Pages\AboutPage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IClipboardService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Pages\Entities\NotificationPageBuilder.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="$(MSBuildThisFileDirectory)Pages\" />

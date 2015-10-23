@@ -89,7 +89,7 @@ namespace PhoenixImperator.Pages
 			ListView navigationList = new ListView () {
 				BackgroundColor = Color.White,
 				SeparatorColor = Color.Silver,
-				ItemsSource = new [] {"Positions", "Orders", "Items", "Star Systems", "Order Types", "Info"}
+				ItemsSource = new [] {"Notifications", "Positions", "Orders", "Items", "Star Systems", "Order Types", "Info"}
 			};
 
 			navigationList.IsPullToRefreshEnabled = true;
@@ -98,6 +98,9 @@ namespace PhoenixImperator.Pages
 				Log.WriteLine(Log.Layer.UI, this.GetType(), "Tapped: " + e.Item);
 				((ListView)sender).SelectedItem = null; // de-select the row
 				switch(e.Item.ToString()){
+				case "Notifications":
+					RootPage.Root.ShowPage<Notification> (activityIndicator, e.Item.ToString(), Phoenix.Application.NotificationManager);
+					break;
 				case "Positions":
 					RootPage.Root.ShowPage<Position> (activityIndicator, e.Item.ToString(), Phoenix.Application.PositionManager);
 					break;

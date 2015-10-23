@@ -113,6 +113,12 @@ namespace PhoenixImperator.Pages
 			});
 
 			Add (new SideMenuItem {
+				Title = "Notifications",
+				IconSource = "icon_notifications.png",
+				TargetType = "Notifications"
+			});
+
+			Add (new SideMenuItem {
 				Title = "Positions",
 				IconSource = "icon_positions.png",
 				TargetType = "Positions"

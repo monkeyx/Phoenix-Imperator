@@ -8,7 +8,6 @@ Phoenix Tool built with Xamarin Forms
 - Copy Orders
 - Reordering orders
 - Position notes
-- Notifications
 - Macros
 - Affiliation
 - Markets

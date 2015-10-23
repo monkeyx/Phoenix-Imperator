@@ -1,5 +1,5 @@
 ﻿//
-// EntityPageFactory.cs
+// NotificationPageBuilder.cs
 //
 // Author:
 //       Seyed Razavi <monkeyx@gmail.com>
@@ -24,6 +24,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
+using System.Collections.Generic;
 
 using Xamarin.Forms;
 
@@ -32,46 +33,15 @@ using Phoenix.BL.Managers;
 
 namespace PhoenixImperator.Pages.Entities
 {
-	public static class EntityPageBuilderFactory
+	public class NotificationPageBuilder : BaseEntityPageBuilder<Notification>
 	{
-		public static void ShowEntityPage<T>(NexusManager<T> manager, int id, int tabIndex = 0) where T :   EntityBase, new()
+		public NotificationPageBuilder ()
 		{
-			IEntityPageBuilder<T> builder = EntityPageBuilderFactory.CreateBuilder<T>(manager);
-			manager.Get(id,(item) => {
-				TabbedPage page = builder.BuildPage((T) item);
-				if(tabIndex > 0){
-					page.CurrentPage = page.Children[tabIndex];
-				}
-				Device.BeginInvokeOnMainThread (() => {
-					RootPage.Root.NextPage (page);
-				});
-			});
 		}
 
-		private static IEntityPageBuilder<T> CreateBuilder<T>(NexusManager<T> manager) where T :   EntityBase, new()
+		protected override void DisplayEntity (Notification item)
 		{
-			IEntityPageBuilder<T> builder;
-			switch (typeof(T).Name) {
-			case "Item":
-				builder = (IEntityPageBuilder<T>)new ItemPageBuilder ();
-				break;
-			case "OrderType":
-				builder = (IEntityPageBuilder<T>)new OrderTypePageBuilder ();
-				break;
-			case "Position":
-				builder = (IEntityPageBuilder<T>)new PositionPageBuilder ();
-				break;
-			case "StarSystem":
-				builder = (IEntityPageBuilder<T>)new StarSystemPageBuilder ();
-				break;
-			case "Notification":
-				builder = (IEntityPageBuilder<T>)new NotificationPageBuilder ();
-				break;
-			default:
-				throw new Exception ("Unsupported type"); 
-			}
-			builder.Manager = manager;
-			return builder;
+			AddContentTab ("Notification", "icon_notifications.png");
 		}
 	}
 }

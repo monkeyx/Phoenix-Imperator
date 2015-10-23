@@ -215,32 +215,41 @@ namespace PhoenixImperator.Pages
 					header.Text = "Setting Up. Please be patient.";
 					UpdateStatusMessage("Fetching game status");
 					Phoenix.Application.GameStatusManager.Fetch ((results, ex) => {
-						UpdateStatusMessage("Fetched game status. Now fetching info.");
 						if(ex == null){
-							UpdateProgressBar(progressBar, 0.16f);
+							UpdateStatusMessage("Fetched game status. Now fetching info.");
+							UpdateProgressBar(progressBar, 0.14f);
 							Phoenix.Application.InfoManager.Fetch((infoResults, ex2) => {
-								UpdateStatusMessage("Fetched info data. Now fetching star systems.");
 								if(ex2 == null){
-									UpdateProgressBar(progressBar, 0.33f);
+									UpdateStatusMessage("Fetched info data. Now fetching star systems.");
+									UpdateProgressBar(progressBar, 0.28f);
 									Phoenix.Application.StarSystemManager.Fetch((systemResults, ex3) => {
-										UpdateStatusMessage("Fetched star systems. Now fetching order types.");
 										if(ex3 == null){
-											UpdateProgressBar(progressBar, 0.5f);
+											UpdateStatusMessage("Fetched star systems. Now fetching order types.");
+											UpdateProgressBar(progressBar, 0.42f);
 											Phoenix.Application.OrderTypeManager.Fetch((orderTypeResults, ex4) => {
 												if(ex4 == null){
-													UpdateProgressBar(progressBar, 0.67f);
 													UpdateStatusMessage("Fetched order types. Now fetching items");
+													UpdateProgressBar(progressBar, 0.56f);
 													Phoenix.Application.ItemManager.Fetch((itemResults, ex5) => {
 														if(ex5 == null){
-															UpdateProgressBar(progressBar, 0.83f);
 															UpdateStatusMessage("Fetched items. Now fetching positions.");
+															UpdateProgressBar(progressBar, 0.70f);
 															Phoenix.Application.PositionManager.Fetch((positionResults, ex6) => {
 																if(ex6 == null){
-																	ShowHomePage();
+																	UpdateStatusMessage("Fetched positions. Now fetching notifications.");
+																	UpdateProgressBar(progressBar, 0.84f);
+																	Phoenix.Application.NotificationManager.Fetch((notificationResults, ex7) => {
+																		if(ex7 == null){
+																			ShowHomePage();
+																		}
+																		else {
+																			UpdateProgressBar(progressBar, 1.0f);
+																			ShowErrorAndThenHome(ex6);
+																		}
+																	});
 																}
 																else {
-																	UpdateProgressBar(progressBar, 1.0f);
-																	ShowErrorAndThenHome(ex6);
+																	
 																}
 															});
 														}
