@@ -89,7 +89,7 @@ namespace PhoenixImperator.Pages
 			ListView navigationList = new ListView () {
 				BackgroundColor = Color.White,
 				SeparatorColor = Color.Silver,
-				ItemsSource = new [] {"Notifications", "Positions", "Orders", "Items", "Star Systems", "Order Types", "Info"}
+				ItemsSource = new [] {"Notifications", "Positions", "Orders", "Items", "Star Systems"}
 			};
 
 			navigationList.IsPullToRefreshEnabled = true;
