@@ -151,7 +151,14 @@ namespace PhoenixImperator.Pages
 					activityIndicator,
 					logo,
 					header,
-					navigationList
+					navigationList,
+					new Label {
+						Text = "Pull down to update status from Nexus",
+						TextColor = Color.White,
+						FontSize = Device.GetNamedSize (NamedSize.Small, typeof(Label)),
+						HorizontalOptions = LayoutOptions.CenterAndExpand,
+						FontAttributes = FontAttributes.Italic
+					}
 				}
 			};
 
@@ -165,7 +172,6 @@ namespace PhoenixImperator.Pages
 		protected override void OnAppearing ()
 		{
 			base.OnAppearing ();
-			Onboarding.ShowOnboarding ((int)UserFlags.SHOWN_ONBOARDING_NEXUS_PULL_TO_REFRESH, "Help", "Pull down to check Nexus status");
 		}
 
 		private Label starDateLabel;

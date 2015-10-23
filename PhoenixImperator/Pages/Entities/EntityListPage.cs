@@ -162,6 +162,24 @@ namespace PhoenixImperator.Pages.Entities
 				}
 			};
 
+			if (PullToRefresh) {
+				layout.Children.Add (new Label {
+					Text = "Pull down to refresh. Swipe left to delete an entry.",
+					TextColor = Color.White,
+					FontSize = Device.GetNamedSize (NamedSize.Small, typeof(Label)),
+					HorizontalOptions = LayoutOptions.CenterAndExpand,
+					FontAttributes = FontAttributes.Italic
+				});
+			} else {
+				layout.Children.Add (new Label {
+					Text = "Swipe left to delete an entry.",
+					TextColor = Color.White,
+					FontSize = Device.GetNamedSize (NamedSize.Small, typeof(Label)),
+					HorizontalOptions = LayoutOptions.CenterAndExpand,
+					FontAttributes = FontAttributes.Italic
+				});
+			}
+
 			Content = layout;
 		}
 
@@ -182,11 +200,6 @@ namespace PhoenixImperator.Pages.Entities
 		protected override void OnAppearing ()
 		{
 			base.OnAppearing ();
-			if (PullToRefresh) {
-				Onboarding.ShowOnboarding ((int)UserFlags.SHOWN_ONBOARDING_ENTITY_LIST_PULL_TO_REFRESH, "Help", "Pull down to refresh. Swipe left to delete an entry.");
-			} else {
-				Onboarding.ShowOnboarding ((int)UserFlags.SHOWN_ONBOARDING_ENTITY_LIST_SWIPE_TO_DELETE, "Help", "Swipe left to delete an entry.");
-			}
 		}
 
 		protected virtual void EntitySelected(NexusManager<T> manager, T item)

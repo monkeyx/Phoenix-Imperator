@@ -155,12 +155,12 @@ namespace PhoenixImperator.Pages.Entities
 			currentLayout.Children.Add (ordersActivity);
 			currentLayout.Children.Add(ordersList);
 			currentLayout.Children.Add (addOrderButton);
-
-			entityPage.CurrentPageChanged += (sender, e) => {
-				if(entityPage.CurrentPage.Title == "Orders"){
-					Onboarding.ShowOnboarding ((int)UserFlags.SHOWN_ONBOARDING_ORDER_SWIPE_TO_DELETE, "Help", "Tap an order to edit. Swipe left to delete an order.");
-				}
-			};
+			currentLayout.Children.Add(new Label {
+				Text = "Tap an order to edit. Swipe left to delete an order.",
+				FontSize = Device.GetNamedSize (NamedSize.Small, typeof(Label)),
+				HorizontalOptions = LayoutOptions.CenterAndExpand,
+				FontAttributes = FontAttributes.Italic
+			});
 
 			Phoenix.Application.OrderManager.AllForPosition (item.Id, (results) => {
 				if(results.Count > 0){

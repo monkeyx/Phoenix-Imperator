@@ -124,6 +124,7 @@ namespace PhoenixImperator.Pages.Entities
 						ShowInfoAlert("Orders Submitted", "Submitted orders for " + positionsSent + " positions");
 						Device.BeginInvokeOnMainThread(() => {
 							listView.IsRefreshing = false;
+							submitButton.IsEnabled = true;
 						});
 					}
 				});
