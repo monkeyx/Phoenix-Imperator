@@ -187,8 +187,6 @@ namespace PhoenixImperator.Pages.Entities
 			} else {
 				Onboarding.ShowOnboarding ((int)UserFlags.SHOWN_ONBOARDING_ENTITY_LIST_SWIPE_TO_DELETE, "Help", "Swipe left to delete an entry.");
 			}
-
-			searchBar.Focus ();
 		}
 
 		protected virtual void EntitySelected(NexusManager<T> manager, T item)

@@ -5,6 +5,7 @@ Phoenix Tool built with Xamarin Forms
 
 - Login with Nexus user / password (requires Nexus changes)
 - Sequencing
+- Copy Orders
 - Reordering orders
 - Position notes
 - Notifications
