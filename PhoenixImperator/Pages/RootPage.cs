@@ -67,7 +67,7 @@ namespace PhoenixImperator.Pages
 			string menuChoice = menu.TargetType.ToString ();
 			switch (menuChoice) {
 			case "Notifications":
-				ShowPage<Notification> (menuPage.Spinner, menuChoice, Phoenix.Application.NotificationManager);
+				ShowNotificationsPage (menuPage.Spinner);
 				break;
 			case "Items":
 				ShowPage<Item> (menuPage.Spinner, menuChoice, Phoenix.Application.ItemManager);
@@ -181,6 +181,40 @@ namespace PhoenixImperator.Pages
 					GoToPage (page);
 				});
 			});
+		}
+
+		public void ShowNotificationsPage(ActivityIndicator spinner)
+		{
+			spinner.IsRunning = true;
+			NotificationTabbedPage page = new NotificationTabbedPage ();
+			if (Phoenix.Application.NotificationManager.Count() > 0) {
+				// show local results
+				Phoenix.Application.NotificationManager.All ((results) => {
+					page.AddNotificationListPage("High", "icon_red_circle.png", results,Notification.NotificationPriority.Red);
+					page.AddNotificationListPage("Medium", "icon_amber_circle.png", results,Notification.NotificationPriority.Amber);
+					page.AddNotificationListPage("Low", "icon_green_circle.png", results,Notification.NotificationPriority.Green);
+					Device.BeginInvokeOnMainThread (() => {
+						spinner.IsRunning = false;
+						GoToPage (page);
+					});
+				});
+			} else {
+				// fetch and show results
+				Phoenix.Application.NotificationManager.Fetch ((results, ex) => {
+					if(ex == null){
+						page.AddNotificationListPage("High", "icon_red_circle.png", results,Notification.NotificationPriority.Red);
+						page.AddNotificationListPage("Medium", "icon_amber_circle.png", results,Notification.NotificationPriority.Amber);
+						page.AddNotificationListPage("Low", "icon_green_circle.png", results,Notification.NotificationPriority.Green);
+						Device.BeginInvokeOnMainThread (() => {
+							spinner.IsRunning = false;
+							GoToPage (page);
+						});
+					}
+					else {
+						menuPage.ShowErrorAlert(ex);
+					}
+				}, false);
+			}
 		}
 
 		private MenuPage menuPage;

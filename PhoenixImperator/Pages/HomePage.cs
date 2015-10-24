@@ -99,7 +99,7 @@ namespace PhoenixImperator.Pages
 				((ListView)sender).SelectedItem = null; // de-select the row
 				switch(e.Item.ToString()){
 				case "Notifications":
-					RootPage.Root.ShowPage<Notification> (activityIndicator, e.Item.ToString(), Phoenix.Application.NotificationManager);
+					RootPage.Root.ShowNotificationsPage (activityIndicator);
 					break;
 				case "Positions":
 					RootPage.Root.ShowPage<Position> (activityIndicator, e.Item.ToString(), Phoenix.Application.PositionManager);
@@ -126,13 +126,19 @@ namespace PhoenixImperator.Pages
 				SetStatus(null);
 				Phoenix.Application.GameStatusManager.Fetch ((results, ex) => {
 					if(ex == null){
-						Device.BeginInvokeOnMainThread(() => {
-							navigationList.IsRefreshing = false;
-							IEnumerator<GameStatus> i = results.GetEnumerator();
-							if(i.MoveNext()){
-								SetStatus(i.Current);
+						Phoenix.Application.NotificationManager.Fetch((notificationResults,ex2) => {
+							if(ex2 != null){
+								ShowErrorAlert(ex2);
 							}
+							Device.BeginInvokeOnMainThread(() => {
+								navigationList.IsRefreshing = false;
+								IEnumerator<GameStatus> i = results.GetEnumerator();
+								if(i.MoveNext()){
+									SetStatus(i.Current);
+								}
+							});
 						});
+
 					}
 					else {
 						ShowErrorAlert(ex);

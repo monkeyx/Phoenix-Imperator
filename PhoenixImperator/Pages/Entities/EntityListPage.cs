@@ -76,7 +76,7 @@ namespace PhoenixImperator.Pages.Entities
 		/// <value>The manager.</value>
 		public NexusManager<T> Manager { get; private set;}
 
-		public EntityListPage (string title, NexusManager<T> manager, IEnumerable<T> entities, bool entityHasDetail = true, bool pullToRefresh = true)
+		public EntityListPage (string title, NexusManager<T> manager, IEnumerable<T> entities, bool entityHasDetail = true, bool pullToRefresh = true, bool swipeLeftToDelete = true)
 		{
 			Manager = manager;
 			EntityList.UpdateEntities (entities);
@@ -97,7 +97,11 @@ namespace PhoenixImperator.Pages.Entities
 				GroupDisplayBinding = new Binding ("GroupName"),
 				GroupShortNameBinding = new Binding ("GroupShortName")
 			};
-			listView.ItemTemplate = new DataTemplate (typeof(EntityViewCell));
+			if (swipeLeftToDelete) {
+				listView.ItemTemplate = new DataTemplate (typeof(EntityViewCell));
+			} else {
+				listView.ItemTemplate = new DataTemplate (typeof(TextCell));
+			}
 			listView.ItemTemplate.SetBinding (TextCell.TextProperty, "ListText");
 			listView.ItemTemplate.SetBinding (TextCell.DetailProperty, "ListDetail");
 			listView.IsRefreshing = true;
@@ -113,19 +117,7 @@ namespace PhoenixImperator.Pages.Entities
 				listView.IsPullToRefreshEnabled = true;
 				listView.RefreshCommand = new Command ((e) => {
 					if(!isSearching) {
-						manager.Fetch((results, ex) => {
-							if(ex == null){
-								GroupEntities (results, (groupedResults) => {
-									Device.BeginInvokeOnMainThread (() => {
-										listView.ItemsSource = groupedResults;
-										listView.IsRefreshing = false;
-									});
-								});
-							}
-							else {
-								ShowErrorAlert(ex);
-							}
-						},true);
+						RefreshList();
 					}
 				});
 			}
@@ -163,14 +155,24 @@ namespace PhoenixImperator.Pages.Entities
 			};
 
 			if (PullToRefresh) {
-				layout.Children.Add (new Label {
-					Text = "Pull down to refresh. Swipe left to delete an entry.",
-					TextColor = Color.White,
-					FontSize = Device.GetNamedSize (NamedSize.Small, typeof(Label)),
-					HorizontalOptions = LayoutOptions.CenterAndExpand,
-					FontAttributes = FontAttributes.Italic
-				});
-			} else {
+				if (swipeLeftToDelete) {
+					layout.Children.Add (new Label {
+						Text = "Pull down to refresh. Swipe left to delete an entry.",
+						TextColor = Color.White,
+						FontSize = Device.GetNamedSize (NamedSize.Small, typeof(Label)),
+						HorizontalOptions = LayoutOptions.CenterAndExpand,
+						FontAttributes = FontAttributes.Italic
+					});
+				} else {
+					layout.Children.Add (new Label {
+						Text = "Pull down to refresh.",
+						TextColor = Color.White,
+						FontSize = Device.GetNamedSize (NamedSize.Small, typeof(Label)),
+						HorizontalOptions = LayoutOptions.CenterAndExpand,
+						FontAttributes = FontAttributes.Italic
+					});
+				}
+			} else if (swipeLeftToDelete) {
 				layout.Children.Add (new Label {
 					Text = "Swipe left to delete an entry.",
 					TextColor = Color.White,
@@ -181,6 +183,23 @@ namespace PhoenixImperator.Pages.Entities
 			}
 
 			Content = layout;
+		}
+
+		protected virtual void RefreshList()
+		{
+			Manager.Fetch((results, ex) => {
+				if(ex == null){
+					GroupEntities (results, (groupedResults) => {
+						Device.BeginInvokeOnMainThread (() => {
+							listView.ItemsSource = groupedResults;
+							listView.IsRefreshing = false;
+						});
+					});
+				}
+				else {
+					ShowErrorAlert(ex);
+				}
+			},true);
 		}
 
 		protected virtual void DeleteEntity(EntityBase entity, Action<IEnumerable<EntityBase>> callback)

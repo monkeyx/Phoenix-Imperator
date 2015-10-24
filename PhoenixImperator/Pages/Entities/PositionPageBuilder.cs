@@ -98,7 +98,8 @@ namespace PhoenixImperator.Pages.Entities
 			notificationList.ItemTemplate.SetBinding (TextCell.TextProperty, "ListText");
 			notificationList.ItemTemplate.SetBinding (TextCell.DetailProperty, "ListDetail");
 			notificationList.ItemTapped += (sender, e) => {
-				EntityPageBuilderFactory.ShowEntityPage<Notification>(Phoenix.Application.NotificationManager,((Notification)e.Item).Id);
+				Notification note = (Notification)e.Item;
+				EntityPageBuilderFactory.ShowEntityPage<Notification>(Phoenix.Application.NotificationManager,note.Id);
 			};
 			currentLayout.Children.Add (notificationList);
 			notificationList.IsRefreshing = true;
@@ -111,6 +112,10 @@ namespace PhoenixImperator.Pages.Entities
 							notificationList.ItemsSource = groupedResults;
 							notificationList.IsRefreshing = false;
 						});
+					});
+				} else {
+					Device.BeginInvokeOnMainThread (() => {
+						notificationList.IsRefreshing = false;
 					});
 				}
 			});
