@@ -37,11 +37,17 @@ using Phoenix.Util;
 
 namespace PhoenixImperator.Pages.Entities
 {
+	/// <summary>
+	/// Order positions list page.
+	/// </summary>
 	public class OrderPositionsListPage : EntityListPage<Position>
 	{
-		public OrderPositionsListPage (IEnumerable<Position> positions) : base("Orders",Phoenix.Application.PositionManager,positions,true,false)
+		/// <summary>
+		/// Initializes a new instance of the <see cref="PhoenixImperator.Pages.Entities.OrderPositionsListPage"/> class.
+		/// </summary>
+		/// <param name="positions">Positions.</param>
+		public OrderPositionsListPage (IEnumerable<Position> positions) : base("Pending Orders",Phoenix.Application.PositionManager,positions,true,false)
 		{
-			Title = "Pending Orders";
 			positionsWithOrders = new List<Position> (positions);
 			if (positionsWithOrders.Count > 0) {
 				submitButton = new Button {
@@ -53,22 +59,32 @@ namespace PhoenixImperator.Pages.Entities
 					submitButton.IsEnabled = false;
 					SubmitOrders();
 				};
-				layout.Children.Add (submitButton);
+				PageLayout.Children.Add (submitButton);
 			}
 		}
 
+		/// <summary>
+		/// Entities the selected.
+		/// </summary>
+		/// <param name="manager">Manager.</param>
+		/// <param name="item">Item.</param>
 		protected override void EntitySelected(NexusManager<Position> manager, Position item)
 		{
-			EntityPageBuilderFactory.ShowEntityPage<Position>(manager,item.Id,1);
+			EntityPageBuilderFactory.ShowEntityPage<Position>(manager,item.Id,2);
 		}
 
+		/// <summary>
+		/// Deletes the entity.
+		/// </summary>
+		/// <param name="entity">Entity.</param>
+		/// <param name="callback">Callback.</param>
 		protected override void DeleteEntity(EntityBase entity, Action<IEnumerable<EntityBase>> callback)
 		{
 			listView.IsRefreshing = true;
 			Phoenix.Application.OrderManager.DeleteLocalOrders (entity.Id, (response) => {
 				Phoenix.Application.PositionManager.GetPositionsWithOrders((results) => {
 					callback(results);
-					GroupEntities (results, (groupedResults) => {
+					EntityGroup.GroupEntities<Position> (results, (groupedResults) => {
 						Device.BeginInvokeOnMainThread (() => {
 							listView.ItemsSource = groupedResults;
 							listView.IsRefreshing = false;
@@ -89,7 +105,7 @@ namespace PhoenixImperator.Pages.Entities
 				Progress = 0f
 			};
 
-			layout.Children.Add (progressBar);
+			PageLayout.Children.Add (progressBar);
 
 			float progressPerPosition = 1.0f / (float)positionsWithOrders.Count;
 
@@ -115,7 +131,7 @@ namespace PhoenixImperator.Pages.Entities
 					UpdateProgressBar(progressBar, (float) (progressBar.Progress + progressPerPosition));
 					positionsSent += 1;
 					positionsWithOrders.Remove(position);
-					GroupEntities(positionsWithOrders,(results) => {
+					EntityGroup.GroupEntities<Position>(positionsWithOrders,(results) => {
 						Device.BeginInvokeOnMainThread(() => {
 							listView.ItemsSource = results;
 						});

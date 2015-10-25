@@ -36,10 +36,21 @@ using Phoenix.Util;
 
 namespace PhoenixImperator.Pages
 {
+	/// <summary>
+	/// Order selector page.
+	/// </summary>
 	public class OrderSelectorPage : PhoenixPage
 	{
-		public static ObservableCollection<OrderType> Orders { get; set; }
+		/// <summary>
+		/// Gets or sets the orders.
+		/// </summary>
+		/// <value>The orders.</value>
+		public static ObservableCollection<OrderType> Orders { get; set; } = new ObservableCollection<OrderType> ();
 
+		/// <summary>
+		/// Updates the orders.
+		/// </summary>
+		/// <param name="orders">Orders.</param>
 		public static void UpdateOrders(IEnumerable<OrderType> orders)
 		{
 			Orders.Clear ();
@@ -48,37 +59,15 @@ namespace PhoenixImperator.Pages
 			}
 		}
 
-		public OrderSelectorPage (Position position)
+		/// <summary>
+		/// Initializes a new instance of the <see cref="PhoenixImperator.Pages.OrderSelectorPage"/> class.
+		/// </summary>
+		/// <param name="position">Position.</param>
+		public OrderSelectorPage (Position position) : base("New Order")
 		{
-			Title = "New Order";
-
-			Padding = new Thickness (10, Device.OnPlatform (20, 0, 0), 10, 5);
-
 			BackgroundColor = Color.Black;
 
-			Orders = new ObservableCollection<OrderType> ();
-
-			SearchBar searchBar = new SearchBar () {
-				Placeholder = "Search"
-			};
-			searchBar.TextChanged += (sender, e) => FilterList (searchBar.Text);
-			searchBar.SearchButtonPressed += (sender, e) => {
-				FilterList (searchBar.Text);
-			};
-
-			listView = new ListView ();
-			listView.ItemTemplate = new DataTemplate (typeof(TextCell));
-			listView.ItemTemplate.SetBinding (TextCell.TextProperty, "ListText");
-			listView.ItemTemplate.SetBinding (TextCell.DetailProperty, "ListDetail");
-			listView.ItemsSource = Orders;
-
-			Phoenix.Application.OrderTypeManager.GetOrderTypesForPosition ((Position.PositionFlag)position.PositionType, (results) => {
-				UpdateOrders(results);
-			});
-
-			listView.ItemTapped += (sender, e) => {
-				Log.WriteLine (Log.Layer.UI, this.GetType (), "Tapped: " + e.Item + "(" + e.Item.GetType() + ")");
-				((ListView)sender).SelectedItem = null; // de-select the row
+			AddListViewWithSearchBar (typeof(TextCell), Orders, (sender, e) => {
 				Phoenix.Application.OrderTypeManager.Get(((OrderType)e.Item).Id,(orderType) => {
 					Order order = new Order{
 						PositionId = position.Id,
@@ -90,31 +79,12 @@ namespace PhoenixImperator.Pages
 						RootPage.Root.NextPageAfterModal(editPage);
 					});
 				});
-			};
+			});
 
-
-			Content = new StackLayout { 
-				Children = {
-					searchBar,
-					listView
-				}
-			};
+			Phoenix.Application.OrderTypeManager.GetOrderTypesForPosition ((Position.PositionFlag)position.PositionType, (results) => {
+				UpdateOrders(results);
+			});
 		}
-
-		private void FilterList(string filter)
-		{
-			listView.BeginRefresh ();
-
-			if (string.IsNullOrWhiteSpace (filter)) {
-				listView.ItemsSource = Orders;
-			} else {
-				listView.ItemsSource = (Orders.Where (x => x.ToString ().ToLower ().Contains (filter.ToLower ())));
-			}
-
-			listView.EndRefresh ();
-		}
-
-		private ListView listView;
 	}
 }
 

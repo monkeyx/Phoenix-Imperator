@@ -30,43 +30,41 @@ using Xamarin.Forms;
 
 namespace PhoenixImperator.Pages
 {
+	/// <summary>
+	/// Menu page.
+	/// </summary>
 	public class MenuPage : PhoenixPage
 	{
+		/// <summary>
+		/// Gets or sets the menu.
+		/// </summary>
+		/// <value>The menu.</value>
 		public ListView Menu { get; set; }
-		public ActivityIndicator Spinner { get; set; }
 
-		public MenuPage ()
+		/// <summary>
+		/// Initializes a new instance of the <see cref="PhoenixImperator.Pages.MenuPage"/> class.
+		/// </summary>
+		public MenuPage () : base("Menu")
 		{
 			Icon = "settings.png";
-			Title = "menu"; // The Title property must be set.
 
 			Menu = new MenuListView ();
 
 			var menuLabel = new ContentView {
 				Padding = new Thickness (10, 36, 0, 5),
 				Content = new Label {
-					TextColor = Color.FromHex ("AAAAAA"),
+					TextColor = Color.Black,
 					Text = "MENU", 
 				},
 			};
 
-			Spinner = new ActivityIndicator {
-				IsEnabled = true,
-				IsRunning = false,
-				BindingContext = this
-			};
-
-			var layout = new StackLayout { 
-				Spacing = 0, 
-				VerticalOptions = LayoutOptions.FillAndExpand
-			};
-			layout.Children.Add (menuLabel);
-			layout.Children.Add (Menu);
-			layout.Children.Add (Spinner);
-
-			Content = layout;
+			PageLayout.Children.Add (menuLabel);
+			PageLayout.Children.Add (Menu);
 		}
 
+		/// <summary>
+		/// Deselects the menu item.
+		/// </summary>
 		public void DeselectMenuItem()
 		{
 			Device.BeginInvokeOnMainThread (() => {
@@ -75,8 +73,14 @@ namespace PhoenixImperator.Pages
 		}
 	}
 
+	/// <summary>
+	/// Menu list view.
+	/// </summary>
 	public class MenuListView : ListView
 	{
+		/// <summary>
+		/// Initializes a new instance of the <see cref="PhoenixImperator.Pages.MenuListView"/> class.
+		/// </summary>
 		public MenuListView()
 		{
 			List<SideMenuItem> data = new MenuListData ();
@@ -93,17 +97,38 @@ namespace PhoenixImperator.Pages
 		}
 	}
 
+	/// <summary>
+	/// Side menu item.
+	/// </summary>
 	public class SideMenuItem
 	{
+		/// <summary>
+		/// Gets or sets the title.
+		/// </summary>
+		/// <value>The title.</value>
 		public string Title { get; set; }
 
+		/// <summary>
+		/// Gets or sets the icon source.
+		/// </summary>
+		/// <value>The icon source.</value>
 		public string IconSource { get; set; }
 
+		/// <summary>
+		/// Gets or sets the type of the target.
+		/// </summary>
+		/// <value>The type of the target.</value>
 		public object TargetType { get; set; }
 	}
 
+	/// <summary>
+	/// Menu list data.
+	/// </summary>
 	public class MenuListData : List<SideMenuItem>
 	{
+		/// <summary>
+		/// Initializes a new instance of the <see cref="PhoenixImperator.Pages.MenuListData"/> class.
+		/// </summary>
 		public MenuListData()
 		{
 			Add (new SideMenuItem {

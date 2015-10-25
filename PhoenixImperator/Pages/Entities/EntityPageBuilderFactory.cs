@@ -32,8 +32,18 @@ using Phoenix.BL.Managers;
 
 namespace PhoenixImperator.Pages.Entities
 {
+	/// <summary>
+	/// Entity page builder factory.
+	/// </summary>
 	public static class EntityPageBuilderFactory
 	{
+		/// <summary>
+		/// Shows the entity page.
+		/// </summary>
+		/// <param name="manager">Manager.</param>
+		/// <param name="id">Identifier.</param>
+		/// <param name="tabIndex">Tab index.</param>
+		/// <typeparam name="T">The 1st type parameter.</typeparam>
 		public static void ShowEntityPage<T>(NexusManager<T> manager, int id, int tabIndex = 0) where T :   EntityBase, new()
 		{
 			IEntityPageBuilder<T> builder = EntityPageBuilderFactory.CreateBuilder<T>(manager);

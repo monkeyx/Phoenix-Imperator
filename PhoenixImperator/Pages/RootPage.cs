@@ -24,6 +24,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
+using System.Collections.Generic;
 
 using Xamarin;
 using Xamarin.Forms;
@@ -36,10 +37,20 @@ using PhoenixImperator.Pages.Entities;
 
 namespace PhoenixImperator.Pages
 {
+	/// <summary>
+	/// Root page.
+	/// </summary>
 	public class RootPage : MasterDetailPage
 	{
+		/// <summary>
+		/// Gets or sets the root.
+		/// </summary>
+		/// <value>The root.</value>
 		public static RootPage Root { get; set; }
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="PhoenixImperator.Pages.RootPage"/> class.
+		/// </summary>
 		public RootPage ()
 		{
 			Root = this;
@@ -55,11 +66,18 @@ namespace PhoenixImperator.Pages
 			Detail = navigationPage;
 		}
 
+		/// <summary>
+		/// Gos the home.
+		/// </summary>
 		public void GoHome()
 		{
 			GoToPage (new HomePage());
 		}
 
+		/// <summary>
+		/// Navigates to.
+		/// </summary>
+		/// <param name="menu">Menu.</param>
 		public void NavigateTo (SideMenuItem menu)
 		{
 			Insights.Track (menu.TargetType.ToString());
@@ -98,6 +116,10 @@ namespace PhoenixImperator.Pages
 
 		}
 
+		/// <summary>
+		/// Gos to page.
+		/// </summary>
+		/// <param name="displayPage">Display page.</param>
 		public void GoToPage(Page displayPage)
 		{
 			Log.WriteLine (Log.Layer.UI, GetType (), "Go To Page: " + displayPage);
@@ -114,32 +136,58 @@ namespace PhoenixImperator.Pages
 			menuPage.DeselectMenuItem ();
 		}
 
+		/// <summary>
+		/// Nexts the page modal.
+		/// </summary>
+		/// <param name="modalPage">Modal page.</param>
 		public void NextPageModal(Page modalPage)
 		{
 			((NavigationPage)Detail).Navigation.PushModalAsync (modalPage);
 		}
 
+		/// <summary>
+		/// Nexts the page after modal.
+		/// </summary>
+		/// <param name="nextPage">Next page.</param>
 		public void NextPageAfterModal(Page nextPage)
 		{
 			NextPage (nextPage);
 			DismissModal ();
 		}
 
+		/// <summary>
+		/// Dismisses the modal.
+		/// </summary>
 		public void DismissModal()
 		{
 			((NavigationPage)Detail).Navigation.PopModalAsync ();
 		}
 
+		/// <summary>
+		/// Nexts the page.
+		/// </summary>
+		/// <param name="nextPage">Next page.</param>
 		public void NextPage(Page nextPage)
 		{
 			((NavigationPage)Detail).PushAsync (nextPage);
 		}
 
+		/// <summary>
+		/// Previouses the page.
+		/// </summary>
 		public void PreviousPage()
 		{
 			((NavigationPage)Detail).PopAsync ();
 		}
 
+		/// <summary>
+		/// Shows the page.
+		/// </summary>
+		/// <param name="spinner">Spinner.</param>
+		/// <param name="title">Title.</param>
+		/// <param name="manager">Manager.</param>
+		/// <param name="entityHasDetail">If set to <c>true</c> entity has detail.</param>
+		/// <typeparam name="T">The 1st type parameter.</typeparam>
 		public void ShowPage<T>(ActivityIndicator spinner, string title, NexusManager<T> manager, bool entityHasDetail = true) where T :   EntityBase, new()
 		{
 			spinner.IsRunning = true;
@@ -171,6 +219,10 @@ namespace PhoenixImperator.Pages
 			}
 		}
 
+		/// <summary>
+		/// Shows the orders page.
+		/// </summary>
+		/// <param name="spinner">Spinner.</param>
 		public void ShowOrdersPage(ActivityIndicator spinner)
 		{
 			spinner.IsRunning = true;
@@ -183,38 +235,41 @@ namespace PhoenixImperator.Pages
 			});
 		}
 
+		/// <summary>
+		/// Shows the notifications page.
+		/// </summary>
+		/// <param name="spinner">Spinner.</param>
 		public void ShowNotificationsPage(ActivityIndicator spinner)
 		{
 			spinner.IsRunning = true;
-			NotificationTabbedPage page = new NotificationTabbedPage ();
 			if (Phoenix.Application.NotificationManager.Count() > 0) {
 				// show local results
 				Phoenix.Application.NotificationManager.All ((results) => {
-					page.AddNotificationListPage("High", "icon_red_circle.png", results,Notification.NotificationPriority.Red);
-					page.AddNotificationListPage("Medium", "icon_amber_circle.png", results,Notification.NotificationPriority.Amber);
-					page.AddNotificationListPage("Low", "icon_green_circle.png", results,Notification.NotificationPriority.Green);
-					Device.BeginInvokeOnMainThread (() => {
-						spinner.IsRunning = false;
-						GoToPage (page);
-					});
+					ShowNotificationsPage(spinner,results);
 				});
 			} else {
 				// fetch and show results
 				Phoenix.Application.NotificationManager.Fetch ((results, ex) => {
 					if(ex == null){
-						page.AddNotificationListPage("High", "icon_red_circle.png", results,Notification.NotificationPriority.Red);
-						page.AddNotificationListPage("Medium", "icon_amber_circle.png", results,Notification.NotificationPriority.Amber);
-						page.AddNotificationListPage("Low", "icon_green_circle.png", results,Notification.NotificationPriority.Green);
-						Device.BeginInvokeOnMainThread (() => {
-							spinner.IsRunning = false;
-							GoToPage (page);
-						});
+						ShowNotificationsPage(spinner,results);
 					}
 					else {
 						menuPage.ShowErrorAlert(ex);
 					}
 				}, false);
 			}
+		}
+
+		private void ShowNotificationsPage(ActivityIndicator spinner, IEnumerable<Notification> results)
+		{
+			NotificationTabbedPage page = new NotificationTabbedPage ();
+			page.AddNotificationListPage("High", "icon_red_circle.png", results,Notification.NotificationPriority.Red);
+			page.AddNotificationListPage("Medium", "icon_amber_circle.png", results,Notification.NotificationPriority.Amber);
+			page.AddNotificationListPage("Low", "icon_green_circle.png", results,Notification.NotificationPriority.Green);
+			Device.BeginInvokeOnMainThread (() => {
+				spinner.IsRunning = false;
+				GoToPage (page);
+			});
 		}
 
 		private MenuPage menuPage;

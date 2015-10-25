@@ -54,12 +54,11 @@ namespace PhoenixImperator.Pages
 			}
 		}
 
-		public UserLoginPage () : base()
+		public UserLoginPage () : base("Phoenix Imperator")
 		{
 			BackgroundColor = Color.Black;
 
-			Image logo = new Image { Aspect = Aspect.AspectFill };
-			logo.Source = ImageSource.FromFile ("logo.png");
+			AddLogo ();
 
 			string headerText;
 			if (Phoenix.Application.UserManager.Count () < 1) {
@@ -68,12 +67,7 @@ namespace PhoenixImperator.Pages
 				headerText = "Phoenix Imperator";
 			}
 
-			header = new Label { 
-				XAlign = TextAlignment.Center,
-				Text = headerText,
-				TextColor = Color.White,
-				FontAttributes = FontAttributes.Bold
-			};
+			header = AddHeading (headerText);
 
 			statusMessage = new Label {
 				XAlign = TextAlignment.Center,
@@ -84,14 +78,12 @@ namespace PhoenixImperator.Pages
 			userIdEntry = new Entry {
 				Placeholder = "User ID",
 				HorizontalOptions = LayoutOptions.FillAndExpand,
-				VerticalOptions = LayoutOptions.CenterAndExpand,
 				Keyboard = Keyboard.Numeric,
 			};
 
 			userCodeEntry = new Entry {
 				Placeholder = "Code",
-				HorizontalOptions = LayoutOptions.FillAndExpand,
-				VerticalOptions = LayoutOptions.CenterAndExpand,
+				HorizontalOptions = LayoutOptions.FillAndExpand
 			};
 
 			userIdEntry.Focus ();
@@ -103,73 +95,25 @@ namespace PhoenixImperator.Pages
 				TextColor = Color.Black,
 				BackgroundColor = Color.White,
 				BorderWidth = 1,
-				HorizontalOptions = LayoutOptions.FillAndExpand,
-				VerticalOptions = LayoutOptions.CenterAndExpand
-			};
-
-			activityIndicator = new ActivityIndicator {
-				IsEnabled = true,
-				IsRunning = false,
-				BindingContext = this
+				HorizontalOptions = LayoutOptions.FillAndExpand
 			};
 
 			loginButton.Clicked += LoginButtonClicked;
 
 			Button linkButton = new Button {
-				VerticalOptions = LayoutOptions.EndAndExpand,
 				HorizontalOptions = LayoutOptions.CenterAndExpand,
 				Text = "Visit Nexus to get your XML Access Id and Code",
-				TextColor = Color.White,
-				BackgroundColor = Color.Black
+				// TextColor = Color.White,
+				// BackgroundColor = Color.Black
 			};
 
-			linkButton.Clicked += (sender, e) => {
-				Button button = new Button{
-					Text = "Back to Imperator",
-					BackgroundColor = Color.Black,
-					TextColor = Color.White
-				};
-				button.Clicked += (sender2, e2) => {
-					RootPage.Root.DismissModal();
-				};
-				ScrollView view = new ScrollView {
-					VerticalOptions = LayoutOptions.FillAndExpand
-				};
-				StackLayout layout = new StackLayout{
-					Padding = new Thickness(10, Device.OnPlatform(20, 0, 0), 10, 5),
-					BackgroundColor = Color.Black,
-					Children = {
-						view,
-						button
-					}
-				};
-				WebView browser = new WebView{
-					Source = "http://www.phoenixbse.com/index.php?a=user&sa=xml"
-				};
-				view.Content = browser;
+			linkButton.Clicked += LinkButtonClicked;
 
-				PhoenixPage page = new PhoenixPage{
-					Title = "Nexus",
-					Content = layout
-				};
-				RootPage.Root.NextPageModal(page);
-			};
-
-			this.Padding = new Thickness(10, Device.OnPlatform(20, 0, 0), 10, 5);
-
-			Content = new StackLayout { 
-				VerticalOptions = LayoutOptions.StartAndExpand,
-				Children = {
-					activityIndicator,
-					logo,
-					header,
-					userIdEntry,
-					userCodeEntry,
-					loginButton,
-					linkButton,
-					statusMessage
-				}
-			};
+			PageLayout.Children.Add (userIdEntry);
+			PageLayout.Children.Add (userCodeEntry);
+			PageLayout.Children.Add (loginButton);
+			PageLayout.Children.Add (linkButton);
+			PageLayout.Children.Add (statusMessage);
 
 			int userCount = Phoenix.Application.UserManager.Count ();
 			Log.WriteLine (Log.Layer.AL, GetType(), "Users: " + userCount);
@@ -188,13 +132,45 @@ namespace PhoenixImperator.Pages
 			}
 		}
 
+		void LinkButtonClicked(object sender, EventArgs e)
+		{
+			Button button = new Button{
+				Text = "Back to Imperator",
+				BackgroundColor = Color.Black,
+				TextColor = Color.White
+			};
+			button.Clicked += (sender2, e2) => {
+				RootPage.Root.DismissModal();
+			};
+			ScrollView view = new ScrollView {
+				VerticalOptions = LayoutOptions.FillAndExpand
+			};
+			StackLayout layout = new StackLayout{
+				Padding = new Thickness(10, Device.OnPlatform(20, 0, 0), 10, 5),
+				BackgroundColor = Color.Black,
+				Children = {
+					view,
+					button
+				}
+			};
+			WebView browser = new WebView{
+				Source = "http://www.phoenixbse.com/index.php?a=user&sa=xml"
+			};
+			view.Content = browser;
+
+			PhoenixPage page = new PhoenixPage("Nexus"){
+				Content = layout
+			};
+			RootPage.Root.NextPageModal(page);
+		}
+
 		void LoginButtonClicked(object sender, EventArgs e)
 		{
 			if (string.IsNullOrWhiteSpace (userCodeEntry.Text) || string.IsNullOrWhiteSpace (userIdEntry.Text)) {
 				ShowErrorAlert ("User Id and Code are required");
 				return;
 			}
-			activityIndicator.IsRunning = true;
+			Spinner.IsRunning = true;
 			userIdEntry.IsEnabled = false;
 			userCodeEntry.IsEnabled = false;
 			loginButton.IsEnabled = false;
@@ -309,7 +285,7 @@ namespace PhoenixImperator.Pages
 		private void ShowHomePage()
 		{
 			Device.BeginInvokeOnMainThread (() => {
-				activityIndicator.IsRunning = false;
+				Spinner.IsRunning = false;
 				userIdEntry.IsEnabled = true;
 				userCodeEntry.IsEnabled = true;
 				loginButton.IsEnabled = true;
@@ -320,12 +296,11 @@ namespace PhoenixImperator.Pages
 			});
 		}
 
-		private Label header;
 		private Label statusMessage;
 		private Entry userIdEntry;
 		private Entry userCodeEntry;
 		private Button loginButton;
-		private ActivityIndicator activityIndicator;
+		private Label header;
 	}
 }
 

@@ -35,8 +35,17 @@ using Phoenix.Util;
 
 namespace PhoenixImperator.Pages.Entities
 {
+	/// <summary>
+	/// Notification tabbed page.
+	/// </summary>
 	public class NotificationTabbedPage : TabbedPage
 	{
+		/// <summary>
+		/// Filters the by priority.
+		/// </summary>
+		/// <returns>The by priority.</returns>
+		/// <param name="results">Results.</param>
+		/// <param name="priority">Priority.</param>
 		public static IEnumerable<Notification> FilterByPriority(IEnumerable<Notification> results, Notification.NotificationPriority priority)
 		{
 			return from element in results
@@ -45,12 +54,22 @@ namespace PhoenixImperator.Pages.Entities
 				select element;
 		}
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="PhoenixImperator.Pages.Entities.NotificationTabbedPage"/> class.
+		/// </summary>
 		public NotificationTabbedPage ()
 		{
 			Title = "Notifications";
 			BackgroundColor = Color.White;
 		}
 
+		/// <summary>
+		/// Adds the notification list page.
+		/// </summary>
+		/// <param name="title">Title.</param>
+		/// <param name="icon">Icon.</param>
+		/// <param name="filtered">Filtered.</param>
+		/// <param name="priority">Priority.</param>
 		public void AddNotificationListPage(string title, string icon, IEnumerable<Notification> filtered, Notification.NotificationPriority priority)
 		{
 			NotificationListPage page = new NotificationListPage (title, icon, filtered, priority);
@@ -61,22 +80,39 @@ namespace PhoenixImperator.Pages.Entities
 		}
 	}
 
+	/// <summary>
+	/// Notification list page.
+	/// </summary>
 	public class NotificationListPage : EntityListPage<Notification>
 	{
+		/// <summary>
+		/// Gets the priority.
+		/// </summary>
+		/// <value>The priority.</value>
 		public Notification.NotificationPriority Priority { get; private set; }
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="PhoenixImperator.Pages.Entities.NotificationListPage"/> class.
+		/// </summary>
+		/// <param name="title">Title.</param>
+		/// <param name="icon">Icon.</param>
+		/// <param name="notifications">Notifications.</param>
+		/// <param name="priority">Priority.</param>
 		public NotificationListPage(string title, string icon, IEnumerable<Notification> notifications, Notification.NotificationPriority priority) : base(title,Phoenix.Application.NotificationManager,NotificationTabbedPage.FilterByPriority(notifications,priority),true,true,false)
 		{
 			Icon = icon;
 			Priority = priority;
 		}
 
+		/// <summary>
+		/// Refreshs the list.
+		/// </summary>
 		protected override void RefreshList()
 		{
 			Manager.Fetch((results, ex) => {
 				results = NotificationTabbedPage.FilterByPriority(results,Priority);
 				if(ex == null){
-					GroupEntities (results, (groupedResults) => {
+					EntityGroup.GroupEntities<Notification> (results, (groupedResults) => {
 						Device.BeginInvokeOnMainThread (() => {
 							listView.ItemsSource = groupedResults;
 							listView.IsRefreshing = false;

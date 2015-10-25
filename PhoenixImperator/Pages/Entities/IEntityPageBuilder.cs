@@ -32,10 +32,22 @@ using Phoenix.BL.Managers;
 
 namespace PhoenixImperator
 {
+	/// <summary>
+	/// Entity page builder interface
+	/// </summary>
 	public interface IEntityPageBuilder<T> where T :   EntityBase, new()
 	{
+		/// <summary>
+		/// Gets or sets the manager.
+		/// </summary>
+		/// <value>The manager.</value>
 		NexusManager<T> Manager { get; set; }
 
+		/// <summary>
+		/// Builds the page.
+		/// </summary>
+		/// <returns>The page.</returns>
+		/// <param name="item">Item.</param>
 		TabbedPage BuildPage(T item);
 	}
 }

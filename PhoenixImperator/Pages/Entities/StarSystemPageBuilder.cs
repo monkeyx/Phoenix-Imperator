@@ -38,113 +38,76 @@ using Phoenix.Util;
 
 namespace PhoenixImperator.Pages.Entities
 {
+	/// <summary>
+	/// Star system page builder.
+	/// </summary>
 	public class StarSystemPageBuilder : BaseEntityPageBuilder<StarSystem>
 	{
+		/// <summary>
+		/// Gets or sets the current star system.
+		/// </summary>
+		/// <value>The current star system.</value>
+		public static StarSystem CurrentStarSystem { get; set; }
+
+		/// <summary>
+		/// Displaies the entity.
+		/// </summary>
+		/// <param name="item">Item.</param>
 		protected override void DisplayEntity(StarSystem item)
 		{
-			if (item.CelestialBodies.Count > 0) {
+			CurrentStarSystem = item;
+			AddCelestialBodies ();
+			AddJumpLinks ();
+			AddPositions ();
+		}
+
+		private void AddCelestialBodies()
+		{
+			if (CurrentStarSystem.CelestialBodies.Count > 0) {
 				AddContentTab ("Celestial Bodies","icon_celestialbodies.png");
 
-				AddProperty ("Periphery", item.PeripheryName);
-				AddCopyButton ("Copy System ID", item.Id.ToString ());
+				currentTab.AddProperty ("Periphery", CurrentStarSystem.PeripheryName);
+				AddCopyButton ("Copy System ID", CurrentStarSystem.Id.ToString ());
 
-				ListView listView = new ListView ();
-				listView.ItemTemplate = new DataTemplate (typeof(TextCell));
-				listView.ItemTemplate.SetBinding (TextCell.TextProperty, "ListText");
-				listView.ItemTemplate.SetBinding (TextCell.DetailProperty, "ListDetail");
-				listView.ItemsSource = item.CelestialBodies;
-
-				listView.ItemTapped += (sender, e) => {
-					Log.WriteLine(Log.Layer.UI, this.GetType(), "Tapped: " + e.Item);
-					((ListView)sender).SelectedItem = null; // de-select the row
+				currentTab.AddListView (typeof(TextCell),CurrentStarSystem.CelestialBodies,(sender,e) => {
 					App.ClipboardService.CopyToClipboard(((CelestialBody)e.Item).LocalCelestialBodyId.ToString());
-				};
-				currentLayout.Children.Add (listView);
-				currentLayout.Children.Add (new Label {
-					HorizontalOptions = LayoutOptions.CenterAndExpand,
-					Text = "Tap a planet to copy its ID",
-					FontAttributes = FontAttributes.Italic
 				});
-			}
 
-			if (item.JumpLinks.Count > 0) {
+				currentTab.AddHelpLabel ("Tap a planet to copy its ID");
+			}
+		}
+
+		private void AddJumpLinks()
+		{
+			if (CurrentStarSystem.JumpLinks.Count > 0) {
 				AddContentTab ("Jump Links","icon_jumplink.png");
 
-				AddProperty ("Periphery", item.PeripheryName);
+				currentTab.AddProperty ("Periphery", CurrentStarSystem.PeripheryName);
 
-				ListView listView = new ListView ();
-				listView.ItemTemplate = new DataTemplate (typeof(TextCell));
-				listView.ItemTemplate.SetBinding (TextCell.TextProperty, "ListText");
-				listView.ItemTemplate.SetBinding (TextCell.DetailProperty, "ListDetail");
-				listView.ItemsSource = item.JumpLinks;
-
-				listView.ItemTapped += (sender, e) => {
-					Log.WriteLine (Log.Layer.UI, this.GetType (), "Tapped: " + e.Item);
-					((ListView)sender).SelectedItem = null; // de-select the row
+				currentTab.AddListView (typeof(TextCell),CurrentStarSystem.JumpLinks,(sender,e) => {
 					StarSystem ss = ((JumpLink)e.Item).ToStarSysytem;
 					EntityPageBuilderFactory.ShowEntityPage<StarSystem> (Manager, ss.Id);
-				};
-
-				currentLayout.Children.Add (listView);
-				currentLayout.Children.Add (new Label {
-					HorizontalOptions = LayoutOptions.CenterAndExpand,
-					Text = "Tap a link to view system",
-					FontAttributes = FontAttributes.Italic
 				});
-			}
 
-			Phoenix.Application.PositionManager.GetPositionsInStarSystem (item, (results) => {
-				allPositions = results;
+				currentTab.AddHelpLabel ("Tap a link to view system");
+			}
+		}
+
+		private void AddPositions()
+		{
+			Phoenix.Application.PositionManager.GetPositionsInStarSystem (CurrentStarSystem, (results) => {
 				if(results.GetEnumerator().MoveNext()){
 					Device.BeginInvokeOnMainThread (() => {
 						AddContentTab ("Positions","icon_positions.png");
-						SearchBar searchBar = new SearchBar () {
-							Placeholder = "Search"
-						};
-						searchBar.TextChanged += (sender, e) => FilterList (searchBar.Text);
-						searchBar.SearchButtonPressed += (sender, e) => {
-							FilterList (searchBar.Text);
-						};
-						positionListView = new ListView ();
-						positionListView.ItemTemplate = new DataTemplate (typeof(TextCell));
-						positionListView.ItemTemplate.SetBinding (TextCell.TextProperty, "ListText");
-						positionListView.ItemTemplate.SetBinding (TextCell.DetailProperty, "ListDetail");
-						positionListView.ItemsSource = results;
-						positionListView.ItemTapped += (sender, e) => {
-							Log.WriteLine (Log.Layer.UI, this.GetType (), "Tapped: " + e.Item);
-							((ListView)sender).SelectedItem = null; // de-select the row
+
+						currentTab.AddListViewWithSearchBar (typeof(TextCell),results,(sender,e) => {
 							Position p = (Position)e.Item;
 							EntityPageBuilderFactory.ShowEntityPage<Position> (Phoenix.Application.PositionManager, p.Id);
-						};
-						currentLayout.Children.Add (searchBar);
-						currentLayout.Children.Add (positionListView);
+						});
 					});
 				}
 			});
 		}
-
-		private void FilterList(string filter)
-		{
-			positionListView.BeginRefresh ();
-
-			Task.Factory.StartNew (() => {
-				if (string.IsNullOrWhiteSpace (filter)) {
-					Device.BeginInvokeOnMainThread(() => {
-						positionListView.ItemsSource = allPositions;
-						positionListView.EndRefresh ();
-					});
-				} else {
-					IEnumerable<Position> filtered = allPositions.Where (x => x.ToString ().ToLower ().Contains (filter.ToLower ()));
-					Device.BeginInvokeOnMainThread(() => {
-						positionListView.ItemsSource = filtered;
-						positionListView.EndRefresh ();
-					});
-				}
-			});
-		}
-
-		private IEnumerable<Position> allPositions;
-		private ListView positionListView;
 	}
 }
 

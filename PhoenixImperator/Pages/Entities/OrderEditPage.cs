@@ -36,13 +36,23 @@ using PhoenixImperator.Pages.Entities;
 
 namespace PhoenixImperator.Pages
 {
+	/// <summary>
+	/// Order edit page.
+	/// </summary>
 	public class OrderEditPage : PhoenixPage
 	{
+		/// <summary>
+		/// Gets or sets the current order.
+		/// </summary>
+		/// <value>The current order.</value>
 		public Order CurrentOrder { get; set; }
 
-		public OrderEditPage (Order order)
+		/// <summary>
+		/// Initializes a new instance of the <see cref="PhoenixImperator.Pages.OrderEditPage"/> class.
+		/// </summary>
+		/// <param name="order">Order.</param>
+		public OrderEditPage (Order order) : base(order.OrderType.Name)
 		{
-			Title = order.OrderType.Name;
 			CurrentOrder = order;
 
 			formTable = new TableView {
@@ -100,14 +110,9 @@ namespace PhoenixImperator.Pages
 				}
 			});
 
-			Content = new StackLayout {
-				Padding = new Thickness (10, 10),
-				Children = {
-					deleteButton,
-					new ScrollView { Content = formTable },
-					saveButton
-				}
-			};
+			PageLayout.Children.Add (deleteButton);
+			PageLayout.Children.Add (new ScrollView { Content = formTable });
+			PageLayout.Children.Add (saveButton);
 		}
 
 		private void SaveOrder()

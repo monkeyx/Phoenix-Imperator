@@ -36,12 +36,32 @@ using Phoenix.Util;
 
 namespace PhoenixImperator.Pages.Entities
 {
+	/// <summary>
+	/// Position page builder.
+	/// </summary>
 	public class PositionPageBuilder : BaseEntityPageBuilder<Position>
 	{
+		/// <summary>
+		/// Gets or sets the orders.
+		/// </summary>
+		/// <value>The orders.</value>
 		public static ObservableCollection<Order> Orders { get; set; } = new ObservableCollection<Order> ();
+
+		/// <summary>
+		/// Gets or sets the notifications.
+		/// </summary>
+		/// <value>The notifications.</value>
 		public static ObservableCollection<Notification> Notifications { get; set; } = new ObservableCollection<Notification> ();
+
+		/// <summary>
+		/// The current position.
+		/// </summary>
 		public static Position CurrentPosition;
 
+		/// <summary>
+		/// Updates the orders.
+		/// </summary>
+		/// <param name="orders">Orders.</param>
 		public static void UpdateOrders(IEnumerable<Order> orders)
 		{
 			Orders.Clear ();
@@ -50,6 +70,10 @@ namespace PhoenixImperator.Pages.Entities
 			}
 		}
 
+		/// <summary>
+		/// Updates the notifications.
+		/// </summary>
+		/// <param name="notifications">Notifications.</param>
 		public static void UpdateNotifications(IEnumerable<Notification> notifications)
 		{
 			Notifications.Clear ();
@@ -58,25 +82,63 @@ namespace PhoenixImperator.Pages.Entities
 			}
 		}
 
+		/// <summary>
+		/// Displaies the entity.
+		/// </summary>
+		/// <param name="item">Item.</param>
 		protected override void DisplayEntity(Position item)
 		{
 			CurrentPosition = item;
+
+			AddGeneralTab ();
+
+			AddNotificationsTab ();
+
+			AddTurnReportTab ();
+
+			AddOrdersTab ();
+		}
+
+		void RequestUpdateButtonClicked(object sender, EventArgs e)
+		{
+			Phoenix.Application.OrderManager.RequestUpdate (CurrentPosition.Id, (results) => {
+				UpdateOrders(results);
+				SwitchToOrdersTab();
+			});
+		}
+
+		protected void SwitchToOrdersTab()
+		{
+			if (ordersTab != null) {
+				Device.BeginInvokeOnMainThread (() => {
+					entityPage.CurrentPage = ordersTab;
+				});
+			}
+		}
+
+		private void AddGeneralTab()
+		{
 			AddContentTab ("General", "icon_general.png");
-			AddCopyButton ("Copy ID", item.Id.ToString ());
-			if (item.StarSystem != null) {
-				AddEntityProperty (Phoenix.Application.StarSystemManager, item.StarSystem, "Star System", item.SystemText);
+			AddCopyButton ("Copy ID", CurrentPosition.Id.ToString ());
+
+			if (CurrentPosition.StarSystem != null) {
+				currentTab.AddEntityProperty (Phoenix.Application.StarSystemManager, CurrentPosition.StarSystem, "Star System", CurrentPosition.SystemText);
 			} else {
-				AddPropertyDoubleLine ("Star System", item.SystemText);
+				currentTab.AddPropertyDoubleLine ("Star System", CurrentPosition.SystemText);
 			}
-			AddPropertyDoubleLine ("Location", item.LocationText);
-			if (!string.IsNullOrWhiteSpace (item.PositionClass)) {
-				AddProperty ("Class", item.PositionClass);
+
+			currentTab.AddPropertyDoubleLine ("Location", CurrentPosition.LocationText);
+
+			if (!string.IsNullOrWhiteSpace (CurrentPosition.PositionClass)) {
+				currentTab.AddProperty ("Class", CurrentPosition.PositionClass);
 			}
-			if (!string.IsNullOrWhiteSpace (item.Size)) {
-				AddProperty ("Size", item.Size);
+
+			if (!string.IsNullOrWhiteSpace (CurrentPosition.Size)) {
+				currentTab.AddProperty ("Size", CurrentPosition.Size);
 			}
-			if (!string.IsNullOrWhiteSpace (item.Design)) {
-				AddProperty ("Design", item.Design);
+
+			if (!string.IsNullOrWhiteSpace (CurrentPosition.Design)) {
+				currentTab.AddProperty ("Design", CurrentPosition.Design);
 			}
 
 			Button requestUpdateButton = new Button {
@@ -85,29 +147,25 @@ namespace PhoenixImperator.Pages.Entities
 				BackgroundColor = Color.Green
 			};
 			requestUpdateButton.Clicked += RequestUpdateButtonClicked;
-			currentLayout.Children.Add (requestUpdateButton);
+			currentTab.PageLayout.Children.Add (requestUpdateButton);
+		}
 
+		private void AddNotificationsTab()
+		{
 			AddContentTab ("Notifications", "icon_notifications.png");
-
-			ListView notificationList = new ListView {
-				IsGroupingEnabled = true,
-				GroupDisplayBinding = new Binding ("GroupName"),
-				GroupShortNameBinding = new Binding ("GroupShortName")
-			};
-			notificationList.ItemTemplate = new DataTemplate (typeof(NotificationViewCell));
-			notificationList.ItemTemplate.SetBinding (TextCell.TextProperty, "ListText");
-			notificationList.ItemTemplate.SetBinding (TextCell.DetailProperty, "ListDetail");
-			notificationList.ItemTapped += (sender, e) => {
+			ListView notificationList = currentTab.AddListView (typeof(NotificationViewCell), null, (sender, e) => {
 				Notification note = (Notification)e.Item;
 				EntityPageBuilderFactory.ShowEntityPage<Notification>(Phoenix.Application.NotificationManager,note.Id);
-			};
-			currentLayout.Children.Add (notificationList);
+			});
+			notificationList.IsGroupingEnabled = true;
+			notificationList.GroupDisplayBinding = new Binding ("GroupName");
+			notificationList.GroupShortNameBinding = new Binding ("GroupShortName");;
 			notificationList.IsRefreshing = true;
 
-			Phoenix.Application.NotificationManager.AllForPosition (item.Id, (results) => {
+			Phoenix.Application.NotificationManager.AllForPosition (CurrentPosition.Id, (results) => {
 				if(results.Count > 0){
 					UpdateNotifications(results);
-					EntityListPage<Notification>.GroupEntities (results, (groupedResults) => {
+					EntityGroup.GroupEntities<Notification> (results, (groupedResults) => {
 						Device.BeginInvokeOnMainThread (() => {
 							notificationList.ItemsSource = groupedResults;
 							notificationList.IsRefreshing = false;
@@ -119,8 +177,11 @@ namespace PhoenixImperator.Pages.Entities
 					});
 				}
 			});
+		}
 
-			Phoenix.Application.PositionManager.GetTurnReport (item.Id, (turn) => {
+		private void AddTurnReportTab()
+		{
+			Phoenix.Application.PositionManager.GetTurnReport (CurrentPosition.Id, (turn) => {
 				Device.BeginInvokeOnMainThread(() => {
 					AddContentTab("Turn Report", "icon_report.png");
 					WebView browser = new WebView();
@@ -130,21 +191,12 @@ namespace PhoenixImperator.Pages.Entities
 					currentTab.Content = browser;
 				});
 			});
+		}
 
+		private void AddOrdersTab()
+		{
 			AddContentTab("Orders", "icon_orders.png");
 			ordersTab = currentTab;
-			ActivityIndicator ordersActivity = new ActivityIndicator {
-				IsEnabled = true,
-				IsRunning = true,
-				BindingContext = currentTab
-			};
-
-			StackLayout orderFormLayout = new StackLayout {
-				Orientation = StackOrientation.Horizontal,
-				HorizontalOptions = LayoutOptions.StartAndExpand
-			};
-
-			currentLayout.Children.Add (orderFormLayout);
 
 			Button addOrderButton = new Button {
 				Text = "Add Order",
@@ -156,23 +208,18 @@ namespace PhoenixImperator.Pages.Entities
 				RootPage.Root.NextPageModal(page);
 			};
 
+			currentTab.PageLayout.Children.Add (addOrderButton);
 
-			ordersList = new ListView ();
-			ordersList.ItemTemplate = new DataTemplate (typeof(OrderViewCell));
-			ordersList.ItemTemplate.SetBinding (TextCell.TextProperty, "ListText");
-			ordersList.ItemTemplate.SetBinding (TextCell.DetailProperty, "ListDetail");
-			ordersList.ItemTapped += (sender, e) => {
-				ordersActivity.IsRunning = true;
+			ListView ordersList = currentTab.AddListView (typeof(OrderViewCell), null, (sender, e) => {
+				currentTab.Spinner.IsRunning = true;
 				Phoenix.Application.OrderManager.Get(((Order)e.Item).Id,(order) => {
 					OrderEditPage page = new OrderEditPage(order);
 					Device.BeginInvokeOnMainThread(() => {
 						RootPage.Root.NextPage(page);
-						ordersList.SelectedItem = null;
-						ordersActivity.IsRunning = false;
+						currentTab.Spinner.IsRunning = false;
 					});
 				});
-			};
-			ordersList.ItemsSource = Orders;
+			});
 
 			Button clearOrdersButton = new Button {
 				Text = "Clear Orders",
@@ -192,67 +239,49 @@ namespace PhoenixImperator.Pages.Entities
 				}
 			};
 
-			currentLayout.Children.Add (clearOrdersButton);
-			currentLayout.Children.Add (ordersActivity);
-			currentLayout.Children.Add(ordersList);
-			currentLayout.Children.Add (addOrderButton);
-			currentLayout.Children.Add(new Label {
-				Text = "Tap an order to edit. Swipe left to delete an order.",
-				FontSize = Device.GetNamedSize (NamedSize.Small, typeof(Label)),
-				HorizontalOptions = LayoutOptions.CenterAndExpand,
-				FontAttributes = FontAttributes.Italic
-			});
+			currentTab.PageLayout.Children.Add (clearOrdersButton);
 
-			Phoenix.Application.OrderManager.AllForPosition (item.Id, (results) => {
+			currentTab.AddHelpLabel ("Tap an order to edit. Swipe left to delete an order.");
+
+			ordersList.IsRefreshing = true;
+
+			Phoenix.Application.OrderManager.AllForPosition (CurrentPosition.Id, (results) => {
 				if(results.Count > 0){
-					Device.BeginInvokeOnMainThread(() => {
-						ordersActivity.IsRunning = false;
-					});
 					UpdateOrders(results);
+					Device.BeginInvokeOnMainThread(() => {
+						ordersList.IsRefreshing = false;
+						ordersList.ItemsSource = Orders;
+					});
 				}
 				else {
-					Phoenix.Application.OrderManager.FetchForPosition(item.Id,(fetchResults,ex) => {
-						Device.BeginInvokeOnMainThread(() => {
-							ordersActivity.IsRunning = false;
-						});
+					Phoenix.Application.OrderManager.FetchForPosition(CurrentPosition.Id,(fetchResults,ex) => {
 						if(ex == null){
 							UpdateOrders(fetchResults);
 						}
 						else {
+							Orders = new ObservableCollection<Order>();
 							ShowErrorAlert(ex);
 						}
+						Device.BeginInvokeOnMainThread(() => {
+							ordersList.IsRefreshing = false;
+							ordersList.ItemsSource = Orders;
+						});
 					});
 				}
 			});
 		}
 
-		void RequestUpdateButtonClicked(object sender, EventArgs e)
-		{
-			Phoenix.Application.OrderManager.RequestUpdate (CurrentPosition.Id, (results) => {
-				Orders = new ObservableCollection<Order> (results);
-				Device.BeginInvokeOnMainThread(() => {
-					ordersList.ItemsSource = Orders;
-				});
-				SwitchToOrdersTab();
-			});
-		}
-
-		protected void SwitchToOrdersTab()
-		{
-			if (ordersTab != null) {
-				Device.BeginInvokeOnMainThread (() => {
-					entityPage.CurrentPage = ordersTab;
-				});
-			}
-
-		}
-
-		private ListView ordersList;
 		private Page ordersTab;
 	}
 
+	/// <summary>
+	/// Order view cell.
+	/// </summary>
 	public class OrderViewCell : TextCell
 	{
+		/// <summary>
+		/// Initializes a new instance of the <see cref="PhoenixImperator.Pages.Entities.OrderViewCell"/> class.
+		/// </summary>
 		public OrderViewCell()
 		{
 			var deleteAction = new MenuItem { Text = "Delete", IsDestructive = true }; // red background
@@ -262,6 +291,11 @@ namespace PhoenixImperator.Pages.Entities
 			this.ContextActions.Add (deleteAction);
 		}
 
+		/// <summary>
+		/// Raises the delete event.
+		/// </summary>
+		/// <param name="sender">Sender.</param>
+		/// <param name="e">E.</param>
 		void OnDelete (object sender, EventArgs e)
 		{
 			var item = (MenuItem)sender;
@@ -272,8 +306,14 @@ namespace PhoenixImperator.Pages.Entities
 		}
 	}
 
+	/// <summary>
+	/// Notification view cell.
+	/// </summary>
 	public class NotificationViewCell : TextCell
 	{
+		/// <summary>
+		/// Initializes a new instance of the <see cref="PhoenixImperator.Pages.Entities.NotificationViewCell"/> class.
+		/// </summary>
 		public NotificationViewCell()
 		{
 			var deleteAction = new MenuItem { Text = "Delete", IsDestructive = true }; // red background
@@ -283,6 +323,11 @@ namespace PhoenixImperator.Pages.Entities
 			this.ContextActions.Add (deleteAction);
 		}
 
+		/// <summary>
+		/// Raises the delete event.
+		/// </summary>
+		/// <param name="sender">Sender.</param>
+		/// <param name="e">E.</param>
 		void OnDelete (object sender, EventArgs e)
 		{
 			var item = (MenuItem)sender;

@@ -36,8 +36,15 @@ using PhoenixImperator.Pages.Entities;
 
 namespace PhoenixImperator.Pages
 {
+	/// <summary>
+	/// Home page.
+	/// </summary>
 	public class HomePage : PhoenixPage
 	{
+		/// <summary>
+		/// Sets the status.
+		/// </summary>
+		/// <param name="status">Status.</param>
 		public void SetStatus(GameStatus status)
 		{
 			Log.WriteLine(Log.Layer.UI, this.GetType(), "GameStatus: " + status);
@@ -51,14 +58,29 @@ namespace PhoenixImperator.Pages
 				
 		}
 
-		public HomePage () : base()
+		/// <summary>
+		/// Initializes a new instance of the <see cref="PhoenixImperator.Pages.HomePage"/> class.
+		/// </summary>
+		public HomePage () : base("Home")
 		{
-			Title = "Home";
-
 			BackgroundColor = Color.Black;
 
-			Image logo = new Image { Aspect = Aspect.AspectFill };
-			logo.Source = ImageSource.FromFile ("logo.png");
+			AddHeader ();
+
+			AddHomeNavigation ();
+
+			AddHelpLabel ("Pull down to update status from Nexus");
+
+			Phoenix.Application.GameStatusManager.First((result) => {
+				Device.BeginInvokeOnMainThread(() => {
+					SetStatus(result);
+				});
+			});
+		}
+
+		private void AddHeader()
+		{
+			AddLogo ();
 
 			starDateLabel = new Label {
 				TextColor = Color.Silver
@@ -86,6 +108,11 @@ namespace PhoenixImperator.Pages
 				}
 			};
 
+			PageLayout.Children.Add (header);
+		}
+
+		private void AddHomeNavigation()
+		{
 			ListView navigationList = new ListView () {
 				BackgroundColor = Color.White,
 				SeparatorColor = Color.Silver,
@@ -99,25 +126,25 @@ namespace PhoenixImperator.Pages
 				((ListView)sender).SelectedItem = null; // de-select the row
 				switch(e.Item.ToString()){
 				case "Notifications":
-					RootPage.Root.ShowNotificationsPage (activityIndicator);
+					RootPage.Root.ShowNotificationsPage (Spinner);
 					break;
 				case "Positions":
-					RootPage.Root.ShowPage<Position> (activityIndicator, e.Item.ToString(), Phoenix.Application.PositionManager);
+					RootPage.Root.ShowPage<Position> (Spinner, e.Item.ToString(), Phoenix.Application.PositionManager);
 					break;
 				case "Order Types":
-					RootPage.Root.ShowPage<OrderType> (activityIndicator, e.Item.ToString(), Phoenix.Application.OrderTypeManager);
+					RootPage.Root.ShowPage<OrderType> (Spinner, e.Item.ToString(), Phoenix.Application.OrderTypeManager);
 					break;
 				case "Items":
-					RootPage.Root.ShowPage<Item> (activityIndicator, e.Item.ToString(), Phoenix.Application.ItemManager);
+					RootPage.Root.ShowPage<Item> (Spinner, e.Item.ToString(), Phoenix.Application.ItemManager);
 					break;
 				case "Info":
-					RootPage.Root.ShowPage<InfoData> (activityIndicator, e.Item.ToString(), Phoenix.Application.InfoManager,false);
+					RootPage.Root.ShowPage<InfoData> (Spinner, e.Item.ToString(), Phoenix.Application.InfoManager,false);
 					break;
 				case "Star Systems":
-					RootPage.Root.ShowPage<StarSystem> (activityIndicator, e.Item.ToString(), Phoenix.Application.StarSystemManager);
+					RootPage.Root.ShowPage<StarSystem> (Spinner, e.Item.ToString(), Phoenix.Application.StarSystemManager);
 					break;
 				case "Orders":
-					RootPage.Root.ShowOrdersPage(activityIndicator);
+					RootPage.Root.ShowOrdersPage(Spinner);
 					break;
 				}
 			};
@@ -147,45 +174,11 @@ namespace PhoenixImperator.Pages
 				}, true);
 			});
 
-			activityIndicator = new ActivityIndicator {
-				IsEnabled = true,
-				IsRunning = false,
-				BindingContext = this
-			};
-
-			this.Padding = new Thickness(10, Device.OnPlatform(20, 0, 0), 10, 5);
-
-			Content = new StackLayout { 
-				Children = {
-					activityIndicator,
-					logo,
-					header,
-					navigationList,
-					new Label {
-						Text = "Pull down to update status from Nexus",
-						TextColor = Color.White,
-						FontSize = Device.GetNamedSize (NamedSize.Small, typeof(Label)),
-						HorizontalOptions = LayoutOptions.CenterAndExpand,
-						FontAttributes = FontAttributes.Italic
-					}
-				}
-			};
-
-			Phoenix.Application.GameStatusManager.First((result) => {
-				Device.BeginInvokeOnMainThread(() => {
-					SetStatus(result);
-				});
-			});
-		}
-
-		protected override void OnAppearing ()
-		{
-			base.OnAppearing ();
+			PageLayout.Children.Add (navigationList);
 		}
 
 		private Label starDateLabel;
 		private Label statusMessageLabel;
-		private ActivityIndicator activityIndicator;
 	}
 }
 
