@@ -137,6 +137,9 @@
     <Reference Include="PLCrashReporterUnifiedBinding">
       <HintPath>..\packages\Xamarin.Insights.1.11.1\lib\Xamarin.iOS10\PLCrashReporterUnifiedBinding.dll</HintPath>
     </Reference>
+    <Reference Include="Square.Aardvark">
+      <HintPath>..\packages\Square.Aardvark.1.2.2.0\lib\Xamarin.iOS\Square.Aardvark.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <BundleResource Include="Resources\Default.png" />
