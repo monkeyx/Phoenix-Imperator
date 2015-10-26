@@ -41,6 +41,14 @@ namespace PhoenixImperator.Pages.Entities
 	/// </summary>
 	public class PositionPageBuilder : BaseEntityPageBuilder<Position>
 	{
+		public enum PositionTab
+		{
+			General = 0,
+			Notifications = 1,
+			TurnReport = 2,
+			Orders = 3
+		}
+
 		/// <summary>
 		/// Gets or sets the orders.
 		/// </summary>
@@ -181,14 +189,15 @@ namespace PhoenixImperator.Pages.Entities
 
 		private void AddTurnReportTab()
 		{
+			PhoenixPage turnsPage = AddContentTab("Turn Report", "icon_report.png");
+			turnsPage.AddHelpLabel ("Loading...");
 			Phoenix.Application.PositionManager.GetTurnReport (CurrentPosition.Id, (turn) => {
 				Device.BeginInvokeOnMainThread(() => {
-					AddContentTab("Turn Report", "icon_report.png");
 					WebView browser = new WebView();
 					HtmlWebViewSource htmlSource = new HtmlWebViewSource();
 					htmlSource.Html = turn;
 					browser.Source = htmlSource;
-					currentTab.Content = browser;
+					turnsPage.Content = browser;
 				});
 			});
 		}

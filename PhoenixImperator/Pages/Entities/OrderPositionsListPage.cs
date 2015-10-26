@@ -70,7 +70,7 @@ namespace PhoenixImperator.Pages.Entities
 		/// <param name="item">Item.</param>
 		protected override void EntitySelected(NexusManager<Position> manager, Position item)
 		{
-			EntityPageBuilderFactory.ShowEntityPage<Position>(manager,item.Id,2);
+			EntityPageBuilderFactory.ShowEntityPage<Position>(manager,item.Id,(int)PositionPageBuilder.PositionTab.Orders);
 		}
 
 		/// <summary>

@@ -131,10 +131,17 @@ namespace PhoenixImperator.Pages
 		/// </summary>
 		public MenuListData()
 		{
+			
 			Add (new SideMenuItem {
 				Title = "Home",
 				IconSource = "home.png",
 				TargetType = typeof(HomePage)
+			});
+
+			Add (new SideMenuItem {
+				Title = "Turns",
+				IconSource = "icon_report.png",
+				TargetType = "Turns"
 			});
 
 			Add (new SideMenuItem {

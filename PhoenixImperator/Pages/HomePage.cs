@@ -116,7 +116,7 @@ namespace PhoenixImperator.Pages
 			ListView navigationList = new ListView () {
 				BackgroundColor = Color.White,
 				SeparatorColor = Color.Silver,
-				ItemsSource = new [] {"Notifications", "Positions", "Orders", "Items", "Star Systems"}
+				ItemsSource = new [] {"Turns", "Notifications", "Positions", "Orders", "Items", "Star Systems"}
 			};
 
 			navigationList.IsPullToRefreshEnabled = true;
@@ -124,7 +124,11 @@ namespace PhoenixImperator.Pages
 			navigationList.ItemTapped += (sender, e) => {
 				Log.WriteLine(Log.Layer.UI, this.GetType(), "Tapped: " + e.Item);
 				((ListView)sender).SelectedItem = null; // de-select the row
+				Spinner.IsRunning = true;
 				switch(e.Item.ToString()){
+				case "Turns":
+					RootPage.Root.ShowTurnsPage (Spinner);
+					break;
 				case "Notifications":
 					RootPage.Root.ShowNotificationsPage (Spinner);
 					break;
@@ -150,24 +154,62 @@ namespace PhoenixImperator.Pages
 			};
 
 			navigationList.RefreshCommand = new Command ((e) => {
+				string oldStardate = starDateLabel.Text;
+				string oldStatus = statusMessageLabel.Text;
 				SetStatus(null);
 				Phoenix.Application.GameStatusManager.Fetch ((results, ex) => {
 					if(ex == null){
-						Phoenix.Application.NotificationManager.Fetch((notificationResults,ex2) => {
-							if(ex2 != null){
-								ShowErrorAlert(ex2);
+						GameStatus newStatus = null;
+						IEnumerator<GameStatus> i = results.GetEnumerator();
+						if(i.MoveNext()){
+							newStatus = i.Current;
+						}
+						if(newStatus != null) {
+							if(newStatus.StarDate != oldStardate && newStatus.StatusMessage != oldStatus){
+								// status has changed so fetch data from Neuxs
+								Phoenix.Application.NotificationManager.Fetch((notificationResults,ex2) => {
+									if(ex2 == null){
+										Phoenix.Application.PositionManager.Fetch((positionResults,ex3) => {
+											if(ex3 == null){
+												Device.BeginInvokeOnMainThread(() => {
+													navigationList.IsRefreshing = false;
+													SetStatus(newStatus);
+												});
+											}
+											else {
+												Device.BeginInvokeOnMainThread(() => {
+													navigationList.IsRefreshing = false;
+												});
+												ShowErrorAlert(ex3);
+											}
+										});
+									}
+									else {
+										Device.BeginInvokeOnMainThread(() => {
+											navigationList.IsRefreshing = false;
+										});
+										ShowErrorAlert(ex2);
+									}
+
+								});
+							} else {
+								Device.BeginInvokeOnMainThread(() => {
+									navigationList.IsRefreshing = false;
+									SetStatus(newStatus);
+								});
 							}
+						}
+						else {
 							Device.BeginInvokeOnMainThread(() => {
 								navigationList.IsRefreshing = false;
-								IEnumerator<GameStatus> i = results.GetEnumerator();
-								if(i.MoveNext()){
-									SetStatus(i.Current);
-								}
 							});
-						});
-
+							ShowErrorAlert("Unable to get status from Nexus");
+						}
 					}
 					else {
+						Device.BeginInvokeOnMainThread(() => {
+							navigationList.IsRefreshing = false;
+						});
 						ShowErrorAlert(ex);
 					}
 

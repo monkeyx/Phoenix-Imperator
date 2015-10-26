@@ -3,7 +3,7 @@ Phoenix Tool built with Xamarin Forms
 
 # TODO
 
-- Login with Nexus user / password (requires Nexus changes)
+- Login with Nexus user / password - Requires Nexus XML Support
 - Report Issues (with log files)
 - Sequencing
 - Copy Orders
@@ -16,3 +16,4 @@ Phoenix Tool built with Xamarin Forms
 - Trade Routes
 - Turn Report Parsing
 - GPI Tool
+- Political info (squadrons, finances, voting) - Requires Nexus XML Support

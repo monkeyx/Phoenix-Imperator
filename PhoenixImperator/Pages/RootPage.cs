@@ -84,6 +84,9 @@ namespace PhoenixImperator.Pages
 			Log.WriteLine (Log.Layer.UI, GetType (), "Navigate To: " + menu.TargetType);
 			string menuChoice = menu.TargetType.ToString ();
 			switch (menuChoice) {
+			case "Turns":
+				ShowTurnsPage (menuPage.Spinner);
+				break;
 			case "Notifications":
 				ShowNotificationsPage (menuPage.Spinner);
 				break;
@@ -258,6 +261,42 @@ namespace PhoenixImperator.Pages
 					}
 				}, false);
 			}
+		}
+
+		/// <summary>
+		/// Shows the turns page.
+		/// </summary>
+		/// <param name="spinner">Spinner.</param>
+		public void ShowTurnsPage(ActivityIndicator spinner)
+		{
+			spinner.IsRunning = true;
+			if (Phoenix.Application.NotificationManager.Count() > 0) {
+				// show local results
+				Phoenix.Application.PositionManager.GetPositionsWithTurns ((results) => {
+					ShowTurnsPage(spinner,results);
+				});
+			} else {
+				// fetch and show results
+				Phoenix.Application.NotificationManager.Fetch ((results, ex) => {
+					if(ex == null){
+						Phoenix.Application.PositionManager.GetPositionsWithTurns ((positionResults) => {
+							ShowTurnsPage(spinner,positionResults);
+						});
+					}
+					else {
+						menuPage.ShowErrorAlert(ex);
+					}
+				}, false);
+			}
+		}
+
+		private void ShowTurnsPage(ActivityIndicator spinner, IEnumerable<Position> results)
+		{
+			TurnsPositionsListPage page = new TurnsPositionsListPage (results);
+			Device.BeginInvokeOnMainThread (() => {
+				spinner.IsRunning = false;
+				GoToPage (page);
+			});
 		}
 
 		private void ShowNotificationsPage(ActivityIndicator spinner, IEnumerable<Notification> results)
