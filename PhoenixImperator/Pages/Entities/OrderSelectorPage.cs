@@ -34,7 +34,7 @@ using Phoenix.BL.Entities;
 using Phoenix.BL.Managers;
 using Phoenix.Util;
 
-namespace PhoenixImperator.Pages
+namespace PhoenixImperator.Pages.Entities
 {
 	/// <summary>
 	/// Order selector page.
@@ -80,6 +80,19 @@ namespace PhoenixImperator.Pages
 					});
 				});
 			});
+
+			Button cancelButton = new Button {
+				Text = "Cancel",
+				TextColor = Color.White
+			};
+
+			cancelButton.Clicked += (sender, e) => {
+				Device.BeginInvokeOnMainThread(() => {
+					RootPage.Root.DismissModal();
+				});
+			};
+
+			PageLayout.Children.Add (cancelButton);
 
 			Phoenix.Application.OrderTypeManager.GetOrderTypesForPosition ((Position.PositionFlag)position.PositionType, (results) => {
 				UpdateOrders(results);

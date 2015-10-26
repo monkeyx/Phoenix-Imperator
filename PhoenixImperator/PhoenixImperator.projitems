@@ -26,12 +26,12 @@
     <Compile Include="$(MSBuildThisFileDirectory)Pages\MenuPage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Pages\RootPage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Pages\Entities\OrderEditPage.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Pages\OrderSelectorPage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Pages\AboutPage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IClipboardService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Pages\Entities\NotificationPageBuilder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Pages\Entities\NotificationListPage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Pages\Entities\TurnPositionsListPage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Pages\Entities\OrderSelectorPage.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="$(MSBuildThisFileDirectory)Pages\" />
