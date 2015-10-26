@@ -165,7 +165,7 @@ namespace PhoenixImperator.Pages
 							newStatus = i.Current;
 						}
 						if(newStatus != null) {
-							if(newStatus.StarDate != oldStardate && newStatus.StatusMessage != oldStatus){
+							if(newStatus.StarDate != oldStardate || newStatus.StatusMessage != oldStatus){
 								// status has changed so fetch data from Neuxs
 								Phoenix.Application.NotificationManager.Fetch((notificationResults,ex2) => {
 									if(ex2 == null){

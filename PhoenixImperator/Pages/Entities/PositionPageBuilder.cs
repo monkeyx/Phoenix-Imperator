@@ -46,7 +46,8 @@ namespace PhoenixImperator.Pages.Entities
 			General = 0,
 			Notifications = 1,
 			TurnReport = 2,
-			Orders = 3
+			Orders = 3,
+			Notes = 4
 		}
 
 		/// <summary>
@@ -105,6 +106,8 @@ namespace PhoenixImperator.Pages.Entities
 			AddTurnReportTab ();
 
 			AddOrdersTab ();
+
+			AddNotesTab ();
 		}
 
 		void RequestUpdateButtonClicked(object sender, EventArgs e)
@@ -278,6 +281,28 @@ namespace PhoenixImperator.Pages.Entities
 					});
 				}
 			});
+		}
+
+		private void AddNotesTab()
+		{
+			AddContentTab ("Notes", "icon_notes.png");
+			Editor editor = new Editor {
+				VerticalOptions = LayoutOptions.FillAndExpand,
+				HorizontalOptions = LayoutOptions.FillAndExpand,
+				BackgroundColor = Color.FromHex("eeeeff")
+			};
+			Phoenix.Application.PositionManager.GetNote (CurrentPosition.Id, (content) => {
+				Device.BeginInvokeOnMainThread(() => {
+					editor.Text = content;
+				});
+				editor.Completed += (sender, e) => {
+					Phoenix.Application.PositionManager.SaveNote(CurrentPosition.Id,editor.Text,(savedContent) => {
+						Log.WriteLine(Log.Layer.UI,GetType(),"Saved note for " + CurrentPosition);
+					});
+				};
+			});
+			currentTab.PageLayout.Children.Add (editor);
+			currentTab.AddHelpLabel ("Write notes about a position in the text area above");
 		}
 
 		private Page ordersTab;

@@ -17,3 +17,6 @@ Phoenix Tool built with Xamarin Forms
 - Turn Report Parsing
 - GPI Tool
 - Political info (squadrons, finances, voting) - Requires Nexus XML Support
+- Mining Calculator
+- Complex Manager
+- Merchandising Calculator

@@ -183,6 +183,7 @@
     <BundleResource Include="Resources\icon_amber_circle.png" />
     <BundleResource Include="Resources\icon_green_circle.png" />
     <BundleResource Include="Resources\icon_red_circle.png" />
+    <BundleResource Include="Resources\icon_notes.png" />
   </ItemGroup>
   <ItemGroup>
     <InterfaceDefinition Include="Resources\LaunchScreen.storyboard" />
