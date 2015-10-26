@@ -146,12 +146,12 @@ namespace PhoenixImperator.Pages.Entities
 
 			if (PullToRefresh) {
 				if (swipeLeftToDelete) {
-					AddHelpLabel ("Pull down to refresh. Swipe left to delete an entry.");
+					helpLabel = AddHelpLabel ("Pull down to refresh. Swipe left to delete an entry.");
 				} else {
-					AddHelpLabel ("Pull down to refresh.");
+					helpLabel = AddHelpLabel ("Pull down to refresh.");
 				}
 			} else if (swipeLeftToDelete) {
-				AddHelpLabel ("Swipe left to delete an entry.");
+				helpLabel = AddHelpLabel ("Swipe left to delete an entry.");
 			}
 		}
 
@@ -239,6 +239,7 @@ namespace PhoenixImperator.Pages.Entities
 		}
 
 		protected ListView listView;
+		protected Label helpLabel;
 	}
 
 	/// <summary>

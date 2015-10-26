@@ -8,7 +8,6 @@ Phoenix Tool built with Xamarin Forms
 - Sequencing
 - Copy Orders
 - Reordering orders
-- Position notes
 - Macros
 - Affiliation
 - Markets

@@ -56,7 +56,6 @@ namespace PhoenixImperator.Pages.Entities
 					BackgroundColor = Color.Green
 				};
 				submitButton.Clicked += (sender, e) => {
-					submitButton.IsEnabled = false;
 					SubmitOrders();
 				};
 				PageLayout.Children.Add (submitButton);
@@ -97,6 +96,10 @@ namespace PhoenixImperator.Pages.Entities
 		private void SubmitOrders()
 		{
 			Insights.Track ("Submit Orders");
+			submitButton.IsEnabled = false;
+			submitButton.IsVisible = false;
+			helpLabel.IsVisible = false;
+
 			Log.WriteLine (Log.Layer.UI, GetType (), "Submitting Orders for " + positionsWithOrders.Count);
 			if (positionsWithOrders.Count < 1) {
 				return;
@@ -111,6 +114,7 @@ namespace PhoenixImperator.Pages.Entities
 
 			int totalPositions = positionsWithOrders.Count;
 			int positionsSent = 0;
+			int positionsFailed = 0;
 
 			Device.BeginInvokeOnMainThread(() => {
 				listView.IsRefreshing = true;
@@ -120,27 +124,33 @@ namespace PhoenixImperator.Pages.Entities
 				Phoenix.Application.OrderManager.SubmitOrdersForPosition (position.Id, (count, e) => {
 					if(e == null){
 						Log.WriteLine(Log.Layer.UI,GetType(),"Successfuly uploaded " + count + " orders for " + position );
+						positionsSent += 1;
+						positionsWithOrders.Remove(position);
+						EntityGroup.GroupEntities<Position>(positionsWithOrders,(results) => {
+							Device.BeginInvokeOnMainThread(() => {
+								listView.ItemsSource = results;
+							});
+						});
 					}
 					else {
-						ShowErrorAlert(e);
-						Device.BeginInvokeOnMainThread(() => {
-							submitButton.IsEnabled = true;
-						});
-						return;
+						positionsFailed += 1;
 					}
 					UpdateProgressBar(progressBar, (float) (progressBar.Progress + progressPerPosition));
-					positionsSent += 1;
-					positionsWithOrders.Remove(position);
-					EntityGroup.GroupEntities<Position>(positionsWithOrders,(results) => {
-						Device.BeginInvokeOnMainThread(() => {
-							listView.ItemsSource = results;
-						});
-					});
-					if(positionsSent >= totalPositions){
-						ShowInfoAlert("Orders Submitted", "Submitted orders for " + positionsSent + " positions");
+
+					if((positionsFailed + positionsSent) >= totalPositions){
+						string message = "Submitted orders for positions.";
+						if(positionsSent > 0){
+							message = message + " " + positionsSent + " succeeded.";
+						}
+						if(positionsFailed > 0){
+							message = message + " " + positionsFailed + " failed.";
+						}
 						Device.BeginInvokeOnMainThread(() => {
 							listView.IsRefreshing = false;
+							submitButton.IsVisible = true;
 							submitButton.IsEnabled = true;
+							helpLabel.IsVisible = true;
+							ShowInfoAlert("Orders Submitted", message);
 						});
 					}
 				});

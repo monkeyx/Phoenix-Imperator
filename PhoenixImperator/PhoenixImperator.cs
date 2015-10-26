@@ -52,6 +52,8 @@ namespace PhoenixImperator
 
 	public class App : Application, Phoenix.IDatabase, Phoenix.ILogger, Phoenix.IDocumentFolder, Phoenix.IRestClient
 	{
+		public const int NEXUS_TIMEOUT = 180;
+
 		public static string Version { get; set; }
 
 		public static IClipboardService ClipboardService { get; set; }
@@ -145,7 +147,7 @@ namespace PhoenixImperator
 			Task.Factory.StartNew(async () => {
 				try {
 					var httpClient = new HttpClient(new NativeMessageHandler());
-					httpClient.Timeout = TimeSpan.FromSeconds(60);
+					httpClient.Timeout = TimeSpan.FromSeconds(NEXUS_TIMEOUT);
 					callback(await httpClient.GetStreamAsync (url));
 				}
 				catch(Exception e){
@@ -167,7 +169,7 @@ namespace PhoenixImperator
 				try{
 
 					var httpClient = new HttpClient(new NativeMessageHandler());
-					httpClient.Timeout = TimeSpan.FromSeconds(60);
+					httpClient.Timeout = TimeSpan.FromSeconds(NEXUS_TIMEOUT);
 					callback(await httpClient.PostAsync(url,new StringContent(dto.ToString())));
 				}
 				catch(Exception e){
@@ -186,14 +188,14 @@ namespace PhoenixImperator
 		public async void GetAsync(string url, Action<Stream> callback)
 		{
 			try {
-			var httpClient = new HttpClient(new NativeMessageHandler());
-			httpClient.Timeout = TimeSpan.FromSeconds(60);
-			callback(await httpClient.GetStreamAsync (url));
+				var httpClient = new HttpClient(new NativeMessageHandler());
+				httpClient.Timeout = TimeSpan.FromSeconds(NEXUS_TIMEOUT);
+				callback(await httpClient.GetStreamAsync (url));
 			}
 			catch(Exception e){
-			Insights.Report (e);
-			Log.WriteLine (Log.Layer.AL, GetType (), e);
-			callback (null);
+				Insights.Report (e);
+				Log.WriteLine (Log.Layer.AL, GetType (), e);
+				callback (null);
 			}
 		}
 
@@ -206,15 +208,14 @@ namespace PhoenixImperator
 		public async void PostAsync(string url, object dto, Action<HttpResponseMessage> callback)
 		{
 			try{
-
-			var httpClient = new HttpClient(new NativeMessageHandler());
-			httpClient.Timeout = TimeSpan.FromSeconds(60);
-			callback(await httpClient.PostAsync(url,new StringContent(dto.ToString())));
+				var httpClient = new HttpClient(new NativeMessageHandler());
+				httpClient.Timeout = TimeSpan.FromSeconds(NEXUS_TIMEOUT);
+				callback(await httpClient.PostAsync(url,new StringContent(dto.ToString())));
 			}
 			catch(Exception e){
-			Insights.Report (e);
-			Log.WriteLine (Log.Layer.AL, GetType (), e);
-			callback (null);
+				Insights.Report (e);
+				Log.WriteLine (Log.Layer.AL, GetType (), e);
+				callback (null);
 			}
 		}
 		#endif
