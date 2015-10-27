@@ -215,7 +215,8 @@ namespace PhoenixImperator.Pages.Entities
 			Button clearOrdersButton = new Button {
 				Text = "Clear Orders",
 				TextColor = Color.White,
-				BackgroundColor = Color.Red
+				BackgroundColor = Color.Red,
+				HorizontalOptions = LayoutOptions.FillAndExpand,
 			};
 			clearOrdersButton.Clicked += async (sender, e) => {
 				bool confirm = await currentTab.DisplayAlert("Clear Orders","Are you sure?","Yes","No");
@@ -230,7 +231,31 @@ namespace PhoenixImperator.Pages.Entities
 				}
 			};
 
-			currentTab.PageLayout.Children.Add (clearOrdersButton);
+			Button copyOrdersButton = new Button {
+				Text = "Copy Orders",
+				TextColor = Color.White,
+				BackgroundColor = Color.Blue,
+				HorizontalOptions = LayoutOptions.FillAndExpand,
+			};
+			copyOrdersButton.Clicked += (sender, e) => {
+				PositionSelectorPage page = new PositionSelectorPage((Position.PositionFlag)CurrentPosition.PositionType,(position) => {
+					Phoenix.Application.OrderManager.CopyOrders(CurrentPosition.Id,position.Id,(results) => {
+						EntityPageBuilderFactory.ShowEntityPage<Position>(Manager,position.Id,(int)PositionPageBuilder.PositionTab.Orders);
+					});
+				});
+				RootPage.Root.NextPageModal(page);
+			};
+
+			StackLayout buttonBar = new StackLayout {
+				Orientation = StackOrientation.Horizontal,
+				HorizontalOptions = LayoutOptions.FillAndExpand,
+				Children = {
+					clearOrdersButton,
+					copyOrdersButton
+				}
+			};
+
+			currentTab.PageLayout.Children.Add (buttonBar);
 
 			ordersList = currentTab.AddListView (typeof(OrderViewCell), null, (sender, e) => {
 				currentTab.Spinner.IsRunning = true;

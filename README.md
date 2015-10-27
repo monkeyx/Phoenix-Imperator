@@ -6,7 +6,6 @@ Phoenix Tool built with Xamarin Forms
 - Login with Nexus user / password - Requires Nexus XML Support
 - Report Issues (with log files)
 - Sequencing
-- Copy Orders
 - Reordering orders
 - Macros
 - Affiliation
