@@ -175,6 +175,12 @@ namespace PhoenixImperator.Pages
 			});
 
 			Add (new SideMenuItem {
+				Title = "Notes",
+				IconSource = "icon_notes.png",
+				TargetType = "Notes"
+			});
+
+			Add (new SideMenuItem {
 				Title = "Order Types",
 				IconSource = "icon_general.png",
 				TargetType = "Order Types"

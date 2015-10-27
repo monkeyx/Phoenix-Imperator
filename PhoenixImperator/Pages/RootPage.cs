@@ -111,6 +111,9 @@ namespace PhoenixImperator.Pages
 			case "About":
 				GoToPage (new AboutPage ());
 				break;
+			case "Notes":
+				ShowNotesPage (menuPage.Spinner);
+				break;
 			default:
 				Page displayPage = (Page)Activator.CreateInstance ((Type)menu.TargetType);
 				GoToPage (displayPage);
@@ -231,6 +234,22 @@ namespace PhoenixImperator.Pages
 			spinner.IsRunning = true;
 			Phoenix.Application.PositionManager.GetPositionsWithOrders ((results) => {
 				OrderPositionsListPage page = new OrderPositionsListPage(results);
+				Device.BeginInvokeOnMainThread (() => {
+					spinner.IsRunning = false;
+					GoToPage (page);
+				});
+			});
+		}
+
+		/// <summary>
+		/// Shows the notes page.
+		/// </summary>
+		/// <param name="spinner">Spinner.</param>
+		public void ShowNotesPage(ActivityIndicator spinner)
+		{
+			spinner.IsRunning = true;
+			Phoenix.Application.PositionManager.GetPositionsWithNotes ((results) => {
+				NotePositionListPage page = new NotePositionListPage(results);
 				Device.BeginInvokeOnMainThread (() => {
 					spinner.IsRunning = false;
 					GoToPage (page);

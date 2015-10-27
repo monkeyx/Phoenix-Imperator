@@ -116,7 +116,7 @@ namespace PhoenixImperator.Pages
 			ListView navigationList = new ListView () {
 				BackgroundColor = Color.White,
 				SeparatorColor = Color.Silver,
-				ItemsSource = new [] {"Turns", "Notifications", "Positions", "Orders", "Items", "Star Systems"}
+				ItemsSource = new [] {"Turns", "Notifications", "Positions", "Orders", "Items", "Star Systems", "Notes"}
 			};
 
 			navigationList.IsPullToRefreshEnabled = true;
@@ -149,6 +149,9 @@ namespace PhoenixImperator.Pages
 					break;
 				case "Orders":
 					RootPage.Root.ShowOrdersPage(Spinner);
+					break;
+				case "Notes":
+					RootPage.Root.ShowNotesPage(Spinner);
 					break;
 				}
 			};

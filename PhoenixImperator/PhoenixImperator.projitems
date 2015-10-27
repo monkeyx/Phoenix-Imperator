@@ -32,6 +32,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Pages\Entities\NotificationListPage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Pages\Entities\TurnPositionsListPage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Pages\Entities\OrderSelectorPage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Pages\Entities\NotePositionListPage.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="$(MSBuildThisFileDirectory)Pages\" />
