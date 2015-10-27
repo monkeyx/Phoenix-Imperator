@@ -32,6 +32,11 @@ using Xamarin;
 using Foundation;
 using UIKit;
 
+using UbertestersSDK;
+using UbertestersCrashHandler;
+
+using Phoenix.Util;
+
 namespace PhoenixImperator.iOS
 {
 	[Register ("AppDelegate")]
@@ -49,12 +54,19 @@ namespace PhoenixImperator.iOS
 			Insights.Initialize("4cdef01b1dc979920d5d485896d5fe50e9c752a6");
 			Insights.Track ("iOS/Start");
 
+			Ubertesters.Shared.InitializeWithOptions (UbertestersOptions.ActivationModeWidget | UbertestersOptions.LockingModeDisableUbertesters);
+			AppDomain.CurrentDomain.UnhandledException += (object sender, UnhandledExceptionEventArgs e) => {
+				CrashHandler.PostCrash (e);
+			};
+
 			App.Version = GetBuildNumber ();
 			App.ClipboardService = new ClipboardService ();
 
 			LoadApplication (new App ());
 
 			UIApplication.SharedApplication.IdleTimerDisabled = true;
+
+			Log.WriteLine (Log.Layer.AL, GetType (), "Application Start");
 
 			return base.FinishedLaunching (app, options);
 		}

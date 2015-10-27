@@ -1,10 +1,10 @@
 ﻿//
-// MainActivity.cs
+// ImperatorApplication.cs
 //
 // Author:
 //       Seyed Razavi <monkeyx@gmail.com>
 //
-// Copyright (c) 2015 Seyed Razavi 
+// Copyright (c) 2015 Seyed Razavi
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -33,43 +33,33 @@ using Android.Views;
 using Android.Widget;
 using Android.OS;
 
-using Xamarin;
-using Xamarin.Forms;
-
 using Com.Ubertesters.Sdk; 
+using Com.Ubertesters.Common.Models;
+
+using Phoenix.Util;
 
 namespace PhoenixImperator.Droid
 {
-	[Activity (Label = "Imperator", Icon = "@drawable/icon", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
-	public class MainActivity : global::Xamarin.Forms.Platform.Android.FormsApplicationActivity
+	[Application (Label = "Imperator", Icon = "@drawable/icon")]
+	public class ImperatorApplication : Application
 	{
-		public static ClipboardManager AndroidClipboardManager { get; private set; }
-
-		protected override void OnCreate (Bundle bundle)
+		// Required constructor
+		public ImperatorApplication(IntPtr javaReference, JniHandleOwnership transfer) : base(javaReference, transfer)
 		{
-			base.OnCreate (bundle);
-
-			AndroidClipboardManager = (ClipboardManager)GetSystemService(ClipboardService);
-			App.ClipboardService = new ClipboardService ();
-
-			global::Xamarin.Forms.Forms.Init (this, bundle);
-
-			Insights.Initialize("4cdef01b1dc979920d5d485896d5fe50e9c752a6", this.ApplicationContext);
-			Insights.Track ("Android/Start");
-
-			App.Version = GetBuildNumber ();
-
-			LoadApplication (new App ());
-
-			this.Window.SetFlags(WindowManagerFlags.KeepScreenOn, WindowManagerFlags.KeepScreenOn);
 		}
 
-		public string GetBuildNumber()
+		public override void OnCreate()
 		{
-			Context context = Forms.Context;
-			PackageManager manager = context.PackageManager;
-			PackageInfo info = manager.GetPackageInfo(context.PackageName, 0);
-			return info.VersionName;
+			base.OnCreate();
+			Ubertesters.Initialize(this,LockingMode.DisableUbertesters,ActivationMode.Widget);
+			AndroidEnvironment.UnhandledExceptionRaiser += OnException;
+			Log.WriteLine (Log.Layer.AL, GetType (), "Application Start");
+		}
+
+		private static void OnException(object sender, RaiseThrowableEventArgs e)
+		{
+			Ubertesters.SendException(e);
+			throw e.Exception;
 		}
 	}
 }

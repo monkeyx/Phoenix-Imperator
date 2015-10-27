@@ -46,7 +46,6 @@
     </MtouchI18n>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|iPhoneSimulator' ">
-    <DebugType>full</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\iPhoneSimulator\Release</OutputPath>
     <ErrorReport>prompt</ErrorReport>
@@ -140,6 +139,12 @@
     <Reference Include="Square.Aardvark">
       <HintPath>..\packages\Square.Aardvark.1.2.2.0\lib\Xamarin.iOS\Square.Aardvark.dll</HintPath>
     </Reference>
+    <Reference Include="UbertestersCrashHandler">
+      <HintPath>..\Components\UbertestersSDK-1.0.3\lib\ios-unified\UbertestersCrashHandler.dll</HintPath>
+    </Reference>
+    <Reference Include="UbertestersSDK">
+      <HintPath>..\Components\UbertestersSDK-1.0.3\lib\ios-unified\UbertestersSDK.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <BundleResource Include="Resources\Default.png" />
@@ -211,5 +216,11 @@
       <Project>{364EF96F-144B-4416-AF34-C3400E76656F}</Project>
       <Name>PhoenixPCL</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <XamarinComponentReference Include="UbertestersSDK">
+      <Version>1.0.3</Version>
+      <Visible>False</Visible>
+    </XamarinComponentReference>
   </ItemGroup>
 </Project>
