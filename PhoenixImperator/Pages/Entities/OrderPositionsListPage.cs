@@ -50,16 +50,47 @@ namespace PhoenixImperator.Pages.Entities
 		{
 			positionsWithOrders = new List<Position> (positions);
 			if (positionsWithOrders.Count > 0) {
-				submitButton = new Button {
-					Text = "Submit Orders",
-					TextColor = Color.White,
-					BackgroundColor = Color.Green
-				};
-				submitButton.Clicked += (sender, e) => {
-					SubmitOrders();
-				};
-				PageLayout.Children.Add (submitButton);
+				submitButton.IsVisible = true;
 			}
+		}
+
+		/// <summary>
+		/// Befores the list.
+		/// </summary>
+		protected override void BeforeList ()
+		{
+			submitButton = new Button {
+				Text = "Submit Orders",
+				TextColor = Color.White,
+				BackgroundColor = Color.Green,
+				IsVisible = false
+			};
+			submitButton.Clicked += (sender, e) => {
+				SubmitOrders();
+			};
+			PageLayout.Children.Add (submitButton);
+
+		}
+
+		/// <summary>
+		/// Afters the list.
+		/// </summary>
+		protected override void AfterList ()
+		{
+			Button addButton = new Button {
+				Text = "Add",
+				TextColor = Color.White,
+				BackgroundColor = Color.Blue
+			};
+
+			addButton.Clicked += (sender, e) => {
+				PositionSelectorPage page = new PositionSelectorPage(Position.PositionFlag.None,(position) => {
+					EntitySelected(Manager,position);
+				});
+				RootPage.Root.NextPageModal(page);
+			};
+
+			PageLayout.Children.Add (addButton);
 		}
 
 		/// <summary>

@@ -118,9 +118,11 @@ namespace PhoenixImperator.Pages.Entities
 			} else {
 				cellType = typeof(TextCell);
 			}
+			BeforeList ();
 			listView = AddListViewWithSearchBar (cellType, null, (sender, e) => {
 				EntitySelected(manager, (T)e.Item);
 			});
+			AfterList ();
 
 			listView.IsGroupingEnabled = true;
 			listView.GroupDisplayBinding = new Binding ("GroupName");
@@ -153,6 +155,20 @@ namespace PhoenixImperator.Pages.Entities
 			} else if (swipeLeftToDelete) {
 				helpLabel = AddHelpLabel ("Swipe left to delete an entry.");
 			}
+		}
+
+		/// <summary>
+		/// Befores the list.
+		/// </summary>
+		protected virtual void BeforeList()
+		{
+		}
+
+		/// <summary>
+		/// Afters the list.
+		/// </summary>
+		protected virtual void AfterList()
+		{
 		}
 
 		/// <summary>

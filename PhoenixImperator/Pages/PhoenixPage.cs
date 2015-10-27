@@ -76,7 +76,7 @@ namespace PhoenixImperator
 			};
 			PageLayout = new StackLayout { 
 				VerticalOptions = LayoutOptions.FillAndExpand,
-				Padding = new Thickness (10, Device.OnPlatform (20, 0, 0), 10, 5),
+				Padding = new Thickness (5, 5, 5, 5),
 				Children = {
 					Spinner
 				}

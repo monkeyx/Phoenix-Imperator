@@ -210,28 +210,7 @@ namespace PhoenixImperator.Pages.Entities
 			AddContentTab("Orders", "icon_orders.png");
 			ordersTab = currentTab;
 
-			Button addOrderButton = new Button {
-				Text = "Add Order",
-				TextColor = Color.White,
-				BackgroundColor = Color.Blue
-			};
-			addOrderButton.Clicked += (sender, e) => {
-				OrderSelectorPage page = new OrderSelectorPage(CurrentPosition);
-				RootPage.Root.NextPageModal(page);
-			};
-
-			currentTab.PageLayout.Children.Add (addOrderButton);
-
-			ListView ordersList = currentTab.AddListView (typeof(OrderViewCell), null, (sender, e) => {
-				currentTab.Spinner.IsRunning = true;
-				Phoenix.Application.OrderManager.Get(((Order)e.Item).Id,(order) => {
-					OrderEditPage page = new OrderEditPage(order);
-					Device.BeginInvokeOnMainThread(() => {
-						RootPage.Root.NextPage(page);
-						currentTab.Spinner.IsRunning = false;
-					});
-				});
-			});
+			ListView ordersList = null;
 
 			Button clearOrdersButton = new Button {
 				Text = "Clear Orders",
@@ -252,6 +231,28 @@ namespace PhoenixImperator.Pages.Entities
 			};
 
 			currentTab.PageLayout.Children.Add (clearOrdersButton);
+
+			ordersList = currentTab.AddListView (typeof(OrderViewCell), null, (sender, e) => {
+				currentTab.Spinner.IsRunning = true;
+				Phoenix.Application.OrderManager.Get(((Order)e.Item).Id,(order) => {
+					OrderEditPage page = new OrderEditPage(order);
+					Device.BeginInvokeOnMainThread(() => {
+						RootPage.Root.NextPage(page);
+						currentTab.Spinner.IsRunning = false;
+					});
+				});
+			});
+
+			Button addOrderButton = new Button {
+				Text = "Add Order",
+				TextColor = Color.White,
+				BackgroundColor = Color.Blue
+			};
+			addOrderButton.Clicked += (sender, e) => {
+				OrderSelectorPage page = new OrderSelectorPage(CurrentPosition);
+				RootPage.Root.NextPageModal(page);
+			};
+			currentTab.PageLayout.Children.Add (addOrderButton);
 
 			currentTab.AddHelpLabel ("Tap an order to edit. Swipe left to delete an order.");
 
