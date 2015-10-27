@@ -55,6 +55,31 @@ namespace PhoenixImperator.Pages.Entities
 		}
 
 		/// <summary>
+		/// Raises the disappearing event.
+		/// </summary>
+		protected override void OnDisappearing ()
+		{
+			hasDisappeared = true;
+		}
+
+		/// <summary>
+		/// Raises the appearing event.
+		/// </summary>
+		protected override void OnAppearing ()
+		{
+			if (hasDisappeared) {
+				Phoenix.Application.PositionManager.GetPositionsWithOrders ((results) => {
+					EntityGroup.GroupEntities<Position> (results, (groupedResults) => {
+						Device.BeginInvokeOnMainThread (() => {
+							listView.ItemsSource = groupedResults;
+							listView.IsRefreshing = false;
+						});
+					});
+				});
+			}
+		}
+
+		/// <summary>
 		/// Befores the list.
 		/// </summary>
 		protected override void BeforeList ()
@@ -197,6 +222,7 @@ namespace PhoenixImperator.Pages.Entities
 
 		private List<Position> positionsWithOrders;
 		private Button submitButton;
+		private bool hasDisappeared = false;
 	}
 }
 
