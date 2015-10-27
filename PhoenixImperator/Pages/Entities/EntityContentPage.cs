@@ -31,16 +31,25 @@ using Phoenix.BL.Entities;
 
 namespace PhoenixImperator
 {
+	/// <summary>
+	/// Entity content page.
+	/// </summary>
 	public class EntityContentPage : TabbedPage
 	{
+		/// <summary>
+		/// Gets the entity.
+		/// </summary>
+		/// <value>The entity.</value>
 		public EntityBase Entity { get; private set; }
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="PhoenixImperator.EntityContentPage"/> class.
+		/// </summary>
+		/// <param name="entity">Entity.</param>
 		public EntityContentPage (EntityBase entity) : base()
 		{
 			Entity = entity;
 			Title = entity.ToString ();
-
-			BackgroundColor = Color.White;
 		}
 	}
 }

@@ -8,8 +8,6 @@
 	<string>co.monkeyx.phoenix.imperator</string>
 	<key>CFBundleShortVersionString</key>
 	<string>1.0</string>
-	<key>CFBundleVersion</key>
-	<string>1.0</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>MinimumOSVersion</key>
@@ -70,5 +68,9 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>CFBundleVersion</key>
+	<string>1.1</string>
+	<key>ubertesters_organization_token</key>
+	<string>ed357380-7ca3-11e5-b469-22000a9127ac</string>
 </dict>
 </plist>

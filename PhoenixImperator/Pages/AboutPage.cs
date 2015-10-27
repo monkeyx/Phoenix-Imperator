@@ -31,36 +31,15 @@ namespace PhoenixImperator.Pages
 {
 	public class AboutPage : PhoenixPage
 	{
-		public AboutPage ()
+		public AboutPage () : base("About")
 		{
-			Padding = new Thickness (10, Device.OnPlatform (20, 0, 0), 10, 5);
 
-			Content = new StackLayout { 
-				VerticalOptions = LayoutOptions.FillAndExpand,
-				Children = {
-					new Label { 
-						Text = "About Phoenix Imperator",
-						FontAttributes = FontAttributes.Bold,
-						HorizontalOptions = LayoutOptions.CenterAndExpand
-					},
-					new Label {
-						Text = "Build: " + App.Version,
-						HorizontalOptions = LayoutOptions.FillAndExpand
-					},
-					new Label {
-						Text = "Programming by Seyed Razavi",
-						HorizontalOptions = LayoutOptions.FillAndExpand
-					},
-					new Label {
-						Text = "Artwork by Amber Bethel",
-						HorizontalOptions = LayoutOptions.FillAndExpand
-					},
-					new Label {
-						Text = "Phoenix and Beyond the Stellar Empire are owned by KJC Games"
-					}
-
-				}
-			};
+			AddHeading ("Phoenix Imperator");
+			AddProperty ("Build", App.Version);
+			AddProperty ("Programming", "Seyed Razavi");
+			AddProperty ("Artwork", "Amber Bethel");
+			AddLabel ("Phoenix and Beyond the Stellar Empire are owned by KJC Games");
+			AddHeading ("Distributed under the MIT License");
 		}
 	}
 }

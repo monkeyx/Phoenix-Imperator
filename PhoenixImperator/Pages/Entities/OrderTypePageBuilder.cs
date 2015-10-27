@@ -33,27 +33,29 @@ using Phoenix.BL.Managers;
 
 namespace PhoenixImperator.Pages.Entities
 {
+	/// <summary>
+	/// Order type page builder.
+	/// </summary>
 	public class OrderTypePageBuilder : BaseEntityPageBuilder<OrderType>
 	{
+		/// <summary>
+		/// Displaies the entity.
+		/// </summary>
+		/// <param name="item">Item.</param>
 		protected override void DisplayEntity(OrderType item)
 		{
 			AddContentTab ("General", "icon_general.png");
-			AddPropertyDoubleLine ("Type", item.TypeDescription);
-			AddPropertyDoubleLine ("Position(s)", item.PositionType);
-			AddProperty ("TU Cost", item.TUCost.ToString ());
+			currentTab.AddPropertyDoubleLine ("Type", item.TypeDescription);
+			currentTab.AddPropertyDoubleLine ("Position(s)", item.PositionType);
+			currentTab.AddProperty ("TU Cost", item.TUCost.ToString ());
 
 			AddContentTab ("Description", "icon_techmanual.png");
-			AddLabel (item.Description);
+			currentTab.AddLabel (item.Description);
 
 			if (item.Parameters.Count > 0) {
 				AddContentTab ("Parameters", "icon_positions.png");
-
-				ListView listView = new ListView ();
-				listView.ItemTemplate = new DataTemplate (typeof(TextCell));
-				listView.ItemTemplate.SetBinding (TextCell.TextProperty, "Name");
-				listView.ItemTemplate.SetBinding (TextCell.DetailProperty, "Detail");
-				listView.ItemsSource = item.Parameters;
-				currentLayout.Children.Add (listView);
+				currentTab.AddListView (typeof(TextCell), item.Parameters, (sender, e) => {
+				});
 			}
 		}
 	}

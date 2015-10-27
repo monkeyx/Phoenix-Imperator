@@ -37,34 +37,125 @@ using Phoenix.Util;
 
 namespace PhoenixImperator.Pages.Entities
 {
+	/// <summary>
+	/// Order positions list page.
+	/// </summary>
 	public class OrderPositionsListPage : EntityListPage<Position>
 	{
-		public OrderPositionsListPage (IEnumerable<Position> positions) : base("Orders",Phoenix.Application.PositionManager,positions,true,false)
+		/// <summary>
+		/// Initializes a new instance of the <see cref="PhoenixImperator.Pages.Entities.OrderPositionsListPage"/> class.
+		/// </summary>
+		/// <param name="positions">Positions.</param>
+		public OrderPositionsListPage (IEnumerable<Position> positions) : base("Pending Orders",Phoenix.Application.PositionManager,positions,true,false)
 		{
-			Title = "Pending Orders";
 			positionsWithOrders = new List<Position> (positions);
 			if (positionsWithOrders.Count > 0) {
-				submitButton = new Button {
-					Text = "Submit Orders",
-					TextColor = Color.White,
-					BackgroundColor = Color.Green
-				};
-				submitButton.Clicked += (sender, e) => {
-					submitButton.IsEnabled = false;
-					SubmitOrders();
-				};
-				layout.Children.Add (submitButton);
+				submitButton.IsVisible = true;
 			}
 		}
 
+		/// <summary>
+		/// Raises the disappearing event.
+		/// </summary>
+		protected override void OnDisappearing ()
+		{
+			hasDisappeared = true;
+		}
+
+		/// <summary>
+		/// Raises the appearing event.
+		/// </summary>
+		protected override void OnAppearing ()
+		{
+			if (hasDisappeared) {
+				Phoenix.Application.PositionManager.GetPositionsWithOrders ((results) => {
+					EntityGroup.GroupEntities<Position> (results, (groupedResults) => {
+						Device.BeginInvokeOnMainThread (() => {
+							listView.ItemsSource = groupedResults;
+							listView.IsRefreshing = false;
+						});
+					});
+				});
+			}
+		}
+
+		/// <summary>
+		/// Befores the list.
+		/// </summary>
+		protected override void BeforeList ()
+		{
+			submitButton = new Button {
+				Text = "Submit Orders",
+				TextColor = Color.White,
+				BackgroundColor = Color.Green,
+				IsVisible = false
+			};
+			submitButton.Clicked += (sender, e) => {
+				SubmitOrders();
+			};
+			PageLayout.Children.Add (submitButton);
+
+		}
+
+		/// <summary>
+		/// Afters the list.
+		/// </summary>
+		protected override void AfterList ()
+		{
+			Button addButton = new Button {
+				Text = "Add",
+				TextColor = Color.White,
+				BackgroundColor = Color.Blue
+			};
+
+			addButton.Clicked += (sender, e) => {
+				PositionSelectorPage page = new PositionSelectorPage(Position.PositionFlag.None,(position) => {
+					EntitySelected(Manager,position);
+				});
+				RootPage.Root.NextPageModal(page);
+			};
+
+			PageLayout.Children.Add (addButton);
+		}
+
+		/// <summary>
+		/// Entities the selected.
+		/// </summary>
+		/// <param name="manager">Manager.</param>
+		/// <param name="item">Item.</param>
 		protected override void EntitySelected(NexusManager<Position> manager, Position item)
 		{
-			EntityPageBuilderFactory.ShowEntityPage<Position>(manager,item.Id,1);
+			EntityPageBuilderFactory.ShowEntityPage<Position>(manager,item.Id,(int)PositionPageBuilder.PositionTab.Orders);
+		}
+
+		/// <summary>
+		/// Deletes the entity.
+		/// </summary>
+		/// <param name="entity">Entity.</param>
+		/// <param name="callback">Callback.</param>
+		protected override void DeleteEntity(EntityBase entity, Action<IEnumerable<EntityBase>> callback)
+		{
+			listView.IsRefreshing = true;
+			Phoenix.Application.OrderManager.DeleteLocalOrders (entity.Id, (response) => {
+				Phoenix.Application.PositionManager.GetPositionsWithOrders((results) => {
+					callback(results);
+					EntityGroup.GroupEntities<Position> (results, (groupedResults) => {
+						Device.BeginInvokeOnMainThread (() => {
+							listView.ItemsSource = groupedResults;
+							listView.IsRefreshing = false;
+						});
+					});
+				});
+			});
 		}
 
 		private void SubmitOrders()
 		{
 			Insights.Track ("Submit Orders");
+			submitButton.IsEnabled = false;
+			submitButton.IsVisible = false;
+			helpLabel.IsVisible = false;
+
 			Log.WriteLine (Log.Layer.UI, GetType (), "Submitting Orders for " + positionsWithOrders.Count);
 			if (positionsWithOrders.Count < 1) {
 				return;
@@ -73,12 +164,13 @@ namespace PhoenixImperator.Pages.Entities
 				Progress = 0f
 			};
 
-			layout.Children.Add (progressBar);
+			PageLayout.Children.Add (progressBar);
 
 			float progressPerPosition = 1.0f / (float)positionsWithOrders.Count;
 
 			int totalPositions = positionsWithOrders.Count;
 			int positionsSent = 0;
+			int positionsFailed = 0;
 
 			Device.BeginInvokeOnMainThread(() => {
 				listView.IsRefreshing = true;
@@ -88,26 +180,33 @@ namespace PhoenixImperator.Pages.Entities
 				Phoenix.Application.OrderManager.SubmitOrdersForPosition (position.Id, (count, e) => {
 					if(e == null){
 						Log.WriteLine(Log.Layer.UI,GetType(),"Successfuly uploaded " + count + " orders for " + position );
+						positionsSent += 1;
+						positionsWithOrders.Remove(position);
+						EntityGroup.GroupEntities<Position>(positionsWithOrders,(results) => {
+							Device.BeginInvokeOnMainThread(() => {
+								listView.ItemsSource = results;
+							});
+						});
 					}
 					else {
-						ShowErrorAlert(e);
-						Device.BeginInvokeOnMainThread(() => {
-							submitButton.IsEnabled = true;
-						});
-						return;
+						positionsFailed += 1;
 					}
 					UpdateProgressBar(progressBar, (float) (progressBar.Progress + progressPerPosition));
-					positionsSent += 1;
-					positionsWithOrders.Remove(position);
-					GroupEntities(positionsWithOrders,(results) => {
-						Device.BeginInvokeOnMainThread(() => {
-							listView.ItemsSource = results;
-						});
-					});
-					if(positionsSent >= totalPositions){
-						ShowInfoAlert("Orders Submitted", "Submitted orders for " + positionsSent + " positions");
+
+					if((positionsFailed + positionsSent) >= totalPositions){
+						string message = "Submitted orders for positions.";
+						if(positionsSent > 0){
+							message = message + " " + positionsSent + " succeeded.";
+						}
+						if(positionsFailed > 0){
+							message = message + " " + positionsFailed + " failed.";
+						}
 						Device.BeginInvokeOnMainThread(() => {
 							listView.IsRefreshing = false;
+							submitButton.IsVisible = true;
+							submitButton.IsEnabled = true;
+							helpLabel.IsVisible = true;
+							ShowInfoAlert("Orders Submitted", message);
 						});
 					}
 				});
@@ -123,6 +222,7 @@ namespace PhoenixImperator.Pages.Entities
 
 		private List<Position> positionsWithOrders;
 		private Button submitButton;
+		private bool hasDisappeared = false;
 	}
 }
 

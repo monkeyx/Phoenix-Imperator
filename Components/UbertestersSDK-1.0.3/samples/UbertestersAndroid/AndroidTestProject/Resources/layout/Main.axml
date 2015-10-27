@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+    <Button
+        android:id="@+id/myButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/hello" />
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/linearLayout1">
+        <Button
+            android:text="Log Info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/logInfoButton"
+            android:layout_marginRight="0.0dp" />
+        <Button
+            android:text="Log Warning"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/logWarningButton" />
+        <Button
+            android:text="Log Error"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/logErrorButton" />
+        <Button
+            android:text="Make Crash"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/makeCrashButton" />
+        <Button
+            android:text="Make screenshot"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/makeScreenshotButton" />
+    </LinearLayout>
+</LinearLayout>

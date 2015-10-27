@@ -37,6 +37,42 @@ using Phoenix.Util;
 
 namespace PhoenixImperator.Pages.Entities
 {
+	/// <summary>
+	/// Entity list.
+	/// </summary>
+	public static class EntityList
+	{
+		/// <summary>
+		/// Gets or sets the entities.
+		/// </summary>
+		/// <value>The entities.</value>
+		public static ObservableCollection<EntityBase> Entities { get; set; }
+
+		/// <summary>
+		/// The delete entity callback.
+		/// </summary>
+		public static Action<EntityBase, Action<IEnumerable<EntityBase>>> DeleteEntityCallback;
+
+		/// <summary>
+		/// Updates the entities.
+		/// </summary>
+		/// <param name="entities">Entities.</param>
+		public static void UpdateEntities(IEnumerable<EntityBase> entities)
+		{
+			if (Entities == null) {
+				Entities = new ObservableCollection<EntityBase> ();
+			} else {
+				Entities.Clear ();
+			}
+			foreach (EntityBase e in entities) {
+				Entities.Add (e);
+			}
+		}
+	}
+
+	/// <summary>
+	/// Entity list page.
+	/// </summary>
 	public class EntityListPage<T> : PhoenixPage where T :   EntityBase, new()
 	{
 		/// <summary>
@@ -52,31 +88,48 @@ namespace PhoenixImperator.Pages.Entities
 		/// <value><c>true</c> if pull to refresh; otherwise, <c>false</c>.</value>
 		public bool PullToRefresh { get; private set;}
 
+		/// <summary>
+		/// Gets the manager.
+		/// </summary>
+		/// <value>The manager.</value>
+		public NexusManager<T> Manager { get; private set;}
 
-		public EntityListPage (string title, NexusManager<T> manager, IEnumerable<T> entities, bool entityHasDetail = true, bool pullToRefresh = true)
+		/// <summary>
+		/// Initializes a new instance of the <see cref="PhoenixImperator.Pages.Entities.EntityListPage`1"/> class.
+		/// </summary>
+		/// <param name="title">Title.</param>
+		/// <param name="manager">Manager.</param>
+		/// <param name="entities">Entities.</param>
+		/// <param name="entityHasDetail">If set to <c>true</c> entity has detail.</param>
+		/// <param name="pullToRefresh">If set to <c>true</c> pull to refresh.</param>
+		/// <param name="swipeLeftToDelete">If set to <c>true</c> swipe left to delete.</param>
+		public EntityListPage (string title, NexusManager<T> manager, IEnumerable<T> entities, bool entityHasDetail = true, bool pullToRefresh = true, bool swipeLeftToDelete = true) : base(title)
 		{
-			Title = title;
-
-			Padding = new Thickness (10, Device.OnPlatform (20, 0, 0), 10, 5);
-
-			BackgroundColor = Color.Black;
+			Manager = manager;
+			EntityList.UpdateEntities (entities);
+			EntityList.DeleteEntityCallback = DeleteEntity;
 
 			EntityHasDetail = entityHasDetail;
 			PullToRefresh = pullToRefresh;
 
-			allEntities = entities;
+			Type cellType;
+			if (swipeLeftToDelete) {
+				cellType = typeof(EntityViewCell);
+			} else {
+				cellType = typeof(TextCell);
+			}
+			BeforeList ();
+			listView = AddListViewWithSearchBar (cellType, null, (sender, e) => {
+				EntitySelected(manager, (T)e.Item);
+			});
+			AfterList ();
 
-			// List View
-			listView = new ListView {
-				IsGroupingEnabled = true,
-				GroupDisplayBinding = new Binding ("GroupName"),
-				GroupShortNameBinding = new Binding ("GroupShortName")
-			};
-			listView.ItemTemplate = new DataTemplate (typeof(TextCell));
-			listView.ItemTemplate.SetBinding (TextCell.TextProperty, "ListText");
-			listView.ItemTemplate.SetBinding (TextCell.DetailProperty, "ListDetail");
+			listView.IsGroupingEnabled = true;
+			listView.GroupDisplayBinding = new Binding ("GroupName");
+			listView.GroupShortNameBinding = new Binding ("GroupShortName");
+
 			listView.IsRefreshing = true;
-			GroupEntities (entities, (results) => {
+			EntityGroup.GroupEntities<T> (entities, (results) => {
 				Device.BeginInvokeOnMainThread (() => {
 					listView.ItemsSource = results;
 					listView.IsRefreshing = false;
@@ -87,67 +140,81 @@ namespace PhoenixImperator.Pages.Entities
 			if (pullToRefresh) {
 				listView.IsPullToRefreshEnabled = true;
 				listView.RefreshCommand = new Command ((e) => {
-					if(!isSearching) {
-						manager.Fetch((results, ex) => {
-							if(ex == null){
-								GroupEntities (results, (groupedResults) => {
-									Device.BeginInvokeOnMainThread (() => {
-										listView.ItemsSource = groupedResults;
-										listView.IsRefreshing = false;
-									});
-								});
-							}
-							else {
-								ShowErrorAlert(ex);
-							}
-						},true);
+					if(!IsSearching) {
+						RefreshList();
 					}
 				});
 			}
-			listView.ItemTapped += (sender, e) => {
-				Log.WriteLine (Log.Layer.UI, this.GetType (), "Tapped: " + e.Item + "(" + e.Item.GetType() + ")");
-				listView.IsEnabled = false;
-				((ListView)sender).SelectedItem = null; // de-select the row
-				EntitySelected(manager, (T)e.Item);
-			};
 
-			// Search bar
-			isSearching = false;
-
-			searchBar = new SearchBar () {
-				Placeholder = "Search"
-			};
-
-			searchBar.TextChanged += (sender, e) => FilterList (searchBar.Text);
-			searchBar.SearchButtonPressed += (sender, e) => {
-				FilterList (searchBar.Text);
-			};
-
-			// Activity
-			activityIndicator = new ActivityIndicator {
-				IsEnabled = true,
-				IsRunning = false,
-				BindingContext = this
-			};
-			layout =  new StackLayout { 
-				Children = {
-					searchBar,
-					activityIndicator,
-					listView
-				}
-			};
-
-			Content = layout;
-		}
-
-		protected override void OnAppearing ()
-		{
-			base.OnAppearing ();
 			if (PullToRefresh) {
-				Onboarding.ShowOnboarding ((int)UserFlags.SHOWN_ONBOARDING_ENTITY_LIST_PULL_TO_REFRESH, "Help", "Pull down to refresh");
+				if (swipeLeftToDelete) {
+					helpLabel = AddHelpLabel ("Pull down to refresh. Swipe left to delete an entry.");
+				} else {
+					helpLabel = AddHelpLabel ("Pull down to refresh.");
+				}
+			} else if (swipeLeftToDelete) {
+				helpLabel = AddHelpLabel ("Swipe left to delete an entry.");
 			}
 		}
 
+		/// <summary>
+		/// Befores the list.
+		/// </summary>
+		protected virtual void BeforeList()
+		{
+		}
+
+		/// <summary>
+		/// Afters the list.
+		/// </summary>
+		protected virtual void AfterList()
+		{
+		}
+
+		/// <summary>
+		/// Refreshs the list.
+		/// </summary>
+		protected virtual void RefreshList()
+		{
+			Manager.Fetch((results, ex) => {
+				if(ex == null){
+					EntityGroup.GroupEntities<T> (results, (groupedResults) => {
+						Device.BeginInvokeOnMainThread (() => {
+							listView.ItemsSource = groupedResults;
+							listView.IsRefreshing = false;
+						});
+					});
+				}
+				else {
+					ShowErrorAlert(ex);
+				}
+			},true);
+		}
+
+		/// <summary>
+		/// Deletes the entity.
+		/// </summary>
+		/// <param name="entity">Entity.</param>
+		/// <param name="callback">Callback.</param>
+		protected virtual void DeleteEntity(EntityBase entity, Action<IEnumerable<EntityBase>> callback)
+		{
+			listView.IsRefreshing = true;
+			Manager.Delete ((T)entity, (results) => {
+				callback(results);
+				EntityGroup.GroupEntities<T> (results, (groupedResults) => {
+					Device.BeginInvokeOnMainThread (() => {
+						listView.ItemsSource = groupedResults;
+						listView.IsRefreshing = false;
+					});
+				});
+			});
+		}
+
+		/// <summary>
+		/// Entities the selected.
+		/// </summary>
+		/// <param name="manager">Manager.</param>
+		/// <param name="item">Item.</param>
 		protected virtual void EntitySelected(NexusManager<T> manager, T item)
 		{
 			if(EntityHasDetail){
@@ -156,81 +223,134 @@ namespace PhoenixImperator.Pages.Entities
 			listView.IsEnabled = true;
 		}
 
-		protected void GroupEntities(IEnumerable<T> entities, Action<IEnumerable<EntityGroup<T>>> callback)
+		/// <summary>
+		/// Filters the list view.
+		/// </summary>
+		/// <param name="listView">List view.</param>
+		/// <param name="filter">Filter.</param>
+		/// <param name="source">Source.</param>
+		protected override void FilterListView(ListView listView, string filter, IEnumerable<EntityBase> source)
 		{
-			Task.Factory.StartNew (() => {
-				Dictionary<string, EntityGroup<T>> mapping = new Dictionary<string, EntityGroup<T>> ();
-				foreach(T item in entities){
-					EntityGroup<T> group;
-					if (item.Group == null) {
-						if (mapping.ContainsKey ("")) {
-							group = mapping [""];
-						} else {
-							group = new EntityGroup<T> ("", "*");
-							mapping.Add ("", group);
-						}
-					}
-					else if (mapping.ContainsKey (item.Group)) {
-						group = mapping [item.Group];
-					} else {
-						group = new EntityGroup<T> (item.Group, item.GroupShortName);
-						mapping.Add (item.Group, group);
-					}
-					group.Add (item);
-				}
-				IEnumerable<EntityGroup<T>> grouped = from element in mapping.Values
-					orderby element.GroupName
-					select element;
-				callback(grouped);
-			});
-		}
-
-		protected StackLayout layout;
-		protected ListView listView;
-
-		private void FilterList(string filter)
-		{
-			isSearching = true;
 			listView.BeginRefresh ();
 
 			if (string.IsNullOrWhiteSpace (filter)) {
-				GroupEntities (allEntities, (results) => {
+				EntityGroup.GroupEntities<T> (EntityList.Entities, (results) => {
 					Device.BeginInvokeOnMainThread(() => {
 						listView.ItemsSource = results;
 						listView.EndRefresh ();
-						isSearching = false;
+						IsSearching = false;
 					});
 				});
 			} else {
 				Task.Factory.StartNew (() => {
-					GroupEntities(allEntities.Where (x => x.ToString ().ToLower ().Contains (filter.ToLower ())),(results) => {
+					EntityGroup.GroupEntities<T>(EntityList.Entities.Where (x => x.ToString ().ToLower ().Contains (filter.ToLower ())),(results) => {
 						Device.BeginInvokeOnMainThread(() => {
 							listView.ItemsSource = results;
 							listView.EndRefresh ();
-							isSearching = false;
+							IsSearching = false;
 						});
 					});
 				});
 			}
 		}
 
-		private IEnumerable<T> allEntities;
-		private ActivityIndicator activityIndicator;
-		private SearchBar searchBar;
-		private bool isSearching;
-
+		protected ListView listView;
+		protected Label helpLabel;
 	}
 
-	public class EntityGroup<T> : ObservableCollection<T>  where T :   EntityBase, new()
+	/// <summary>
+	/// Entity group.
+	/// </summary>
+	public class EntityGroup : ObservableCollection<EntityBase>
 	{
+		/// <summary>
+		/// Groups the entities.
+		/// </summary>
+		/// <param name="entities">Entities.</param>
+		/// <param name="callback">Callback.</param>
+		/// <typeparam name="T">The 1st type parameter.</typeparam>
+		public static void GroupEntities<T>(IEnumerable<EntityBase> entities, Action<IEnumerable<EntityGroup>> callback)  where T :   EntityBase, new()
+		{
+			Task.Factory.StartNew (() => {
+				Dictionary<string, EntityGroup> mapping = new Dictionary<string, EntityGroup> ();
+				foreach(T item in entities){
+					EntityGroup group;
+					if (item.Group == null) {
+						if (mapping.ContainsKey ("")) {
+							group = mapping [""];
+						} else {
+							group = new EntityGroup ("", "*");
+							mapping.Add ("", group);
+						}
+					}
+					else if (mapping.ContainsKey (item.Group)) {
+						group = mapping [item.Group];
+					} else {
+						group = new EntityGroup (item.Group, item.GroupShortName);
+						mapping.Add (item.Group, group);
+					}
+					group.Add (item);
+				}
+				IEnumerable<EntityGroup> grouped = from element in mapping.Values
+					orderby element.GroupName
+					select element;
+				callback(grouped);
+			});
+		}
+
+		/// <summary>
+		/// Gets the name of the group.
+		/// </summary>
+		/// <value>The name of the group.</value>
 		public string GroupName { get; private set; }
 
+		/// <summary>
+		/// Gets the name of the group short.
+		/// </summary>
+		/// <value>The name of the group short.</value>
 		public string GroupShortName { get; private set; }
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="PhoenixImperator.Pages.Entities.EntityGroup"/> class.
+		/// </summary>
+		/// <param name="groupName">Group name.</param>
+		/// <param name="groupShortName">Group short name.</param>
 		public EntityGroup(string groupName, string groupShortName)
 		{
 			GroupName = groupName;
 			GroupShortName = groupShortName;
+		}
+	}
+
+	/// <summary>
+	/// Entity view cell.
+	/// </summary>
+	public class EntityViewCell : TextCell
+	{
+		/// <summary>
+		/// Initializes a new instance of the <see cref="PhoenixImperator.Pages.Entities.EntityViewCell"/> class.
+		/// </summary>
+		public EntityViewCell()
+		{
+			var deleteAction = new MenuItem { Text = "Delete", IsDestructive = true }; // red background
+			deleteAction.SetBinding (MenuItem.CommandParameterProperty, new Binding ("."));
+			deleteAction.Clicked += OnDelete;
+
+			this.ContextActions.Add (deleteAction);
+		}
+
+		/// <summary>
+		/// Raises the delete event.
+		/// </summary>
+		/// <param name="sender">Sender.</param>
+		/// <param name="e">E.</param>
+		void OnDelete (object sender, EventArgs e)
+		{
+			var item = (MenuItem)sender;
+			Log.WriteLine (Log.Layer.UI,GetType(),"OnDelete: " + item.CommandParameter);
+			EntityList.DeleteEntityCallback ((EntityBase)item.CommandParameter,(results) => {
+				EntityList.UpdateEntities(results);
+			});
 		}
 	}
 }

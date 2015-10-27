@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="1" android:versionName="1.0" package="AndroidTestProject.AndroidTestProject">
+	<uses-sdk />
+	<application android:label="AndroidTestProject" name="AndroidTestProject">
+
+	    <meta-data android:name="ubertesters_project_id" android:value="your ubertesters_project_id"/>
+
+
+	</application>
+
+
+	<!-- Ubertesters library user-permisions -->
+          <uses-permission android:name="android.permission.GET_TASKS" />
+          <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+          <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+          <!-- Ubertesters library user-permisions -->
+
+</manifest>

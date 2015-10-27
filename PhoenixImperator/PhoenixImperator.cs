@@ -47,14 +47,16 @@ namespace PhoenixImperator
 {
 	public enum UserFlags
 	{
-		SHOWN_ONBOARDING_NEXUS_PULL_TO_REFRESH = 0x01,
-		SHOWN_ONBOARDING_ENTITY_LIST_PULL_TO_REFRESH = 0x02,
-		SHOWN_ONBOARDING_ORDER_SWIPE_TO_DELETE = 0x04
+		NONE = 0x00
 	}
 
 	public class App : Application, Phoenix.IDatabase, Phoenix.ILogger, Phoenix.IDocumentFolder, Phoenix.IRestClient
 	{
+		public const int NEXUS_TIMEOUT = 180;
+
 		public static string Version { get; set; }
+
+		public static IClipboardService ClipboardService { get; set; }
 
 		public App ()
 		{
@@ -130,23 +132,22 @@ namespace PhoenixImperator
 			try {
 				Console.WriteLine (format, arg);
 			}
-			catch(Exception e){
-				Insights.Report (e);
+			catch{
 			}
 		}
 
+		#if __ANDROID__
 		/// <summary>
 		/// Async GET method
 		/// </summary>
 		/// <param name="url">URL.</param>
 		/// <param name="callback">Callback.</param>
-		public async void GetAsync(string url, Action<Stream> callback)
+		public void GetAsync(string url, Action<Stream> callback)
 		{
-			#if __ANDROID__
 			Task.Factory.StartNew(async () => {
 				try {
 					var httpClient = new HttpClient(new NativeMessageHandler());
-					httpClient.Timeout = TimeSpan.FromSeconds(60);
+					httpClient.Timeout = TimeSpan.FromSeconds(NEXUS_TIMEOUT);
 					callback(await httpClient.GetStreamAsync (url));
 				}
 				catch(Exception e){
@@ -155,10 +156,40 @@ namespace PhoenixImperator
 					callback (null);
 				}
 			});
-			#else
+		}
+		/// <summary>
+		/// Async POST method
+		/// </summary>
+		/// <returns>Stream</returns>
+		/// <param name="url">URL.</param>
+		/// <param name="dto">Dto.</param>
+		public void PostAsync(string url, object dto, Action<HttpResponseMessage> callback)
+		{
+			Task.Factory.StartNew(async () => {
+				try{
+
+					var httpClient = new HttpClient(new NativeMessageHandler());
+					httpClient.Timeout = TimeSpan.FromSeconds(NEXUS_TIMEOUT);
+					callback(await httpClient.PostAsync(url,new StringContent(dto.ToString())));
+				}
+				catch(Exception e){
+					Insights.Report (e);
+					Log.WriteLine (Log.Layer.AL, GetType (), e);
+					callback (null);
+				}
+			});
+		}
+		#else
+		/// <summary>
+		/// Async GET method
+		/// </summary>
+		/// <param name="url">URL.</param>
+		/// <param name="callback">Callback.</param>
+		public async void GetAsync(string url, Action<Stream> callback)
+		{
 			try {
 				var httpClient = new HttpClient(new NativeMessageHandler());
-				httpClient.Timeout = TimeSpan.FromSeconds(60);
+				httpClient.Timeout = TimeSpan.FromSeconds(NEXUS_TIMEOUT);
 				callback(await httpClient.GetStreamAsync (url));
 			}
 			catch(Exception e){
@@ -166,7 +197,6 @@ namespace PhoenixImperator
 				Log.WriteLine (Log.Layer.AL, GetType (), e);
 				callback (null);
 			}
-			#endif
 		}
 
 		/// <summary>
@@ -177,25 +207,9 @@ namespace PhoenixImperator
 		/// <param name="dto">Dto.</param>
 		public async void PostAsync(string url, object dto, Action<HttpResponseMessage> callback)
 		{
-			#if __ANDROID__
-			Task.Factory.StartNew(async () => {
-				try{
-
-					var httpClient = new HttpClient(new NativeMessageHandler());
-					httpClient.Timeout = TimeSpan.FromSeconds(60);
-					callback(await httpClient.PostAsync(url,new StringContent(dto.ToString())));
-				}
-				catch(Exception e){
-					Insights.Report (e);
-					Log.WriteLine (Log.Layer.AL, GetType (), e);
-					callback (null);
-				}
-			});
-			#else
 			try{
-				
 				var httpClient = new HttpClient(new NativeMessageHandler());
-				httpClient.Timeout = TimeSpan.FromSeconds(60);
+				httpClient.Timeout = TimeSpan.FromSeconds(NEXUS_TIMEOUT);
 				callback(await httpClient.PostAsync(url,new StringContent(dto.ToString())));
 			}
 			catch(Exception e){
@@ -203,8 +217,8 @@ namespace PhoenixImperator
 				Log.WriteLine (Log.Layer.AL, GetType (), e);
 				callback (null);
 			}
-			#endif
 		}
+		#endif
 
 		/// <summary>
 		/// Application developers override this method to perform actions when the application starts.

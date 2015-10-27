@@ -36,8 +36,15 @@ using PhoenixImperator.Pages.Entities;
 
 namespace PhoenixImperator.Pages
 {
+	/// <summary>
+	/// Home page.
+	/// </summary>
 	public class HomePage : PhoenixPage
 	{
+		/// <summary>
+		/// Sets the status.
+		/// </summary>
+		/// <param name="status">Status.</param>
 		public void SetStatus(GameStatus status)
 		{
 			Log.WriteLine(Log.Layer.UI, this.GetType(), "GameStatus: " + status);
@@ -51,14 +58,29 @@ namespace PhoenixImperator.Pages
 				
 		}
 
-		public HomePage () : base()
+		/// <summary>
+		/// Initializes a new instance of the <see cref="PhoenixImperator.Pages.HomePage"/> class.
+		/// </summary>
+		public HomePage () : base("Home")
 		{
-			Title = "Home";
-
 			BackgroundColor = Color.Black;
 
-			Image logo = new Image { Aspect = Aspect.AspectFill };
-			logo.Source = ImageSource.FromFile ("logo.png");
+			AddHeader ();
+
+			AddHomeNavigation ();
+
+			AddHelpLabel ("Pull down to update status from Nexus");
+
+			Phoenix.Application.GameStatusManager.First((result) => {
+				Device.BeginInvokeOnMainThread(() => {
+					SetStatus(result);
+				});
+			});
+		}
+
+		private void AddHeader()
+		{
+			AddLogo ();
 
 			starDateLabel = new Label {
 				TextColor = Color.Silver
@@ -86,10 +108,15 @@ namespace PhoenixImperator.Pages
 				}
 			};
 
+			PageLayout.Children.Add (header);
+		}
+
+		private void AddHomeNavigation()
+		{
 			ListView navigationList = new ListView () {
 				BackgroundColor = Color.White,
 				SeparatorColor = Color.Silver,
-				ItemsSource = new [] {"Positions", "Orders", "Items", "Star Systems", "Order Types", "Info"}
+				ItemsSource = new [] {"Turns", "Notifications", "Positions", "Orders", "Items", "Star Systems", "Notes"}
 			};
 
 			navigationList.IsPullToRefreshEnabled = true;
@@ -97,80 +124,106 @@ namespace PhoenixImperator.Pages
 			navigationList.ItemTapped += (sender, e) => {
 				Log.WriteLine(Log.Layer.UI, this.GetType(), "Tapped: " + e.Item);
 				((ListView)sender).SelectedItem = null; // de-select the row
+				Spinner.IsRunning = true;
 				switch(e.Item.ToString()){
+				case "Turns":
+					RootPage.Root.ShowTurnsPage (Spinner);
+					break;
+				case "Notifications":
+					RootPage.Root.ShowNotificationsPage (Spinner);
+					break;
 				case "Positions":
-					RootPage.Root.ShowPage<Position> (activityIndicator, e.Item.ToString(), Phoenix.Application.PositionManager);
+					RootPage.Root.ShowPage<Position> (Spinner, e.Item.ToString(), Phoenix.Application.PositionManager);
 					break;
 				case "Order Types":
-					RootPage.Root.ShowPage<OrderType> (activityIndicator, e.Item.ToString(), Phoenix.Application.OrderTypeManager);
+					RootPage.Root.ShowPage<OrderType> (Spinner, e.Item.ToString(), Phoenix.Application.OrderTypeManager);
 					break;
 				case "Items":
-					RootPage.Root.ShowPage<Item> (activityIndicator, e.Item.ToString(), Phoenix.Application.ItemManager);
+					RootPage.Root.ShowPage<Item> (Spinner, e.Item.ToString(), Phoenix.Application.ItemManager);
 					break;
 				case "Info":
-					RootPage.Root.ShowPage<InfoData> (activityIndicator, e.Item.ToString(), Phoenix.Application.InfoManager,false);
+					RootPage.Root.ShowPage<InfoData> (Spinner, e.Item.ToString(), Phoenix.Application.InfoManager,false);
 					break;
 				case "Star Systems":
-					RootPage.Root.ShowPage<StarSystem> (activityIndicator, e.Item.ToString(), Phoenix.Application.StarSystemManager);
+					RootPage.Root.ShowPage<StarSystem> (Spinner, e.Item.ToString(), Phoenix.Application.StarSystemManager);
 					break;
 				case "Orders":
-					RootPage.Root.ShowOrdersPage(activityIndicator);
+					RootPage.Root.ShowOrdersPage(Spinner);
+					break;
+				case "Notes":
+					RootPage.Root.ShowNotesPage(Spinner);
 					break;
 				}
 			};
 
 			navigationList.RefreshCommand = new Command ((e) => {
+				string oldStardate = starDateLabel.Text;
+				string oldStatus = statusMessageLabel.Text;
 				SetStatus(null);
 				Phoenix.Application.GameStatusManager.Fetch ((results, ex) => {
 					if(ex == null){
-						Device.BeginInvokeOnMainThread(() => {
-							navigationList.IsRefreshing = false;
-							IEnumerator<GameStatus> i = results.GetEnumerator();
-							if(i.MoveNext()){
-								SetStatus(i.Current);
+						GameStatus newStatus = null;
+						IEnumerator<GameStatus> i = results.GetEnumerator();
+						if(i.MoveNext()){
+							newStatus = i.Current;
+						}
+						if(newStatus != null) {
+							if(newStatus.StarDate != oldStardate || newStatus.StatusMessage != oldStatus){
+								// status has changed so fetch data from Neuxs
+								Phoenix.Application.NotificationManager.Fetch((notificationResults,ex2) => {
+									if(ex2 == null){
+										Phoenix.Application.PositionManager.Fetch((positionResults,ex3) => {
+											if(ex3 == null){
+												Device.BeginInvokeOnMainThread(() => {
+													navigationList.IsRefreshing = false;
+													SetStatus(newStatus);
+												});
+											}
+											else {
+												Device.BeginInvokeOnMainThread(() => {
+													navigationList.IsRefreshing = false;
+												});
+												ShowErrorAlert(ex3);
+											}
+										});
+									}
+									else {
+										Device.BeginInvokeOnMainThread(() => {
+											navigationList.IsRefreshing = false;
+										});
+										ShowErrorAlert(ex2);
+									}
+
+								});
+							} else {
+								Device.BeginInvokeOnMainThread(() => {
+									navigationList.IsRefreshing = false;
+									SetStatus(newStatus);
+								});
 							}
-						});
+						}
+						else {
+							Device.BeginInvokeOnMainThread(() => {
+								navigationList.IsRefreshing = false;
+							});
+							ShowErrorAlert("Unable to get status from Nexus");
+						}
 					}
 					else {
+						Device.BeginInvokeOnMainThread(() => {
+							navigationList.IsRefreshing = false;
+						});
 						ShowErrorAlert(ex);
 					}
 
 				}, true);
 			});
 
-			activityIndicator = new ActivityIndicator {
-				IsEnabled = true,
-				IsRunning = false,
-				BindingContext = this
-			};
-
-			this.Padding = new Thickness(10, Device.OnPlatform(20, 0, 0), 10, 5);
-
-			Content = new StackLayout { 
-				Children = {
-					activityIndicator,
-					logo,
-					header,
-					navigationList
-				}
-			};
-
-			Phoenix.Application.GameStatusManager.First((result) => {
-				Device.BeginInvokeOnMainThread(() => {
-					SetStatus(result);
-				});
-			});
-		}
-
-		protected override void OnAppearing ()
-		{
-			base.OnAppearing ();
-			Onboarding.ShowOnboarding ((int)UserFlags.SHOWN_ONBOARDING_NEXUS_PULL_TO_REFRESH, "Help", "Pull down to check Nexus status");
+			PageLayout.Children.Add (navigationList);
 		}
 
 		private Label starDateLabel;
 		private Label statusMessageLabel;
-		private ActivityIndicator activityIndicator;
 	}
 }
 

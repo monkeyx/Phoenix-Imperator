@@ -33,44 +33,80 @@ using Phoenix.BL.Managers;
 
 namespace PhoenixImperator.Pages.Entities
 {
+	/// <summary>
+	/// Item page builder.
+	/// </summary>
 	public class ItemPageBuilder : BaseEntityPageBuilder<Item>
 	{
+		/// <summary>
+		/// Gets or sets the current item.
+		/// </summary>
+		/// <value>The current item.</value>
+		public static Item CurrentItem { get; set; }
+
+		/// <summary>
+		/// Displaies the entity.
+		/// </summary>
+		/// <param name="item">Item.</param>
 		protected override void DisplayEntity(Item item)
 		{
-			AddContentTab ("General", "icon_general.png");
-			AddProperty ("Type", item.ItemType);
-			AddProperty ("Sub Type", item.SubType);
-			AddProperty ("Mass Units", item.MassUnits.ToString ());
-			AddProperty ("Race", item.Race);
+			CurrentItem = item;
 
-			if (item.Production > 0) {
+			AddGeneralTab ();
+
+			AddProductionTab ();
+
+			AddTechManual ();
+
+			AddMoreTab ();
+
+		}
+
+		private void AddGeneralTab()
+		{
+			AddContentTab ("General", "icon_general.png");
+			AddCopyButton ("Copy Item ID", CurrentItem.Id.ToString ());
+			currentTab.AddProperty ("Type", CurrentItem.ItemType);
+			currentTab.AddProperty ("Sub Type", CurrentItem.SubType);
+			currentTab.AddProperty ("Mass Units", CurrentItem.MassUnits.ToString ());
+			currentTab.AddProperty ("Race", CurrentItem.Race);
+		}
+
+		private void AddProductionTab()
+		{
+			if (CurrentItem.Production > 0) {
 				AddContentTab ("Production", "icon_production.png");
-				AddProperty ("Production", item.Production.ToString ());
-				if (item.BlueprintId > 0) {
-					AddEntityProperty(Manager, item.BlueprintItem, "Blueprint");
+				currentTab.AddProperty ("Production", CurrentItem.Production.ToString ());
+				if (CurrentItem.BlueprintId > 0) {
+					currentTab.AddEntityProperty(Manager, CurrentItem.BlueprintItem, "Blueprint");
 				}
-				if (item.SubstituteItemId > 0) {
-					AddEntityProperty(Manager, item.SubstituteItem, "Substitute");
-					AddProperty("Substitute Ratio", item.SubstituteRatio.ToString());
+				if (CurrentItem.SubstituteItemId > 0) {
+					currentTab.AddEntityProperty(Manager, CurrentItem.SubstituteItem, "Substitute");
+					currentTab.AddProperty("Substitute Ratio", CurrentItem.SubstituteRatio.ToString());
 				}
-				if (item.RawMaterials.Count > 0) {
-					AddHeading ("Raw Materials");
-					foreach (RawMaterial rm in item.RawMaterials) {
-						AddEntityProperty(Manager, rm.RawMaterialItem, null, "{0} x " + rm.Quantity);
+				if (CurrentItem.RawMaterials.Count > 0) {
+					currentTab.AddHeading ("Raw Materials");
+					foreach (RawMaterial rm in CurrentItem.RawMaterials) {
+						currentTab.AddEntityProperty(Manager, rm.RawMaterialItem, null, "{0} x " + rm.Quantity);
 					}
 				}
 			}
+		}
 
+		private void AddTechManual()
+		{
 			AddContentTab ("Tech Manual", "icon_techmanual.png");
-			AddLabel (item.TechManual);
+			currentTab.AddLabel (CurrentItem.TechManual);
+		}
 
-			if (item.Properties.Count > 0) {
+		private void AddMoreTab()
+		{
+			if (CurrentItem.Properties.Count > 0) {
 				AddContentTab ("More", "icon_more.png");
-				foreach (ItemProperty prop in item.Properties.Values) {
-					AddProperty (prop.Key, prop.Value);
+				foreach (ItemProperty prop in CurrentItem.Properties.Values) {
+					currentTab.AddProperty (prop.Key, prop.Value);
 				}
 			}
-
 		}
 	}
 }

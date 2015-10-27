@@ -36,14 +36,21 @@ using Android.OS;
 using Xamarin;
 using Xamarin.Forms;
 
+using Com.Ubertesters.Sdk; 
+
 namespace PhoenixImperator.Droid
 {
-	[Activity (Label = "PhoenixImperator.Droid", Icon = "@drawable/icon", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
+	[Activity (Label = "Imperator", Icon = "@drawable/icon", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
 	public class MainActivity : global::Xamarin.Forms.Platform.Android.FormsApplicationActivity
 	{
+		public static ClipboardManager AndroidClipboardManager { get; private set; }
+
 		protected override void OnCreate (Bundle bundle)
 		{
 			base.OnCreate (bundle);
+
+			AndroidClipboardManager = (ClipboardManager)GetSystemService(ClipboardService);
+			App.ClipboardService = new ClipboardService ();
 
 			global::Xamarin.Forms.Forms.Init (this, bundle);
 
