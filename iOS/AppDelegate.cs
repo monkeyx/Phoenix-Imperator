@@ -35,8 +35,6 @@ using UIKit;
 using UbertestersSDK;
 using UbertestersCrashHandler;
 
-using Phoenix.Util;
-
 namespace PhoenixImperator.iOS
 {
 	[Register ("AppDelegate")]
@@ -65,8 +63,6 @@ namespace PhoenixImperator.iOS
 			LoadApplication (new App ());
 
 			UIApplication.SharedApplication.IdleTimerDisabled = true;
-
-			Log.WriteLine (Log.Layer.AL, GetType (), "Application Start");
 
 			return base.FinishedLaunching (app, options);
 		}

@@ -186,16 +186,16 @@ namespace PhoenixImperator.Pages.Entities
 				currentTab.AddPropertyDoubleLine ("Message", item.Message);
 			}
 
-			if (!string.IsNullOrWhiteSpace (item.ErrorCode)) {
-				currentTab.AddProperty ("Error Code", item.ErrorCode);
+			if (!string.IsNullOrWhiteSpace (item.ErrorCodeDescription)) {
+				currentTab.AddProperty ("Error Code", item.ErrorCodeDescription);
 			}
 
 			if (!string.IsNullOrWhiteSpace (item.ErrorMessage)) {
 				currentTab.AddPropertyDoubleLine ("Message", item.ErrorMessage);
 			}
 
-			if (!string.IsNullOrWhiteSpace (item.WarningCode)) {
-				currentTab.AddProperty ("Warning Code", item.WarningCode);
+			if (!string.IsNullOrWhiteSpace (item.WarningCodeDescription)) {
+				currentTab.AddProperty ("Warning Code", item.WarningCodeDescription);
 			}
 
 			if (!string.IsNullOrWhiteSpace (item.WarningMessage)) {

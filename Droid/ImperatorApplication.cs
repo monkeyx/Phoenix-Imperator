@@ -36,8 +36,6 @@ using Android.OS;
 using Com.Ubertesters.Sdk; 
 using Com.Ubertesters.Common.Models;
 
-using Phoenix.Util;
-
 namespace PhoenixImperator.Droid
 {
 	[Application (Label = "Imperator", Icon = "@drawable/icon")]
@@ -53,7 +51,6 @@ namespace PhoenixImperator.Droid
 			base.OnCreate();
 			Ubertesters.Initialize(this,LockingMode.DisableUbertesters,ActivationMode.Widget);
 			AndroidEnvironment.UnhandledExceptionRaiser += OnException;
-			Log.WriteLine (Log.Layer.AL, GetType (), "Application Start");
 		}
 
 		private static void OnException(object sender, RaiseThrowableEventArgs e)
