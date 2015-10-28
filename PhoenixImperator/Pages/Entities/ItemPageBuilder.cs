@@ -58,8 +58,6 @@ namespace PhoenixImperator.Pages.Entities
 
 			AddTechManual ();
 
-			AddMoreTab ();
-
 			AddMarketsTab ();
 
 		}
@@ -72,6 +70,12 @@ namespace PhoenixImperator.Pages.Entities
 			currentTab.AddProperty ("Sub Type", CurrentItem.SubType);
 			currentTab.AddProperty ("Mass Units", CurrentItem.MassUnits.ToString ());
 			currentTab.AddProperty ("Race", CurrentItem.Race);
+
+			if (CurrentItem.Properties.Count > 0) {
+				foreach (ItemProperty prop in CurrentItem.Properties.Values) {
+					currentTab.AddProperty (prop.Key, prop.Value);
+				}
+			}
 		}
 
 		private void AddProductionTab()
@@ -99,16 +103,6 @@ namespace PhoenixImperator.Pages.Entities
 		{
 			AddContentTab ("Tech Manual", "icon_techmanual.png");
 			currentTab.AddLabel (CurrentItem.TechManual);
-		}
-
-		private void AddMoreTab()
-		{
-			if (CurrentItem.Properties.Count > 0) {
-				AddContentTab ("More", "icon_more.png");
-				foreach (ItemProperty prop in CurrentItem.Properties.Values) {
-					currentTab.AddProperty (prop.Key, prop.Value);
-				}
-			}
 		}
 
 		private void AddMarketsTab()
