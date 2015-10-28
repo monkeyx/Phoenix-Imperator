@@ -34,6 +34,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Pages\Entities\OrderSelectorPage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Pages\Entities\NotePositionListPage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Pages\Entities\PositionSelectorPage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Pages\Entities\MarketBasePageBuilder.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="$(MSBuildThisFileDirectory)Pages\" />

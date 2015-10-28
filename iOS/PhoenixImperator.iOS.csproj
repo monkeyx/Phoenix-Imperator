@@ -189,6 +189,9 @@
     <BundleResource Include="Resources\icon_green_circle.png" />
     <BundleResource Include="Resources\icon_red_circle.png" />
     <BundleResource Include="Resources\icon_notes.png" />
+    <BundleResource Include="Resources\icon_markets.png" />
+    <BundleResource Include="Resources\icon_market_sell.png" />
+    <BundleResource Include="Resources\icon_market_buy.png" />
   </ItemGroup>
   <ItemGroup>
     <InterfaceDefinition Include="Resources\LaunchScreen.storyboard" />

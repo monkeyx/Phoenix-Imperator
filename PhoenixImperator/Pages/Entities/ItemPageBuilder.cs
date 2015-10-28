@@ -60,6 +60,8 @@ namespace PhoenixImperator.Pages.Entities
 
 			AddMoreTab ();
 
+			AddMarketsTab ();
+
 		}
 
 		private void AddGeneralTab()
@@ -107,6 +109,15 @@ namespace PhoenixImperator.Pages.Entities
 					currentTab.AddProperty (prop.Key, prop.Value);
 				}
 			}
+		}
+
+		private void AddMarketsTab()
+		{
+			AddContentTab ("Markets", "icon_markets.png");
+			currentTab.AddListViewWithSearchBar (typeof(TextCell), CurrentItem.Markets, (sender, e) => {
+				MarketBase mb = (MarketBase) e.Item;
+				EntityPageBuilderFactory.ShowEntityPage<MarketBase> (Phoenix.Application.MarketManager, mb.Id);
+			});
 		}
 	}
 }

@@ -77,6 +77,9 @@ namespace PhoenixImperator.Pages.Entities
 			case "Notification":
 				builder = (IEntityPageBuilder<T>)new NotificationPageBuilder ();
 				break;
+			case "MarketBase":
+				builder = (IEntityPageBuilder<T>)new MarketBasePageBuilder ();
+				break;
 			default:
 				throw new Exception ("Unsupported type"); 
 			}

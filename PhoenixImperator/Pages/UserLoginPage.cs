@@ -100,7 +100,7 @@ namespace PhoenixImperator.Pages
 
 			loginButton.Clicked += LoginButtonClicked;
 
-			Button linkButton = new Button {
+			linkButton = new Button {
 				HorizontalOptions = LayoutOptions.CenterAndExpand,
 				Text = "Visit Nexus to get your XML Access Id and Code",
 				// TextColor = Color.White,
@@ -174,6 +174,7 @@ namespace PhoenixImperator.Pages
 			userIdEntry.IsEnabled = false;
 			userCodeEntry.IsEnabled = false;
 			loginButton.IsEnabled = false;
+			linkButton.IsVisible = false;
 			Phoenix.Application.UserManager.Save (this.UserId, this.UserCode, (user) => {
 				Phoenix.Application.UserLoggedIn(user);
 
@@ -189,72 +190,22 @@ namespace PhoenixImperator.Pages
 					};
 					layout.Children.Add(progressBar);
 					header.Text = "Setting Up. Please be patient.";
-					UpdateStatusMessage("Fetching game status");
-					Phoenix.Application.GameStatusManager.Fetch ((results, ex) => {
-						if(ex == null){
-							UpdateStatusMessage("Fetched game status. Now fetching info.");
-							UpdateProgressBar(progressBar, 0.14f);
-							Phoenix.Application.InfoManager.Fetch((infoResults, ex2) => {
-								if(ex2 == null){
-									UpdateStatusMessage("Fetched info data. Now fetching star systems.");
-									UpdateProgressBar(progressBar, 0.28f);
-									Phoenix.Application.StarSystemManager.Fetch((systemResults, ex3) => {
-										if(ex3 == null){
-											UpdateStatusMessage("Fetched star systems. Now fetching order types.");
-											UpdateProgressBar(progressBar, 0.42f);
-											Phoenix.Application.OrderTypeManager.Fetch((orderTypeResults, ex4) => {
-												if(ex4 == null){
-													UpdateStatusMessage("Fetched order types. Now fetching items");
-													UpdateProgressBar(progressBar, 0.56f);
-													Phoenix.Application.ItemManager.Fetch((itemResults, ex5) => {
-														if(ex5 == null){
-															UpdateStatusMessage("Fetched items. Now fetching positions.");
-															UpdateProgressBar(progressBar, 0.70f);
-															Phoenix.Application.PositionManager.Fetch((positionResults, ex6) => {
-																if(ex6 == null){
-																	UpdateStatusMessage("Fetched positions. Now fetching notifications.");
-																	UpdateProgressBar(progressBar, 0.84f);
-																	Phoenix.Application.NotificationManager.Fetch((notificationResults, ex7) => {
-																		if(ex7 == null){
-																			ShowHomePage();
-																		}
-																		else {
-																			UpdateProgressBar(progressBar, 1.0f);
-																			ShowErrorAndThenHome(ex6);
-																		}
-																	});
-																}
-																else {
-																	
-																}
-															});
-														}
-														else {
-															ShowErrorAndThenHome(ex5);
-														}
-													});
-												}
-												else {
-													ShowErrorAndThenHome(ex4);
-												}
-
-											});
-										}
-										else {
-											ShowErrorAndThenHome(ex3);
-										}
-									});
-								}
-								else {
-									ShowErrorAndThenHome(ex2);
-								}
-							});
-						}
-						else {
-							ShowErrorAndThenHome(ex);
-						}
-
-					});
+					loginButton.Text = "Setup";
+					int totalSetupActions = SetupActions.Length;
+					int actionCompleteCount = 0;
+					float progressPerAction = 1.0f / (float)totalSetupActions;
+					foreach(Action<Action<Exception>> setupAction in SetupActions){
+						setupAction((ex) => {
+							UpdateProgressBar(progressBar,progressPerAction);
+							if(ex != null){
+								ShowErrorAlert(ex);
+							}
+							actionCompleteCount += 1;
+							if(actionCompleteCount >= totalSetupActions) {
+								ShowHomePage();
+							}
+						});
+					}
 				}
 				else {
 					ShowHomePage();
@@ -265,7 +216,7 @@ namespace PhoenixImperator.Pages
 		private void UpdateProgressBar(ProgressBar progressBar, float progressTo)
 		{
 			Device.BeginInvokeOnMainThread (() => {
-				progressBar.ProgressTo(progressTo,250,Easing.Linear);
+				progressBar.ProgressTo(progressBar.Progress + progressTo,250,Easing.Linear);
 			});
 		}
 
@@ -296,10 +247,107 @@ namespace PhoenixImperator.Pages
 			});
 		}
 
+		private void FetchGameStatus(Action<Exception> callback)
+		{
+			Phoenix.Application.GameStatusManager.Fetch ((results, ex) => {
+				if (ex == null) {
+					UpdateStatusMessage ("Fetched game status.");
+				}
+				callback (ex);
+			});
+		}
+
+		 
+		private void FetchInfo(Action<Exception> callback)
+		{
+			Phoenix.Application.InfoManager.Fetch ((results, ex) => {
+				if (ex == null) {
+					UpdateStatusMessage ("Fetched game info.");
+				}
+				callback (ex);
+			});		
+		}
+
+		private void FetchStarSystems(Action<Exception> callback)
+		{
+			Phoenix.Application.StarSystemManager.Fetch ((results, ex) => {
+				if (ex == null) {
+					UpdateStatusMessage ("Fetched star systems.");
+				}
+				callback (ex);
+			});
+		}
+
+		private void FetchOrderTypes(Action<Exception> callback)
+		{
+			Phoenix.Application.OrderTypeManager.Fetch ((results, ex) => {
+				if (ex == null) {
+					UpdateStatusMessage ("Fetched order types.");
+				}
+				callback (ex);
+			});
+		}
+
+		private void FetchItems(Action<Exception> callback)
+		{
+			Phoenix.Application.ItemManager.Fetch ((results, ex) => {
+				if (ex == null) {
+					UpdateStatusMessage ("Fetched items.");
+				}
+				callback (ex);
+			});
+		}
+
+		private void FetchPositions(Action<Exception> callback)
+		{
+			Phoenix.Application.PositionManager.Fetch ((results, ex) => {
+				if (ex == null) {
+					UpdateStatusMessage ("Fetched positions.");
+				}
+				callback (ex);
+			});
+		}
+
+		private void FetchNotifications(Action<Exception> callback)
+		{
+			Phoenix.Application.NotificationManager.Fetch ((results, ex) => {
+				if (ex == null) {
+					UpdateStatusMessage ("Fetched notifications.");
+				}
+				callback (ex);
+			});
+		}
+
+		private void FetchMarkets(Action<Exception> callback)
+		{
+			Phoenix.Application.MarketManager.Fetch ((results, ex) => {
+				if (ex == null) {
+					UpdateStatusMessage ("Fetched markets.");
+				}
+				callback (ex);
+			});
+		}
+
+		private Action<Action<Exception>>[] SetupActions {
+			get {
+				return new Action<Action<Exception>>[] {
+					FetchGameStatus,
+					FetchInfo,
+					FetchStarSystems,
+					FetchOrderTypes,
+					FetchItems,
+					FetchPositions,
+					FetchNotifications,
+					FetchMarkets
+				};
+			}
+		}
+
 		private Label statusMessage;
 		private Entry userIdEntry;
 		private Entry userCodeEntry;
 		private Button loginButton;
+		private Button linkButton;
 		private Label header;
 	}
 }

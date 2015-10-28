@@ -163,6 +163,12 @@ namespace PhoenixImperator.Pages
 			});
 
 			Add (new SideMenuItem {
+				Title = "Markets",
+				IconSource = "icon_markets.png",
+				TargetType = "Markets"
+			});
+
+			Add (new SideMenuItem {
 				Title = "Items",
 				IconSource = "icon_production.png",
 				TargetType = "Items"

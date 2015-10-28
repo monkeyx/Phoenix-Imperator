@@ -158,6 +158,9 @@
     <AndroidResource Include="Resources\drawable\icon_green_circle.png" />
     <AndroidResource Include="Resources\drawable\icon_red_circle.png" />
     <AndroidResource Include="Resources\drawable\icon_notes.png" />
+    <AndroidResource Include="Resources\drawable\icon_markets.png" />
+    <AndroidResource Include="Resources\drawable\icon_market_sell.png" />
+    <AndroidResource Include="Resources\drawable\icon_market_buy.png" />
   </ItemGroup>
   <Import Project="..\PhoenixImperator\PhoenixImperator.projitems" Label="Shared" Condition="Exists('..\PhoenixImperator\PhoenixImperator.projitems')" />
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />

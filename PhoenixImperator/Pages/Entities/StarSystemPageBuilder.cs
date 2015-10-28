@@ -56,12 +56,13 @@ namespace PhoenixImperator.Pages.Entities
 		protected override void DisplayEntity(StarSystem item)
 		{
 			CurrentStarSystem = item;
-			AddCelestialBodies ();
-			AddJumpLinks ();
-			AddPositions ();
+			AddCelestialBodiesTab ();
+			AddJumpLinksTab ();
+			AddPositionsTab ();
+			AddMarketsTab ();
 		}
 
-		private void AddCelestialBodies()
+		private void AddCelestialBodiesTab()
 		{
 			if (CurrentStarSystem.CelestialBodies.Count > 0) {
 				AddContentTab ("Celestial Bodies","icon_celestialbodies.png");
@@ -77,7 +78,7 @@ namespace PhoenixImperator.Pages.Entities
 			}
 		}
 
-		private void AddJumpLinks()
+		private void AddJumpLinksTab()
 		{
 			if (CurrentStarSystem.JumpLinks.Count > 0) {
 				AddContentTab ("Jump Links","icon_jumplink.png");
@@ -93,7 +94,7 @@ namespace PhoenixImperator.Pages.Entities
 			}
 		}
 
-		private void AddPositions()
+		private void AddPositionsTab()
 		{
 			Phoenix.Application.PositionManager.GetPositionsInStarSystem (CurrentStarSystem, (results) => {
 				if(results.GetEnumerator().MoveNext()){
@@ -106,6 +107,15 @@ namespace PhoenixImperator.Pages.Entities
 						});
 					});
 				}
+			});
+		}
+
+		private void AddMarketsTab()
+		{
+			AddContentTab ("Markets", "icon_markets.png");
+			currentTab.AddListViewWithSearchBar (typeof(TextCell), CurrentStarSystem.Markets, (sender, e) => {
+				MarketBase mb = (MarketBase) e.Item;
+				EntityPageBuilderFactory.ShowEntityPage<MarketBase> (Phoenix.Application.MarketManager, mb.Id);
 			});
 		}
 	}

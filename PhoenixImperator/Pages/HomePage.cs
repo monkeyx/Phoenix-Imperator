@@ -69,7 +69,8 @@ namespace PhoenixImperator.Pages
 
 			AddHomeNavigation ();
 
-			AddHelpLabel ("Pull down to update status from Nexus");
+			helpLabel = AddHelpLabel ("Pull down to update status from Nexus");
+			helpLabel.TextColor = Color.White;
 
 			Phoenix.Application.GameStatusManager.First((result) => {
 				Device.BeginInvokeOnMainThread(() => {
@@ -116,7 +117,7 @@ namespace PhoenixImperator.Pages
 			ListView navigationList = new ListView () {
 				BackgroundColor = Color.White,
 				SeparatorColor = Color.Silver,
-				ItemsSource = new [] {"Turns", "Notifications", "Positions", "Orders", "Items", "Star Systems", "Notes"}
+				ItemsSource = new [] {"Turns", "Notifications", "Positions", "Orders", "Markets", "Items", "Star Systems", "Notes"}
 			};
 
 			navigationList.IsPullToRefreshEnabled = true;
@@ -147,6 +148,9 @@ namespace PhoenixImperator.Pages
 				case "Star Systems":
 					RootPage.Root.ShowPage<StarSystem> (Spinner, e.Item.ToString(), Phoenix.Application.StarSystemManager);
 					break;
+				case "Markets":
+					RootPage.Root.ShowPage<MarketBase> (Spinner, e.Item.ToString(), Phoenix.Application.MarketManager);
+					break;
 				case "Orders":
 					RootPage.Root.ShowOrdersPage(Spinner);
 					break;
@@ -160,6 +164,7 @@ namespace PhoenixImperator.Pages
 				string oldStardate = starDateLabel.Text;
 				string oldStatus = statusMessageLabel.Text;
 				SetStatus(null);
+				UpdateHelpLabel("Checking Nexus status");
 				Phoenix.Application.GameStatusManager.Fetch ((results, ex) => {
 					if(ex == null){
 						GameStatus newStatus = null;
@@ -169,52 +174,28 @@ namespace PhoenixImperator.Pages
 						}
 						if(newStatus != null) {
 							if(newStatus.StarDate != oldStardate || newStatus.StatusMessage != oldStatus){
+								UpdateHelpLabel("Nexus updated. Fetching data.");
 								// status has changed so fetch data from Neuxs
-								Phoenix.Application.NotificationManager.Fetch((notificationResults,ex2) => {
-									if(ex2 == null){
-										Phoenix.Application.PositionManager.Fetch((positionResults,ex3) => {
-											if(ex3 == null){
-												Device.BeginInvokeOnMainThread(() => {
-													navigationList.IsRefreshing = false;
-													SetStatus(newStatus);
-												});
-											}
-											else {
-												Device.BeginInvokeOnMainThread(() => {
-													navigationList.IsRefreshing = false;
-												});
-												ShowErrorAlert(ex3);
-											}
-										});
-									}
-									else {
-										Device.BeginInvokeOnMainThread(() => {
-											navigationList.IsRefreshing = false;
-										});
+								foreach(Action<Action<Exception>> action in RefreshActions){
+									action((ex2) => {
 										ShowErrorAlert(ex2);
-									}
-
-								});
+									});
+								}
 							} else {
-								Device.BeginInvokeOnMainThread(() => {
-									navigationList.IsRefreshing = false;
-									SetStatus(newStatus);
-								});
+								UpdateHelpLabel("No change on Nexus. Pull down to check again.");
 							}
+							SetStatus(newStatus);
 						}
 						else {
-							Device.BeginInvokeOnMainThread(() => {
-								navigationList.IsRefreshing = false;
-							});
 							ShowErrorAlert("Unable to get status from Nexus");
 						}
 					}
 					else {
-						Device.BeginInvokeOnMainThread(() => {
-							navigationList.IsRefreshing = false;
-						});
 						ShowErrorAlert(ex);
 					}
+					Device.BeginInvokeOnMainThread(() => {
+						navigationList.IsRefreshing = false;
+					});
 
 				}, true);
 			});
@@ -222,8 +203,50 @@ namespace PhoenixImperator.Pages
 			PageLayout.Children.Add (navigationList);
 		}
 
+		private void RefreshNotifications(Action<Exception> callback)
+		{
+			Phoenix.Application.NotificationManager.Fetch ((results, ex) => {
+				UpdateHelpLabel("Notifications received.");
+				callback(ex);
+			},true);
+		}
+
+		private void RefreshPositions(Action<Exception> callback)
+		{
+			Phoenix.Application.PositionManager.Fetch ((results, ex) => {
+				UpdateHelpLabel("Positions received.");
+				callback(ex);
+			},true);
+		}
+
+		private void RefreshMarkets(Action<Exception> callback)
+		{
+			Phoenix.Application.MarketManager.Fetch ((results, ex) => {
+				UpdateHelpLabel("Markets received.");
+				callback(ex);
+			},true);
+		}
+
+		private Action<Action<Exception>>[] RefreshActions {
+			get {
+				return new Action<Action<Exception>>[] { 
+					RefreshNotifications,
+					RefreshPositions,
+					RefreshMarkets
+				};
+			}
+		}
+
+		private void UpdateHelpLabel(string text)
+		{
+			Device.BeginInvokeOnMainThread(() => {
+				helpLabel.Text = text;
+			});
+		}
+
 		private Label starDateLabel;
 		private Label statusMessageLabel;
+		private Label helpLabel;
 	}
 }
 

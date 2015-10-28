@@ -108,6 +108,8 @@ namespace PhoenixImperator.Pages.Entities
 			AddOrdersTab ();
 
 			AddNotesTab ();
+
+			AddMarketsTabs ();
 		}
 
 		void RequestUpdateButtonClicked(object sender, EventArgs e)
@@ -329,6 +331,24 @@ namespace PhoenixImperator.Pages.Entities
 			});
 			currentTab.PageLayout.Children.Add (editor);
 			currentTab.AddHelpLabel ("Write notes about a position in the text area above");
+		}
+
+		private void AddMarketsTabs ()
+		{
+			if (CurrentPosition.Market != null) {
+				AddContentTab ("Buying", "icon_market_buy.png");
+				currentTab.AddListViewWithSearchBar (typeof(TextCell), CurrentPosition.Market.Buying, (sender, e) => {
+					MarketItem item = (MarketItem)e.Item;
+					EntityPageBuilderFactory.ShowEntityPage<Item>(Phoenix.Application.ItemManager,item.ItemId);
+				});
+
+				AddContentTab ("Selling", "icon_market_sell.png");
+				currentTab.AddListViewWithSearchBar (typeof(TextCell), CurrentPosition.Market.Selling, (sender, e) => {
+					MarketItem item = (MarketItem)e.Item;
+					EntityPageBuilderFactory.ShowEntityPage<Item>(Phoenix.Application.ItemManager,item.ItemId);
+				});
+			}
+
 		}
 
 		private Page ordersTab;

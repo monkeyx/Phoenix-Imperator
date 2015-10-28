@@ -108,6 +108,9 @@ namespace PhoenixImperator.Pages
 			case "Info":
 				ShowPage<InfoData> (menuPage.Spinner, menuChoice, Phoenix.Application.InfoManager, false);
 				break;
+			case "Markets":
+				ShowPage<MarketBase> (menuPage.Spinner, menuChoice, Phoenix.Application.MarketManager);
+				break;
 			case "About":
 				GoToPage (new AboutPage ());
 				break;
