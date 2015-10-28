@@ -23,7 +23,6 @@ Phoenix Tool built with Xamarin Forms
 - Reordering orders
 - Macros
 - Affiliation
-- Markets
 - Navigation Paths
 - Trade Routes
 - Turn Report Parsing

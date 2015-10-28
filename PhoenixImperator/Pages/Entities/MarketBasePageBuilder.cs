@@ -46,6 +46,8 @@ namespace PhoenixImperator.Pages.Entities
 			AddBuyingTab ();
 
 			AddSellingTab ();
+
+			AddPositionsTab ();
 		}
 
 		private void AddBaseTab()
@@ -95,6 +97,24 @@ namespace PhoenixImperator.Pages.Entities
 				MarketItem item = (MarketItem)e.Item;
 				EntityPageBuilderFactory.ShowEntityPage<Item>(Phoenix.Application.ItemManager,item.ItemId);
 			});
+		}
+
+		private void AddPositionsTab()
+		{
+			if (CurrentBase.StarSystem != null) {
+				Phoenix.Application.PositionManager.GetPositionsInStarSystem (CurrentBase.StarSystem, (results) => {
+					if(results.GetEnumerator().MoveNext()){
+						Device.BeginInvokeOnMainThread (() => {
+							AddContentTab ("Positions","icon_positions.png");
+
+							currentTab.AddListViewWithSearchBar (typeof(TextCell),results,(sender,e) => {
+								Position p = (Position)e.Item;
+								EntityPageBuilderFactory.ShowEntityPage<Position> (Phoenix.Application.PositionManager, p.Id);
+							});
+						});
+					}
+				});
+			}
 		}
 	}
 }
