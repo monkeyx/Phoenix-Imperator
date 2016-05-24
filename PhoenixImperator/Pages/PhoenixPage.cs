@@ -29,8 +29,6 @@ using System.Linq;
 
 using Xamarin.Forms;
 
-using XLabs.Forms.Controls;
-
 using Phoenix.BL.Entities;
 using Phoenix.BL.Managers;
 using Phoenix.Util;
@@ -123,16 +121,15 @@ namespace PhoenixImperator
 		/// Adds the heading.
 		/// </summary>
 		/// <param name="heading">Heading.</param>
-		public ExtendedLabel AddHeading(string heading)
+		public Label AddHeading(string heading)
 		{
 			if (heading == null || PageLayout == null)
 				return null;
-			ExtendedLabel label = new ExtendedLabel {
+			Label label = new Label {
 				HorizontalOptions = LayoutOptions.CenterAndExpand,
 				FontAttributes = FontAttributes.Bold,
 				Text = heading,
-				FontSize = Device.GetNamedSize (NamedSize.Large, typeof(Label)),
-				IsUnderline = true
+				FontSize = Device.GetNamedSize(NamedSize.Large, typeof(Label))
 			};
 			PageLayout.Children.Add (label);
 			return label;
@@ -223,7 +220,7 @@ namespace PhoenixImperator
 		/// <param name="label">Label.</param>
 		/// <param name="entityFormat">Entity format.</param>
 		/// <typeparam name="T">The 1st type parameter.</typeparam>
-		public ExtendedLabel AddEntityProperty<T>(NexusManager<T> manager, EntityBase entity, string label = null, string entityFormat = "{0}") where T :   EntityBase, new()
+		public Label AddEntityProperty<T>(NexusManager<T> manager, EntityBase entity, string label = null, string entityFormat = "{0}") where T :   EntityBase, new()
 		{
 			if (PageLayout == null || manager == null || entity == null)
 				return null;
@@ -235,7 +232,7 @@ namespace PhoenixImperator
 						Text = label
 					});
 			}
-			ExtendedLabel entityLabel = CreateEntityLabel<T> (manager, entity, entityFormat);
+			Label entityLabel = CreateEntityLabel<T> (manager, entity, entityFormat);
 			PageLayout.Children.Add (entityLabel);
 			return entityLabel;
 		}
@@ -248,12 +245,11 @@ namespace PhoenixImperator
 		/// <param name="entity">Entity.</param>
 		/// <param name="entityFormat">Entity format.</param>
 		/// <typeparam name="T">The 1st type parameter.</typeparam>
-		public ExtendedLabel CreateEntityLabel<T>(NexusManager<T> manager, EntityBase entity, string entityFormat = "{0}") where T :   EntityBase, new()
+		public Label CreateEntityLabel<T>(NexusManager<T> manager, EntityBase entity, string entityFormat = "{0}") where T :   EntityBase, new()
 		{
-			ExtendedLabel entityLabel = new ExtendedLabel {
+			Label entityLabel = new Label {
 				Text = string.Format(entityFormat, entity.ToString ()),
-				TextColor = Color.Blue,
-				IsUnderline = true
+				TextColor = Color.Blue
 			};
 			TapGestureRecognizer tapGesture = new TapGestureRecognizer();
 			tapGesture.Command = new Command ((e) => {

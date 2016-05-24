@@ -70,7 +70,7 @@ namespace PhoenixImperator.Pages
 			header = AddHeading (headerText);
 
 			statusMessage = new Label {
-				XAlign = TextAlignment.Center,
+				HorizontalTextAlignment = TextAlignment.Center,
 				Text = "",
 				TextColor = Color.Silver
 			};

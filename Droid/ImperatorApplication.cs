@@ -33,9 +33,6 @@ using Android.Views;
 using Android.Widget;
 using Android.OS;
 
-using Com.Ubertesters.Sdk; 
-using Com.Ubertesters.Common.Models;
-
 namespace PhoenixImperator.Droid
 {
 	[Application (Label = "Imperator", Icon = "@drawable/icon")]
@@ -49,13 +46,11 @@ namespace PhoenixImperator.Droid
 		public override void OnCreate()
 		{
 			base.OnCreate();
-			Ubertesters.Initialize(this,LockingMode.DisableUbertesters,ActivationMode.Widget);
 			AndroidEnvironment.UnhandledExceptionRaiser += OnException;
 		}
 
 		private static void OnException(object sender, RaiseThrowableEventArgs e)
 		{
-			Ubertesters.SendException(e);
 			throw e.Exception;
 		}
 	}

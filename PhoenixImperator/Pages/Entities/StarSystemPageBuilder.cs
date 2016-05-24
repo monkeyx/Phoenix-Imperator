@@ -30,8 +30,6 @@ using System.Threading.Tasks;
 
 using Xamarin.Forms;
 
-using XLabs.Forms.Controls;
-
 using Phoenix.BL.Entities;
 using Phoenix.BL.Managers;
 using Phoenix.Util;

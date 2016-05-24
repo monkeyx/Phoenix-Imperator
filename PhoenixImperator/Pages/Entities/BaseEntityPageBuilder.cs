@@ -29,8 +29,6 @@ using System.Collections.Generic;
 using Xamarin;
 using Xamarin.Forms;
 
-using XLabs.Forms.Controls;
-
 using Phoenix.BL.Entities;
 using Phoenix.BL.Managers;
 

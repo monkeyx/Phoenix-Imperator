@@ -36,8 +36,6 @@ using Android.OS;
 using Xamarin;
 using Xamarin.Forms;
 
-using Com.Ubertesters.Sdk; 
-
 namespace PhoenixImperator.Droid
 {
 	[Activity (Label = "Imperator", Icon = "@drawable/icon", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
